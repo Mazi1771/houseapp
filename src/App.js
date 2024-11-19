@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import PropertyForm from './components/PropertyForm';
+import PropertyList from './components/PropertyList';
 
 function App() {
   const [isFormVisible, setIsFormVisible] = useState(false);
@@ -31,15 +32,15 @@ function App() {
         <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
           {isFormVisible ? (
             <PropertyForm onSubmit={handleAddProperty} />
-          ) : (
+          ) : properties.length === 0 ? (
             <div className="bg-white shadow rounded-lg p-6">
               <h2 className="text-xl font-semibold mb-4">Witaj w HouseApp!</h2>
               <p className="text-gray-500">
-                {properties.length === 0 
-                  ? "Rozpocznij dodawanie i zarządzanie swoimi ofertami nieruchomości."
-                  : `Liczba dodanych nieruchomości: ${properties.length}`}
+                Rozpocznij dodawanie i zarządzanie swoimi ofertami nieruchomości.
               </p>
             </div>
+          ) : (
+            <PropertyList properties={properties} />
           )}
         </div>
       </main>
