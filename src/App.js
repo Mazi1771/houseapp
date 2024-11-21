@@ -55,6 +55,27 @@ function App() {
    }
  };
 
+ const handleRating = async (propertyId, rating) => {
+   try {
+     const response = await fetch(`https://houseapp-backend.onrender.com/api/properties/${propertyId}`, {
+       method: 'PUT',
+       headers: {
+         'Content-Type': 'application/json',
+       },
+       body: JSON.stringify({ rating })
+     });
+
+     if (response.ok) {
+       const updatedProperty = await response.json();
+       setProperties(properties.map(p => 
+         p._id === propertyId ? updatedProperty : p
+       ));
+     }
+   } catch (error) {
+     console.error('Błąd podczas aktualizacji oceny:', error);
+   }
+ };
+
  const handleScrape = async () => {
    if (!url) return;
    setIsLoading(true);
@@ -168,26 +189,61 @@ function App() {
                    property.status === 'do zamieszkania' ? 'bg-green-100 text-green-800' :
                    property.status === 'do remontu' ? 'bg-red-100 text-red-800' :
                    property.status === 'w budowie' ? 'bg-yellow-100 text-yellow-800' :
-                  'bg-blue-100 text-blue-800'
-           }`}>
-               {property.status}
-             </span></p>
+                   'bg-blue-100 text-blue-800'
+                 }`}>
+                   {property.status}
+                 </span></p>
+                 {property.sourceUrl && (
+                   <a 
+                     href={property.sourceUrl}
+                     target="_blank"
+                     rel="noopener noreferrer"
+                     className="text-blue-600 hover:text-blue-800 hover:underline"
+                   >
+                     Zobacz ogłoszenie →
+                   </a>
+                 )}
                  {property.description && (
                    <p className="text-gray-600">{property.description}</p>
                  )}
-                 <div className="flex justify-end mt-4 space-x-2">
-                   <button
-                     onClick={() => handleEditClick(property)}
-                     className="px-4 py-2 bg-blue-100 text-blue-600 rounded hover:bg-blue-200"
-                   >
-                     Edytuj
-                   </button>
-                   <button
-                     onClick={() => handleDelete(property._id)}
-                     className="px-4 py-2 bg-red-100 text-red-600 rounded hover:bg-red-200"
-                   >
-                     Usuń
-                   </button>
+                 <div className="flex justify-between items-center mt-4">
+                   <div className="space-x-2">
+                     <button
+                       onClick={() => handleRating(property._id, 'favorite')}
+                       className={`p-2 rounded ${property.rating === 'favorite' ? 'bg-yellow-100 text-yellow-600' : 'bg-gray-100'}`}
+                       title="Ulubione"
+                     >
+                       ⭐
+                     </button>
+                     <button
+                       onClick={() => handleRating(property._id, 'interested')}
+                       className={`p-2 rounded ${property.rating === 'interested' ? 'bg-green-100 text-green-600' : 'bg-gray-100'}`}
+                       title="Zainteresowany"
+                     >
+                       👍
+                     </button>
+                     <button
+                       onClick={() => handleRating(property._id, 'not_interested')}
+                       className={`p-2 rounded ${property.rating === 'not_interested' ? 'bg-red-100 text-red-600' : 'bg-gray-100'}`}
+                       title="Niezainteresowany"
+                     >
+                       👎
+                     </button>
+                   </div>
+                   <div className="space-x-2">
+                     <button
+                       onClick={() => handleEditClick(property)}
+                       className="px-4 py-2 bg-blue-100 text-blue-600 rounded hover:bg-blue-200"
+                     >
+                       Edytuj
+                     </button>
+                     <button
+                       onClick={() => handleDelete(property._id)}
+                       className="px-4 py-2 bg-red-100 text-red-600 rounded hover:bg-red-200"
+                     >
+                       Usuń
+                     </button>
+                   </div>
                  </div>
                </div>
              </div>
