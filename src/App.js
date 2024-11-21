@@ -164,7 +164,14 @@ function App() {
                  <p>Powierzchnia: {property.area} m²</p>
                  <p>Pokoje: {property.rooms}</p>
                  <p>Lokalizacja: {property.location}</p>
-                 <p>Stan: {property.status}</p>
+                 <p>Stan: <span className={`px-2 py-1 rounded-full text-sm font-medium ${
+                   property.status === 'do zamieszkania' ? 'bg-green-100 text-green-800' :
+                   property.status === 'do remontu' ? 'bg-red-100 text-red-800' :
+                   property.status === 'w budowie' ? 'bg-yellow-100 text-yellow-800' :
+                  'bg-blue-100 text-blue-800'
+           }`}>
+               {property.status}
+             </span></p>
                  {property.description && (
                    <p className="text-gray-600">{property.description}</p>
                  )}
