@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import PropertyForm from './components/PropertyForm';
 import PropertyEditForm from './components/PropertyEditForm';
 
@@ -7,13 +7,20 @@ function App() {
   const [properties, setProperties] = useState([]);
   const [editingProperty, setEditingProperty] = useState(null);
 
-  const handleAddProperty = (propertyData) => {
-    setProperties([...properties, propertyData]);
-    setIsFormVisible(false);
-  };
+  useEffect(() => {
+    fetchProperties();
+  }, []);
 
-  const handleEditClick = (property) => {
-    setEditingProperty(property);
+  const fetchProperties = async () => {
+    try {
+      const response = await fetch('https://houseapp-backend.onrender.com/api/properties');
+      if (response.ok) {
+        const data = await response.json();
+        setProperties(data);
+      }
+    } catch (error) {
+      console.error('Błąd podczas pobierania danych:', error);
+    }
   };
 
   const handleSaveEdit = async (updatedData) => {
