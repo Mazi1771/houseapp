@@ -164,6 +164,7 @@ function App() {
                  <p>Powierzchnia: {property.area} m²</p>
                  <p>Pokoje: {property.rooms}</p>
                  <p>Lokalizacja: {property.location}</p>
+                 <p>Stan: {property.status}</p>
                  {property.description && (
                    <p className="text-gray-600">{property.description}</p>
                  )}
