@@ -6,6 +6,8 @@ function App() {
   const [isFormVisible, setIsFormVisible] = useState(false);
   const [properties, setProperties] = useState([]);
   const [editingProperty, setEditingProperty] = useState(null);
+  const [url, setUrl] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     fetchProperties();
@@ -20,6 +22,43 @@ function App() {
       }
     } catch (error) {
       console.error('Błąd podczas pobierania danych:', error);
+    }
+  };
+
+  const handleAddProperty = (propertyData) => {
+    setProperties([...properties, propertyData]);
+    setIsFormVisible(false);
+  };
+
+  const handleEditClick = (property) => {
+    setEditingProperty(property);
+  };
+
+  const handleScrape = async () => {
+    if (!url) return;
+    setIsLoading(true);
+    try {
+      const response = await fetch('https://houseapp-backend.onrender.com/api/scrape', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ url })
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setProperties([data, ...properties]);
+        setUrl('');
+        setIsFormVisible(false);
+      } else {
+        const error = await response.json();
+        alert(error.message || 'Wystąpił błąd podczas pobierania danych');
+      }
+    } catch (error) {
+      alert('Wystąpił błąd podczas komunikacji z serwerem');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -64,7 +103,30 @@ function App() {
       </header>
       <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         {isFormVisible ? (
-          <PropertyForm onSubmit={handleAddProperty} />
+          <div className="bg-white p-6 rounded-lg shadow mb-6">
+            <h2 className="text-lg font-semibold mb-4">Dodaj nową nieruchomość</h2>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Link do ogłoszenia Otodom</label>
+                <div className="flex gap-2 mt-1">
+                  <input
+                    type="url"
+                    className="flex-1 rounded-md border-gray-300 shadow-sm p-2 border"
+                    placeholder="https://www.otodom.pl/..."
+                    value={url}
+                    onChange={(e) => setUrl(e.target.value)}
+                  />
+                  <button
+                    onClick={handleScrape}
+                    className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
+                    disabled={isLoading}
+                  >
+                    {isLoading ? 'Pobieranie...' : 'Pobierz dane'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
         ) : editingProperty ? (
           <PropertyEditForm 
             property={editingProperty}
