@@ -8,6 +8,7 @@ function App() {
  const [editingProperty, setEditingProperty] = useState(null);
  const [url, setUrl] = useState('');
  const [isLoading, setIsLoading] = useState(false);
+ const [sortBy, setSortBy] = useState(null);
 
  useEffect(() => {
    fetchProperties();
@@ -23,6 +24,29 @@ function App() {
    } catch (error) {
      console.error('Błąd podczas pobierania danych:', error);
    }
+ };
+
+ const getSortedProperties = () => {
+   if (!sortBy) return properties;
+   
+   return [...properties].sort((a, b) => {
+     switch (sortBy) {
+       case 'price-asc':
+         return (a.price || 0) - (b.price || 0);
+       case 'price-desc':
+         return (b.price || 0) - (a.price || 0);
+       case 'area-asc':
+         return (a.area || 0) - (b.area || 0);
+       case 'area-desc':
+         return (b.area || 0) - (a.area || 0);
+       case 'date-asc':
+         return new Date(a.createdAt) - new Date(b.createdAt);
+       case 'date-desc':
+         return new Date(b.createdAt) - new Date(a.createdAt);
+       default:
+         return 0;
+     }
+   });
  };
 
  const handleAddProperty = (propertyData) => {
@@ -134,12 +158,27 @@ function App() {
            <h1 className="text-3xl font-bold text-gray-900">
              HouseApp
            </h1>
-           <button
-             onClick={() => setIsFormVisible(!isFormVisible)}
-             className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-           >
-             {isFormVisible ? 'Zamknij formularz' : 'Dodaj nieruchomość'}
-           </button>
+           <div className="flex items-center gap-4">
+             <select
+               onChange={(e) => setSortBy(e.target.value)}
+               value={sortBy || ''}
+               className="rounded-md border-gray-300 shadow-sm p-2"
+             >
+               <option value="">Sortuj według...</option>
+               <option value="price-asc">Cena: rosnąco</option>
+               <option value="price-desc">Cena: malejąco</option>
+               <option value="area-asc">Powierzchnia: rosnąco</option>
+               <option value="area-desc">Powierzchnia: malejąco</option>
+               <option value="date-asc">Data: najstarsze</option>
+               <option value="date-desc">Data: najnowsze</option>
+             </select>
+             <button
+               onClick={() => setIsFormVisible(!isFormVisible)}
+               className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+             >
+               {isFormVisible ? 'Zamknij formularz' : 'Dodaj nieruchomość'}
+             </button>
+           </div>
          </div>
        </div>
      </header>
@@ -177,7 +216,7 @@ function App() {
          />
        ) : (
          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-           {properties.map((property, index) => (
+           {getSortedProperties().map((property, index) => (
              <div key={property._id || index} className="bg-white rounded-lg shadow p-6">
                <h3 className="text-lg font-semibold mb-2">{property.title}</h3>
                <div className="space-y-2">
