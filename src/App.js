@@ -9,6 +9,14 @@ function App() {
  const [url, setUrl] = useState('');
  const [isLoading, setIsLoading] = useState(false);
  const [sortBy, setSortBy] = useState(null);
+ const [filters, setFilters] = useState({
+   priceMin: '',
+   priceMax: '',
+   areaMin: '',
+   areaMax: '',
+   status: '',
+   rating: '',
+ });
 
  useEffect(() => {
    fetchProperties();
@@ -26,10 +34,10 @@ function App() {
    }
  };
 
- const getSortedProperties = () => {
-   if (!sortBy) return properties;
+ const getSortedProperties = (propertiesToSort = properties) => {
+   if (!sortBy) return propertiesToSort;
    
-   return [...properties].sort((a, b) => {
+   return [...propertiesToSort].sort((a, b) => {
      switch (sortBy) {
        case 'price-asc':
          return (a.price || 0) - (b.price || 0);
@@ -47,6 +55,24 @@ function App() {
          return 0;
      }
    });
+ };
+
+ const getFilteredAndSortedProperties = () => {
+   let filtered = properties.filter(property => {
+     const matchesPrice = (!filters.priceMin || property.price >= Number(filters.priceMin)) &&
+                         (!filters.priceMax || property.price <= Number(filters.priceMax));
+                         
+     const matchesArea = (!filters.areaMin || property.area >= Number(filters.areaMin)) &&
+                        (!filters.areaMax || property.area <= Number(filters.areaMax));
+                        
+     const matchesStatus = !filters.status || property.status === filters.status;
+     
+     const matchesRating = !filters.rating || property.rating === filters.rating;
+
+     return matchesPrice && matchesArea && matchesStatus && matchesRating;
+   });
+
+   return getSortedProperties(filtered);
  };
 
  const handleAddProperty = (propertyData) => {
@@ -78,7 +104,6 @@ function App() {
      alert('Wystąpił błąd podczas usuwania ogłoszenia');
    }
  };
-
  const handleRating = async (propertyId, rating) => {
    try {
      const response = await fetch(`https://houseapp-backend.onrender.com/api/properties/${propertyId}`, {
@@ -215,79 +240,172 @@ function App() {
            onCancel={() => setEditingProperty(null)}
          />
        ) : (
-         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-           {getSortedProperties().map((property, index) => (
-             <div key={property._id || index} className="bg-white rounded-lg shadow p-6">
-               <h3 className="text-lg font-semibold mb-2">{property.title}</h3>
+         <>
+           <div className="bg-white p-4 rounded-lg shadow mb-4">
+             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+               <div>
+                 <h3 className="font-medium mb-2">Cena (PLN)</h3>
+                 <div className="flex gap-2">
+                   <input
+                     type="number"
+                     placeholder="Od"
+                     value={filters.priceMin}
+                     onChange={(e) => setFilters({...filters, priceMin: e.target.value})}
+                     className="w-full rounded border p-2"
+                   />
+                   <input
+                     type="number"
+                     placeholder="Do"
+                     value={filters.priceMax}
+                     onChange={(e) => setFilters({...filters, priceMax: e.target.value})}
+                     className="w-full rounded border p-2"
+                   />
+                 </div>
+               </div>
+               
+               <div>
+                 <h3 className="font-medium mb-2">Powierzchnia (m²)</h3>
+                 <div className="flex gap-2">
+                   <input
+                     type="number"
+                     placeholder="Od"
+                     value={filters.areaMin}
+                     onChange={(e) => setFilters({...filters, areaMin: e.target.value})}
+                     className="w-full rounded border p-2"
+                   />
+                   <input
+                     type="number"
+                     placeholder="Do"
+                     value={filters.areaMax}
+                     onChange={(e) => setFilters({...filters, areaMax: e.target.value})}
+                     className="w-full rounded border p-2"
+                   />
+                 </div>
+               </div>
+
                <div className="space-y-2">
-                 <p>Cena: {property.price} PLN</p>
-                 <p>Powierzchnia: {property.area} m²</p>
-                 <p>Pokoje: {property.rooms}</p>
-                 <p>Lokalizacja: {property.location}</p>
-                 <p>Stan: <span className={`px-2 py-1 rounded-full text-sm font-medium ${
-                   property.status === 'do zamieszkania' ? 'bg-green-100 text-green-800' :
-                   property.status === 'do remontu' ? 'bg-red-100 text-red-800' :
-                   property.status === 'w budowie' ? 'bg-yellow-100 text-yellow-800' :
-                   'bg-blue-100 text-blue-800'
-                 }`}>
-                   {property.status}
-                 </span></p>
-                 {property.sourceUrl && (
-                   <a 
-                     href={property.sourceUrl}
-                     target="_blank"
-                     rel="noopener noreferrer"
-                     className="text-blue-600 hover:text-blue-800 hover:underline"
+                 <div>
+                   <h3 className="font-medium mb-2">Stan</h3>
+                   <select
+                     value={filters.status}
+                     onChange={(e) => setFilters({...filters, status: e.target.value})}
+                     className="w-full rounded border p-2"
                    >
-                     Zobacz ogłoszenie →
-                   </a>
-                 )}
-                 {property.description && (
-                   <p className="text-gray-600">{property.description}</p>
-                 )}
-                 <div className="flex justify-between items-center mt-4">
-                   <div className="space-x-2">
-                     <button
-                       onClick={() => handleRating(property._id, 'favorite')}
-                       className={`p-2 rounded ${property.rating === 'favorite' ? 'bg-yellow-100 text-yellow-600' : 'bg-gray-100'}`}
-                       title="Ulubione"
-                     >
-                       ⭐
-                     </button>
-                     <button
-                       onClick={() => handleRating(property._id, 'interested')}
-                       className={`p-2 rounded ${property.rating === 'interested' ? 'bg-green-100 text-green-600' : 'bg-gray-100'}`}
-                       title="Zainteresowany"
-                     >
-                       👍
-                     </button>
-                     <button
-                       onClick={() => handleRating(property._id, 'not_interested')}
-                       className={`p-2 rounded ${property.rating === 'not_interested' ? 'bg-red-100 text-red-600' : 'bg-gray-100'}`}
-                       title="Niezainteresowany"
-                     >
-                       👎
-                     </button>
-                   </div>
-                   <div className="space-x-2">
-                     <button
-                       onClick={() => handleEditClick(property)}
-                       className="px-4 py-2 bg-blue-100 text-blue-600 rounded hover:bg-blue-200"
-                     >
-                       Edytuj
-                     </button>
-                     <button
-                       onClick={() => handleDelete(property._id)}
-                       className="px-4 py-2 bg-red-100 text-red-600 rounded hover:bg-red-200"
-                     >
-                       Usuń
-                     </button>
-                   </div>
+                     <option value="">Wszystkie</option>
+                     <option value="do zamieszkania">Do zamieszkania</option>
+                     <option value="do remontu">Do remontu</option>
+                     <option value="w budowie">W budowie</option>
+                     <option value="stan deweloperski">Stan deweloperski</option>
+                   </select>
+                 </div>
+                 
+                 <div>
+                   <h3 className="font-medium mb-2">Ocena</h3>
+                   <select
+                     value={filters.rating}
+                     onChange={(e) => setFilters({...filters, rating: e.target.value})}
+                     className="w-full rounded border p-2"
+                   >
+                     <option value="">Wszystkie</option>
+                     <option value="favorite">⭐ Ulubione</option>
+                     <option value="interested">👍 Zainteresowany</option>
+                     <option value="not_interested">👎 Niezainteresowany</option>
+                   </select>
                  </div>
                </div>
              </div>
-           ))}
-         </div>
+
+             <div className="mt-4 flex justify-end">
+               <button
+                 onClick={() => setFilters({
+                   priceMin: '',
+                   priceMax: '',
+                   areaMin: '',
+                   areaMax: '',
+                   status: '',
+                   rating: '',
+                 })}
+                 className="px-4 py-2 bg-gray-100 text-gray-600 rounded hover:bg-gray-200"
+               >
+                 Wyczyść filtry
+               </button>
+             </div>
+           </div>
+
+           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+             {getFilteredAndSortedProperties().map((property, index) => (
+               <div key={property._id || index} className="bg-white rounded-lg shadow p-6">
+                 <h3 className="text-lg font-semibold mb-2">{property.title}</h3>
+                 <div className="space-y-2">
+                   <p>Cena: {property.price} PLN</p>
+                   <p>Powierzchnia: {property.area} m²</p>
+                   <p>Pokoje: {property.rooms}</p>
+                   <p>Lokalizacja: {property.location}</p>
+                   <p>Stan: <span className={`px-2 py-1 rounded-full text-sm font-medium ${
+                     property.status === 'do zamieszkania' ? 'bg-green-100 text-green-800' :
+                     property.status === 'do remontu' ? 'bg-red-100 text-red-800' :
+                     property.status === 'w budowie' ? 'bg-yellow-100 text-yellow-800' :
+                     'bg-blue-100 text-blue-800'
+                   }`}>
+                     {property.status}
+                   </span></p>
+                   {property.sourceUrl && (
+                     <a 
+                       href={property.sourceUrl}
+                       target="_blank"
+                       rel="noopener noreferrer"
+                       className="text-blue-600 hover:text-blue-800 hover:underline"
+                     >
+                       Zobacz ogłoszenie →
+                     </a>
+                   )}
+                   {property.description && (
+                     <p className="text-gray-600">{property.description}</p>
+                   )}
+                   <div className="flex justify-between items-center mt-4">
+                     <div className="space-x-2">
+                       <button
+                         onClick={() => handleRating(property._id, 'favorite')}
+                         className={`p-2 rounded ${property.rating === 'favorite' ? 'bg-yellow-100 text-yellow-600' : 'bg-gray-100'}`}
+                         title="Ulubione"
+                       >
+                         ⭐
+                       </button>
+                       <button
+                         onClick={() => handleRating(property._id, 'interested')}
+                         className={`p-2 rounded ${property.rating === 'interested' ? 'bg-green-100 text-green-600' : 'bg-gray-100'}`}
+                         title="Zainteresowany"
+                       >
+                         👍
+                       </button>
+                       <button
+                         onClick={() => handleRating(property._id, 'not_interested')}
+                         className={`p-2 rounded ${property.rating === 'not_interested' ? 'bg-red-100 text-red-600' : 'bg-gray-100'}`}
+                         title="Niezainteresowany"
+                       >
+                         👎
+                       </button>
+                     </div>
+                     <div className="space-x-2">
+                       <button
+                         onClick={() => handleEditClick(property)}
+                         className="px-4 py-2 bg-blue-100 text-blue-600 rounded hover:bg-blue-200"
+                       >
+                         Edytuj
+                       </button>
+                       <button
+                         onClick={() => handleDelete(property._id)}
+                         className="px-4 py-2 bg-red-100 text-red-600 rounded hover:bg-red-200"
+                       >
+                         Usuń
+                       </button>
+                     </div>
+                   </div>
+                 </div>
+               </div>
+             ))}
+           </div>
+         </>
        )}
      </main>
    </div>
@@ -295,3 +413,4 @@ function App() {
 }
 
 export default App;
+ 
