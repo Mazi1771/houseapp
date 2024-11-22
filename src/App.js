@@ -32,7 +32,9 @@ function App() {
      fetchProperties();
    }
  }, []);
-
+const handleEditClick = (property) => {
+  setEditingProperty(property);
+};
  const fetchProperties = async () => {
    try {
      const token = localStorage.getItem('token');
