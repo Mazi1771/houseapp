@@ -447,84 +447,81 @@ const handleScrape = async () => {
            </div>
 
            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-             {getFilteredAndSortedProperties().map((property, index) => (
-               <div key={property._id || index} className="bg-white rounded-lg shadow p-6">
-                 <h3 className="text-lg font-semibold mb-2">{property.title}</h3>
-                 <div className="space-y-2">
-                   <p>Cena: {property.price} PLN</p>
-                   <p>Powierzchnia: {property.area} m²</p>
-                   <p>Pokoje: {property.rooms}</p>
-                   <p>Lokalizacja: {property.location}</p>
-                   <p>Stan: <span className={`px-2 py-1 rounded-full text-sm font-medium ${
-                     property.status === 'do zamieszkania' ? 'bg-green-100 text-green-800' :
-                     property.status === 'do remontu' ? 'bg-red-100 text-red-800' :
-                     property.status === 'w budowie' ? 'bg-yellow-100 text-yellow-800' :
-                     'bg-blue-100 text-blue-800'
-                   }`}>
-                     {property.status}
-                   </span></p>
-                   {property.sourceUrl && (
-                     <a 
-                       href={property.sourceUrl}
-                       target="_blank"
-                       rel="noopener noreferrer"
-                       className="text-blue-600 hover:text-blue-800 hover:underline"
-                     >
-                       Zobacz ogłoszenie →
-                     </a>
-                   )}
-                   {property.description && (
-                     <p className="text-gray-600">{property.description}</p>
-                   )}
-                   <div className="flex justify-between items-center mt-4">
-                     <div className="space-x-2">
-                       <button
-                         onClick={() => handleRating(property._id, 'favorite')}
-                         className={`p-2 rounded ${property.rating === 'favorite' ? 'bg-yellow-100 text-yellow-600' : 'bg-gray-100'}`}
-                         title="Ulubione"
-                       >
-                         ⭐
-                       </button>
-                       <button
-                         onClick={() => handleRating(property._id, 'interested')}
-                         className={`p-2 rounded ${property.rating === 'interested' ? 'bg-green-100 text-green-600' : 'bg-gray-100'}`}
-                         title="Zainteresowany"
-                       >
-                         👍
-                       </button>
-                       <button
-                         onClick={() => handleRating(property._id, 'not_interested')}
-                         className={`p-2 rounded ${property.rating === 'not_interested' ? 'bg-red-100 text-red-600' : 'bg-gray-100'}`}
-                         title="Niezainteresowany"
-                       >
-                         👎
-                       </button>
-                     </div>
-                     <div className="space-x-2">
-                       <button
-                         onClick={() => handleEditClick(property)}
-                         className="px-4 py-2 bg-blue-100 text-blue-600 rounded hover:bg-blue-200"
-                       >
-                         Edytuj
-                       </button>
-                       <button
-                         onClick={() => handleDelete(property._id)}
-                         className="px-4 py-2 bg-red-100 text-red-600 rounded hover:bg-red-200"
-                       >
-                         Usuń
-                       </button>
-                     </div>
-                   </div>
-                 </div>
-               </div>
-             ))}
-           </div>
-         </>
-       )}
-     </main>
-   </div>
- );
-}
+            {getFilteredAndSortedProperties().map((property, index) => (
+  <div key={property._id || index} className="bg-white rounded-lg shadow p-6">
+    <h3 className="text-lg font-semibold mb-2">{property.title}</h3>
+    <div className="space-y-2">
+      <p>Cena: {property.price ? `${property.price.toLocaleString()} PLN` : 'Brak danych'}</p>
+      <p>Powierzchnia: {property.area ? `${property.area} m²` : 'Brak danych'}</p>
+      {/* Dodaj wyświetlanie powierzchni działki */}
+      {property.plotArea && (
+        <p>Powierzchnia działki: {property.plotArea} m²</p>
+      )}
+      <p>Pokoje: {property.rooms || 'Brak danych'}</p>
+      <p>Lokalizacja: {property.location || 'Brak danych'}</p>
+      <p>Stan: <span className={`px-2 py-1 rounded-full text-sm font-medium ${
+        property.status === 'do zamieszkania' ? 'bg-green-100 text-green-800' :
+        property.status === 'do remontu' ? 'bg-red-100 text-red-800' :
+        property.status === 'w budowie' ? 'bg-yellow-100 text-yellow-800' :
+        'bg-blue-100 text-blue-800'
+      }`}>
+        {property.status}
+      </span></p>
+      {property.sourceUrl && (
+        <a 
+          href={property.sourceUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-blue-600 hover:text-blue-800 hover:underline"
+        >
+          Zobacz ogłoszenie →
+        </a>
+      )}
+      {property.description && (
+        <p className="text-gray-600">{property.description}</p>
+      )}
+      <div className="flex justify-between items-center mt-4">
+        <div className="space-x-2">
+          <button
+            onClick={() => handleRating(property._id, 'favorite')}
+            className={`p-2 rounded ${property.rating === 'favorite' ? 'bg-yellow-100 text-yellow-600' : 'bg-gray-100'}`}
+            title="Ulubione"
+          >
+            ⭐
+          </button>
+          <button
+            onClick={() => handleRating(property._id, 'interested')}
+            className={`p-2 rounded ${property.rating === 'interested' ? 'bg-green-100 text-green-600' : 'bg-gray-100'}`}
+            title="Zainteresowany"
+          >
+            👍
+          </button>
+          <button
+            onClick={() => handleRating(property._id, 'not_interested')}
+            className={`p-2 rounded ${property.rating === 'not_interested' ? 'bg-red-100 text-red-600' : 'bg-gray-100'}`}
+            title="Niezainteresowany"
+          >
+            👎
+          </button>
+        </div>
+        <div className="space-x-2">
+          <button
+            onClick={() => handleEditClick(property)}
+            className="px-4 py-2 bg-blue-100 text-blue-600 rounded hover:bg-blue-200"
+          >
+            Edytuj
+          </button>
+          <button
+            onClick={() => handleDelete(property._id)}
+            className="px-4 py-2 bg-red-100 text-red-600 rounded hover:bg-red-200"
+          >
+            Usuń
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+))}
 
 export default App;
  
