@@ -3,6 +3,8 @@ import PropertyForm from './components/PropertyForm';
 import PropertyEditForm from './components/PropertyEditForm';
 import Login from './components/Login';
 import Register from './components/Register';
+import PriceHistoryChart from './components/PriceHistoryChart';
+
 
 function App() {
  const [isFormVisible, setIsFormVisible] = useState(false);
@@ -453,7 +455,6 @@ const handleScrape = async () => {
     <div className="space-y-2">
       <p>Cena: {property.price ? `${property.price.toLocaleString()} PLN` : 'Brak danych'}</p>
       <p>Powierzchnia: {property.area ? `${property.area} m²` : 'Brak danych'}</p>
-      {/* Dodaj wyświetlanie powierzchni działki */}
       {property.plotArea && (
         <p>Powierzchnia działki: {property.plotArea} m²</p>
       )}
@@ -479,6 +480,24 @@ const handleScrape = async () => {
       )}
       {property.description && (
         <p className="text-gray-600">{property.description}</p>
+       <div className="mt-4 border-t pt-4">
+        <PriceHistoryChart propertyId={property._id} />
+      </div>
+
+      {property.sourceUrl && (
+        <a 
+          href={property.sourceUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-blue-600 hover:text-blue-800 hover:underline"
+        >
+          Zobacz ogłoszenie →
+        </a>
+      )}
+      {property.description && (
+        <p className="text-gray-600">{property.description}</p>
+      )}
+      <div className="flex justify-between items-center mt-4">
       )}
       <div className="flex justify-between items-center mt-4">
         <div className="space-x-2">
