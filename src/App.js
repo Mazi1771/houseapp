@@ -35,30 +35,41 @@ function App() {
 const handleEditClick = (property) => {
   setEditingProperty(property);
 };
- const fetchProperties = async () => {
-   try {
-     const token = localStorage.getItem('token');
-     if (!token) return;
+const fetchProperties = async () => {
+  try {
+    const token = localStorage.getItem('token');
+    console.log('Token przy pobieraniu właściwości:', token ? 'Jest' : 'Brak'); // debugging
 
-     const response = await fetch('https://houseapp-backend.onrender.com/api/properties', {
-       headers: {
-         'Authorization': `Bearer ${token}`
-       }
-     });
-     if (response.ok) {
-       const data = await response.json();
-       setProperties(data);
-     }
-   } catch (error) {
-     console.error('Błąd podczas pobierania danych:', error);
-   }
- };
+    const response = await fetch('https://houseapp-backend.onrender.com/api/properties', {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
 
- const handleLogin = (data) => {
-   setIsAuthenticated(true);
-   setUser(data.user);
-   fetchProperties();
- };
+    console.log('Status odpowiedzi properties:', response.status); // debugging
+    
+    if (response.ok) {
+      const data = await response.json();
+      setProperties(data);
+    } else {
+      const errorData = await response.json();
+      console.error('Błąd przy pobieraniu właściwości:', errorData); // debugging
+      if (response.status === 401) {
+        handleLogout();
+      }
+    }
+  } catch (error) {
+    console.error('Błąd podczas pobierania danych:', error);
+  }
+};
+
+const handleLogin = (data) => {
+  localStorage.setItem('token', data.token);
+  localStorage.setItem('user', JSON.stringify(data.user));
+  setIsAuthenticated(true);
+  setUser(data.user);
+  fetchProperties(); // Pobierz właściwości po zalogowaniu
+};
 
  const handleRegister = (data) => {
    setIsAuthenticated(true);
@@ -74,35 +85,41 @@ const handleEditClick = (property) => {
    setProperties([]);
  };
 
- const handleScrape = async () => {
-   if (!url) return;
-   setIsLoading(true);
-   try {
-     const token = localStorage.getItem('token');
-     const response = await fetch('https://houseapp-backend.onrender.com/api/scrape', {
-       method: 'POST',
-       headers: {
-         'Content-Type': 'application/json',
-         'Authorization': `Bearer ${token}`
-       },
-       body: JSON.stringify({ url })
-     });
-     
-     if (response.ok) {
-       const data = await response.json();
-       setProperties([data, ...properties]);
-       setUrl('');
-       setIsFormVisible(false);
-     } else {
-       const error = await response.json();
-       alert(error.message || 'Wystąpił błąd podczas pobierania danych');
-     }
-   } catch (error) {
-     alert('Wystąpił błąd podczas komunikacji z serwerem');
-   } finally {
-     setIsLoading(false);
-   }
- };
+const handleScrape = async () => {
+  if (!url) return;
+  setIsLoading(true);
+  try {
+    const token = localStorage.getItem('token');
+    console.log('Token:', token ? 'Jest' : 'Brak'); // debugging
+
+    const response = await fetch('https://houseapp-backend.onrender.com/api/scrape', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}` // Upewnij się, że token jest dodawany
+      },
+      body: JSON.stringify({ url })
+    });
+    
+    console.log('Status odpowiedzi:', response.status); // debugging
+    
+    if (response.ok) {
+      const data = await response.json();
+      setProperties([data, ...properties]);
+      setUrl('');
+      setIsFormVisible(false);
+    } else {
+      const errorData = await response.json();
+      console.error('Błąd odpowiedzi:', errorData); // debugging
+      alert(errorData.error || 'Wystąpił błąd podczas pobierania danych');
+    }
+  } catch (error) {
+    console.error('Błąd:', error); // debugging
+    alert('Wystąpił błąd podczas komunikacji z serwerem');
+  } finally {
+    setIsLoading(false);
+  }
+};
  const handleRating = async (propertyId, rating) => {
    try {
      const token = localStorage.getItem('token');
@@ -152,28 +169,33 @@ const handleEditClick = (property) => {
  };
 
  const handleSaveEdit = async (updatedData) => {
-   try {
-     const token = localStorage.getItem('token');
-     const response = await fetch(`https://houseapp-backend.onrender.com/api/properties/${editingProperty._id}`, {
-       method: 'PUT',
-       headers: {
-         'Content-Type': 'application/json',
-         'Authorization': `Bearer ${token}`
-       },
-       body: JSON.stringify(updatedData)
-     });
+  try {
+    const token = localStorage.getItem('token');
+    const response = await fetch(`https://houseapp-backend.onrender.com/api/properties/${editingProperty._id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify(updatedData)
+    });
 
-     if (response.ok) {
-       const updatedProperty = await response.json();
-       setProperties(properties.map(p => 
-         p._id === editingProperty._id ? updatedProperty : p
-       ));
-       setEditingProperty(null);
-     }
-   } catch (error) {
-     console.error('Błąd podczas aktualizacji:', error);
-   }
- };
+    if (response.ok) {
+      const updatedProperty = await response.json();
+      setProperties(properties.map(p => 
+        p._id === editingProperty._id ? updatedProperty : p
+      ));
+      setEditingProperty(null);
+    } else {
+      const errorData = await response.json();
+      console.error('Błąd podczas aktualizacji:', errorData);
+      alert(errorData.error || 'Wystąpił błąd podczas aktualizacji');
+    }
+  } catch (error) {
+    console.error('Błąd podczas aktualizacji:', error);
+    alert('Wystąpił błąd podczas aktualizacji');
+  }
+};
 
  const getFilteredAndSortedProperties = () => {
    let filtered = properties.filter(property => {
