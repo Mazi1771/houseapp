@@ -448,9 +448,9 @@ const handleScrape = async () => {
              </div>
            </div>
 
-           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-           {getFilteredAndSortedProperties().map((property, index) => (
-  <div key={property._id || index} className="bg-white rounded-lg shadow p-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+             {getFilteredAndSortedProperties().map((property, index) => (
+               <div key={property._id || index} className="bg-white rounded-lg shadow p-6">
     <div className="space-y-2">
       <h3 className="text-lg font-semibold mb-2">{property.title}</h3>
       
@@ -535,10 +535,15 @@ const handleScrape = async () => {
           >
             Usuń
           </button>
-        </div>
-      </div>
-    </div>
-  </div>
-))}
+         </div>
+             ))}
+           </div>
+         </>
+       )}
+     </main>
+   </div>
+ );
+}
+
 export default App;
  
