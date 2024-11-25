@@ -498,7 +498,7 @@ const handleScrape = async () => {
       )}
 
       {/* Przyciski akcji */}
-      <div className="flex justify-between items-center mt-4">
+     <div className="flex justify-between items-center mt-4">
         <div className="space-x-2">
           <button
             onClick={() => handleRating(property._id, 'favorite')}
@@ -535,15 +535,17 @@ const handleScrape = async () => {
           >
             Usuń
           </button>
-         </div>
-             ))}
-           </div>
-         </>
-       )}
-     </main>
-   </div>
- );
+        </div>
+      </div>
+    </div>
+  </div>
+))}
+          </div>
+        </>
+      )}
+    </main>
+  </div>
+);
 }
 
 export default App;
- 
