@@ -83,16 +83,6 @@ useEffect(() => {
 const handleEditClick = (property) => {
   setEditingProperty(property);
 };
-const fetchProperties = async () => {
-  try {
-    const token = localStorage.getItem('token');
-    console.log('Token przy pobieraniu właściwości:', token ? 'Jest' : 'Brak'); // debugging
-
-    const response = await fetch('https://houseapp-backend.onrender.com/api/properties', {
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
-    });
 
     console.log('Status odpowiedzi properties:', response.status); // debugging
     
@@ -329,12 +319,12 @@ const handleScrape = async () => {
    <div className="min-h-screen bg-gray-100">
      <header className="bg-white shadow">
        <div className="max-w-7xl mx-auto py-6 px-4">
-         <div className="flex justify-between items-center">
-           <h1 className="text-3xl font-bold text-gray-900">
-             HouseApp
-           </h1>
-    
-           <button
+        <div className="flex justify-between items-center">
+  <h1 className="text-3xl font-bold text-gray-900">
+    HouseApp
+  </h1>
+  <div className="flex items-center gap-4">
+    <button
       onClick={fetchProperties}
       className="p-2 rounded-md hover:bg-gray-100 transition-colors"
       title="Odśwież dane"
@@ -390,46 +380,25 @@ const handleScrape = async () => {
      </header>
 
      <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-      {isLoadingProperties ? (
-        <div className="flex justify-center items-center py-12">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
-            <p className="text-gray-600">Ładowanie nieruchomości...</p>
-          </div>
-        </div>
-       {isFormVisible ? (
-         <div className="bg-white p-6 rounded-lg shadow mb-6">
-           <h2 className="text-lg font-semibold mb-4">Dodaj nową nieruchomość</h2>
-           <div className="space-y-4">
-             <div>
-               <label className="block text-sm font-medium text-gray-700">Link do ogłoszenia Otodom</label>
-               <div className="flex gap-2 mt-1">
-                 <input
-                   type="url"
-                   className="flex-1 rounded-md border-gray-300 shadow-sm p-2 border"
-                   placeholder="https://www.otodom.pl/..."
-                   value={url}
-                   onChange={(e) => setUrl(e.target.value)}
-                 />
-                 <button
-                   onClick={handleScrape}
-                   className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
-                   disabled={isLoading}
-                 >
-                   {isLoading ? 'Pobieranie...' : 'Pobierz dane'}
-                 </button>
-               </div>
-             </div>
-           </div>
-         </div>
-       ) : editingProperty ? (
-         <PropertyEditForm 
-           property={editingProperty}
-           onSave={handleSaveEdit}
-           onCancel={() => setEditingProperty(null)}
-         />
-       ) : (
-         <>
+  {isLoadingProperties ? (
+    <div className="flex justify-center items-center py-12">
+      <div className="text-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
+        <p className="text-gray-600">Ładowanie nieruchomości...</p>
+      </div>
+    </div>
+  ) : isFormVisible ? (
+    <div className="bg-white p-6 rounded-lg shadow mb-6">
+      {/* ... reszta kodu formularza ... */}
+    </div>
+  ) : editingProperty ? (
+    <PropertyEditForm 
+      property={editingProperty}
+      onSave={handleSaveEdit}
+      onCancel={() => setEditingProperty(null)}
+    />
+  ) : (
+    <>
            <div className="bg-white p-4 rounded-lg shadow mb-4">
              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                <div>
