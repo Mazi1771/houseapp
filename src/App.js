@@ -449,41 +449,38 @@ const handleScrape = async () => {
            </div>
 
            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {getFilteredAndSortedProperties().map((property, index) => (
+           {getFilteredAndSortedProperties().map((property, index) => (
   <div key={property._id || index} className="bg-white rounded-lg shadow p-6">
-    <h3 className="text-lg font-semibold mb-2">{property.title}</h3>
     <div className="space-y-2">
-      <p>Cena: {property.price ? `${property.price.toLocaleString()} PLN` : 'Brak danych'}</p>
-      <p>Powierzchnia: {property.area ? `${property.area} m²` : 'Brak danych'}</p>
-      {property.plotArea && (
-        <p>Powierzchnia działki: {property.plotArea} m²</p>
-      )}
-      <p>Pokoje: {property.rooms || 'Brak danych'}</p>
-      <p>Lokalizacja: {property.location || 'Brak danych'}</p>
-      <p>Stan: <span className={`px-2 py-1 rounded-full text-sm font-medium ${
-        property.status === 'do zamieszkania' ? 'bg-green-100 text-green-800' :
-        property.status === 'do remontu' ? 'bg-red-100 text-red-800' :
-        property.status === 'w budowie' ? 'bg-yellow-100 text-yellow-800' :
-        'bg-blue-100 text-blue-800'
-      }`}>
-        {property.status}
-      </span></p>
-      {property.sourceUrl && (
-        <a 
-          href={property.sourceUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-blue-600 hover:text-blue-800 hover:underline"
-        >
-          Zobacz ogłoszenie →
-        </a>
-      )}
-      {property.description && (
-        <p className="text-gray-600">{property.description}</p>
-       <div className="mt-4 border-t pt-4">
+      <h3 className="text-lg font-semibold mb-2">{property.title}</h3>
+      
+      {/* Podstawowe informacje */}
+      <div className="space-y-2">
+        <p>Cena: {property.price ? `${property.price.toLocaleString()} PLN` : 'Brak danych'}</p>
+        <p>Powierzchnia: {property.area ? `${property.area} m²` : 'Brak danych'}</p>
+        {property.plotArea && (
+          <p>Powierzchnia działki: {property.plotArea} m²</p>
+        )}
+        <p>Pokoje: {property.rooms || 'Brak danych'}</p>
+        <p>Lokalizacja: {property.location || 'Brak danych'}</p>
+        <p>Stan: 
+          <span className={`px-2 py-1 rounded-full text-sm font-medium ${
+            property.status === 'do zamieszkania' ? 'bg-green-100 text-green-800' :
+            property.status === 'do remontu' ? 'bg-red-100 text-red-800' :
+            property.status === 'w budowie' ? 'bg-yellow-100 text-yellow-800' :
+            'bg-blue-100 text-blue-800'
+          }`}>
+            {property.status}
+          </span>
+        </p>
+      </div>
+
+      {/* Wykres cen */}
+      <div className="mt-4 border-t pt-4">
         <PriceHistoryChart propertyId={property._id} />
       </div>
 
+      {/* Link do ogłoszenia */}
       {property.sourceUrl && (
         <a 
           href={property.sourceUrl}
@@ -494,11 +491,13 @@ const handleScrape = async () => {
           Zobacz ogłoszenie →
         </a>
       )}
+
+      {/* Opis */}
       {property.description && (
         <p className="text-gray-600">{property.description}</p>
       )}
-      <div className="flex justify-between items-center mt-4">
-      )}
+
+      {/* Przyciski akcji */}
       <div className="flex justify-between items-center mt-4">
         <div className="space-x-2">
           <button
@@ -541,6 +540,5 @@ const handleScrape = async () => {
     </div>
   </div>
 ))}
-
 export default App;
  
