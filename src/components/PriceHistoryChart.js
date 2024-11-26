@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 const PriceHistoryChart = ({ propertyId }) => {
   const [priceHistory, setPriceHistory] = useState([]);
@@ -62,7 +62,8 @@ const PriceHistoryChart = ({ propertyId }) => {
   if (error) return <div className="p-4 text-red-600">Błąd: {error}</div>;
   if (priceHistory.length === 0) return null;
 
-  const displayedHistory = showFullHistory ? priceHistory : priceHistory.slice(0, 3);
+  // Zmiana z 3 na 2 ostatnie wpisy
+  const displayedHistory = showFullHistory ? priceHistory : priceHistory.slice(0, 2);
 
   return (
     <div className="space-y-4">
@@ -98,8 +99,8 @@ const PriceHistoryChart = ({ propertyId }) => {
         })}
       </div>
 
-      {/* Przycisk "Pokaż więcej" */}
-      {priceHistory.length > 3 && (
+      {/* Przycisk "Pokaż więcej" - zmiana warunku z 3 na 2 */}
+      {priceHistory.length > 2 && (
         <button
           onClick={() => setShowFullHistory(!showFullHistory)}
           className="w-full py-2 px-4 text-sm text-blue-600 hover:bg-blue-50 rounded transition-colors"
@@ -108,32 +109,61 @@ const PriceHistoryChart = ({ propertyId }) => {
         </button>
       )}
 
-      {/* Wykres */}
+      {/* Ulepszony wykres */}
       {showFullHistory && priceHistory.length > 1 && (
-        <div className="mt-4">
-          <LineChart
-            width={600}
-            height={300}
-            data={[...priceHistory].reverse()}
-            margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-          >
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="date" />
-            <YAxis />
-            <Tooltip 
-              formatter={(value) => formatPrice(value)}
-              labelFormatter={(label) => `Data: ${label}`}
-            />
-            <Legend />
-            <Line 
-              type="monotone" 
-              dataKey="price" 
-              stroke="#2563eb" 
-              name="Cena"
-              dot={{r: 4}}
-              activeDot={{r: 6}}
-            />
-          </LineChart>
+        <div className="mt-4 h-[300px] w-full">
+          <ResponsiveContainer>
+            <LineChart
+              data={[...priceHistory].reverse()}
+              margin={{ top: 10, right: 30, left: 10, bottom: 10 }}
+            >
+              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+              <XAxis 
+                dataKey="date" 
+                tick={{ fill: '#6b7280' }}
+                axisLine={{ stroke: '#d1d5db' }}
+              />
+              <YAxis 
+                tick={{ fill: '#6b7280' }}
+                axisLine={{ stroke: '#d1d5db' }}
+                tickFormatter={(value) => `${(value / 1000).toFixed(0)}k`}
+              />
+              <Tooltip 
+                formatter={(value) => formatPrice(value)}
+                labelFormatter={(label) => `Data: ${label}`}
+                contentStyle={{
+                  backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                  border: '1px solid #e5e7eb',
+                  borderRadius: '6px',
+                  boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                }}
+              />
+              <Legend 
+                verticalAlign="top" 
+                height={36}
+                formatter={(value) => <span className="text-gray-600">Historia cen</span>}
+              />
+              <Line 
+                type="monotone" 
+                dataKey="price" 
+                stroke="#2563eb"
+                strokeWidth={2}
+                name="Cena"
+                dot={{
+                  r: 4,
+                  fill: '#2563eb',
+                  stroke: '#ffffff',
+                  strokeWidth: 2
+                }}
+                activeDot={{
+                  r: 6,
+                  fill: '#2563eb',
+                  stroke: '#ffffff',
+                  strokeWidth: 2
+                }}
+              />
+            </LineChart>
+          </ResponsiveContainer>
         </div>
       )}
     </div>
