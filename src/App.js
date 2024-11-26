@@ -567,7 +567,7 @@ return (
                 </div>
               ))}
             </div>
-          </>
+          </div>
         )}
       </main>
     </div>
