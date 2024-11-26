@@ -380,11 +380,12 @@ return (
   </div>
 </header>
 
-{/* Sekcja filtrów - przeniesiona poza header */}
+{/* Sekcja filtrów */}
 {isFiltersVisible && (
   <div className="max-w-7xl mx-auto py-4 px-4 sm:px-6 lg:px-8">
     <div className="bg-white p-4 rounded-lg shadow mb-4 transition-all duration-300">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {/* Sekcja ceny */}
         <div>
           <h3 className="font-medium mb-2">Cena (PLN)</h3>
           <div className="flex gap-2">
@@ -405,6 +406,7 @@ return (
           </div>
         </div>
         
+        {/* Sekcja powierzchni */}
         <div>
           <h3 className="font-medium mb-2">Powierzchnia (m²)</h3>
           <div className="flex gap-2">
@@ -425,6 +427,7 @@ return (
           </div>
         </div>
 
+        {/* Sekcja stanu i oceny */}
         <div className="space-y-2">
           <div>
             <h3 className="font-medium mb-2">Stan</h3>
