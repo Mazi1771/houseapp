@@ -25,13 +25,22 @@ const PriceHistoryChart = ({ propertyId }) => {
         }
 
         const data = await response.json();
+        
+        // Dodajemy console.log do sprawdzenia surowych danych
+        console.log('Surowe dane historii:', data);
+
         const formattedData = data
           .map(entry => ({
             date: new Date(entry.date).toLocaleDateString(),
             price: entry.price,
-            fullDate: new Date(entry.date)
+            fullDate: new Date(entry.date),
+            // Dodajemy oryginalną datę do debugowania
+            originalDate: entry.date
           }))
           .sort((a, b) => b.fullDate - a.fullDate); // Sortuj od najnowszych
+          
+        // Dodajemy console.log do sprawdzenia posortowanych danych
+        console.log('Posortowane dane:', formattedData);
 
         setPriceHistory(formattedData);
       } catch (error) {
@@ -62,7 +71,6 @@ const PriceHistoryChart = ({ propertyId }) => {
   if (error) return <div className="p-4 text-red-600">Błąd: {error}</div>;
   if (priceHistory.length === 0) return null;
 
-  // Zmiana z 3 na 2 ostatnie wpisy
   const displayedHistory = showFullHistory ? priceHistory : priceHistory.slice(0, 2);
 
   return (
@@ -73,9 +81,17 @@ const PriceHistoryChart = ({ propertyId }) => {
       <div className="space-y-2">
         {displayedHistory.map((entry, index) => {
           const previousEntry = priceHistory[index + 1];
+          
+          // Dodajemy console.log do debugowania każdej zmiany ceny
+          console.log('Aktualna cena:', entry.price, 'Data:', entry.originalDate);
+          console.log('Poprzednia cena:', previousEntry?.price, 'Data:', previousEntry?.originalDate);
+          
           const priceChange = previousEntry ? entry.price - previousEntry.price : null;
           const percentageChange = getPercentageChange(entry.price, previousEntry?.price);
           
+          // Dodajemy console.log do sprawdzenia obliczonej różnicy
+          console.log('Obliczona zmiana:', priceChange);
+
           return (
             <div key={entry.date} className="flex items-center justify-between p-2 bg-gray-50 rounded">
               <div className="flex flex-col">
@@ -99,7 +115,7 @@ const PriceHistoryChart = ({ propertyId }) => {
         })}
       </div>
 
-      {/* Przycisk "Pokaż więcej" - zmiana warunku z 3 na 2 */}
+      {/* Reszta kodu pozostaje bez zmian */}
       {priceHistory.length > 2 && (
         <button
           onClick={() => setShowFullHistory(!showFullHistory)}
@@ -109,7 +125,6 @@ const PriceHistoryChart = ({ propertyId }) => {
         </button>
       )}
 
-      {/* Ulepszony wykres */}
       {showFullHistory && priceHistory.length > 1 && (
         <div className="mt-4 h-[300px] w-full">
           <ResponsiveContainer>
