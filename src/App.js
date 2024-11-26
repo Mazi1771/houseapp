@@ -104,7 +104,9 @@ function App() {
     setIsAuthenticated(false);
     setUser(null);
     setProperties([]);
-  };const handleScrape = async () => {
+  };
+
+  const handleScrape = async () => {
     if (!url) return;
     setIsLoading(true);
     try {
@@ -255,7 +257,47 @@ function App() {
   };
 
   if (!isAuthenticated) {
-   return (
+    return (
+      <div className="min-h-screen bg-gray-100">
+        <div className="max-w-7xl mx-auto py-6 px-4">
+          <div className="text-center mb-8">
+            <h1 className="text-3xl font-bold text-gray-900">
+              HouseApp
+            </h1>
+          </div>
+          {authMode === 'login' ? (
+            <div>
+              <Login onLogin={handleLogin} />
+              <p className="text-center mt-4">
+                Nie masz jeszcze konta?{' '}
+                <button
+                  onClick={() => setAuthMode('register')}
+                  className="text-blue-600 hover:text-blue-800"
+                >
+                  Zarejestruj się
+                </button>
+              </p>
+            </div>
+          ) : (
+            <div>
+              <Register onRegister={handleRegister} />
+              <p className="text-center mt-4">
+                Masz już konto?{' '}
+                <button
+                  onClick={() => setAuthMode('login')}
+                  className="text-blue-600 hover:text-blue-800"
+                >
+                  Zaloguj się
+                </button>
+              </p>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  return (
     <div className="min-h-screen bg-gray-100">
       <header className="bg-white shadow">
         <div className="max-w-7xl mx-auto py-6 px-4">
@@ -355,7 +397,7 @@ function App() {
           <PropertyEditForm
             property={editingProperty}
             onSave={handleSaveEdit}
-            onCancel={() => setEditingProperty(null)}
+onCancel={() => setEditingProperty(null)}
           />
         )}
 
@@ -553,5 +595,6 @@ function App() {
       </main>
     </div>
   );
+}
 
 export default App;
