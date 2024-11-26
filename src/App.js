@@ -255,229 +255,210 @@ function App() {
   };
 
   if (!isAuthenticated) {
-    return (
-      <div className="min-h-screen bg-gray-100">
+   return (
+    <div className="min-h-screen bg-gray-100">
+      <header className="bg-white shadow">
         <div className="max-w-7xl mx-auto py-6 px-4">
-          <div className="text-center mb-8">
+          <div className="flex justify-between items-center">
             <h1 className="text-3xl font-bold text-gray-900">
               HouseApp
             </h1>
-          </div>
-          {authMode === 'login' ? (
-            <div>
-              <Login onLogin={handleLogin} />
-              <p className="text-center mt-4">
-                Nie masz jeszcze konta?{' '}
-                <button
-                  onClick={() => setAuthMode('register')}
-                  className="text-blue-600 hover:text-blue-800"
+            <div className="flex items-center gap-4">
+              <button
+                onClick={fetchProperties}
+                className="p-2 rounded-md hover:bg-gray-100 transition-colors"
+                title="Odśwież dane"
+              >
+                <svg 
+                  xmlns="http://www.w3.org/2000/svg" 
+                  className="h-5 w-5" 
+                  fill="none" 
+                  viewBox="0 0 24 24" 
+                  stroke="currentColor"
                 >
-                  Zarejestruj się
-                </button>
-              </p>
+                  <path 
+                    strokeLinecap="round" 
+                    strokeLinejoin="round" 
+                    strokeWidth={2} 
+                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" 
+                  />
+                </svg>
+              </button>
+              <span className="text-gray-600">
+                {user?.name || user?.email}
+              </span>
+              <button
+                onClick={handleLogout}
+                className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
+              >
+                Wyloguj
+              </button>
             </div>
-          ) : (
-            <div>
-              <Register onRegister={handleRegister} />
-              <p className="text-center mt-4">
-                Masz już konto?{' '}
-                <button
-                  onClick={() => setAuthMode('login')}
-                  className="text-blue-600 hover:text-blue-800"
+          </div>
+          <div className="flex justify-between items-center mt-4">
+            <div className="flex items-center gap-4">
+              <select
+                onChange={(e) => setSortBy(e.target.value)}
+                value={sortBy || ''}
+                className="rounded-md border-gray-300 shadow-sm p-2"
+              >
+                <option value="">Sortuj według...</option>
+                <option value="price-asc">Cena: rosnąco</option>
+                <option value="price-desc">Cena: malejąco</option>
+                <option value="area-asc">Powierzchnia: rosnąco</option>
+                <option value="area-desc">Powierzchnia: malejąco</option>
+                <option value="date-asc">Data: najstarsze</option>
+                <option value="date-desc">Data: najnowsze</option>
+              </select>
+              <button
+                onClick={() => setIsFiltersVisible(!isFiltersVisible)}
+                className="px-4 py-2 bg-gray-100 text-gray-600 rounded hover:bg-gray-200 flex items-center gap-2"
+              >
+                <svg 
+                  xmlns="http://www.w3.org/2000/svg" 
+                  className="h-5 w-5" 
+                  fill="none" 
+                  viewBox="0 0 24 24" 
+                  stroke="currentColor"
                 >
-                  Zaloguj się
-                </button>
-              </p>
+                  <path 
+                    strokeLinecap="round" 
+                    strokeLinejoin="round" 
+                    strokeWidth={2} 
+                    d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" 
+                  />
+                </svg>
+                {isFiltersVisible ? 'Ukryj filtry' : 'Pokaż filtry'}
+              </button>
             </div>
-          )}
-        </div>
-      </div>
-    );
-  }
-return (
-    <div className="min-h-screen bg-gray-100">
-     <header className="bg-white shadow">
-  <div className="max-w-7xl mx-auto py-6 px-4">
-    <div className="flex justify-between items-center">
-      <h1 className="text-3xl font-bold text-gray-900">
-        HouseApp
-      </h1>
-      <div className="flex items-center gap-4">
-        <button
-          onClick={fetchProperties}
-          className="p-2 rounded-md hover:bg-gray-100 transition-colors"
-          title="Odśwież dane"
-        >
-          <svg 
-            xmlns="http://www.w3.org/2000/svg" 
-            className="h-5 w-5" 
-            fill="none" 
-            viewBox="0 0 24 24" 
-            stroke="currentColor"
-          >
-            <path 
-              strokeLinecap="round" 
-              strokeLinejoin="round" 
-              strokeWidth={2} 
-              d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" 
-            />
-          </svg>
-        </button>
-        <span className="text-gray-600">
-          {user?.name || user?.email}
-        </span>
-        <button
-          onClick={handleLogout}
-          className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
-        >
-          Wyloguj
-        </button>
-      </div>
-    </div>
-    <div className="flex justify-between items-center mt-4">
-      <div className="flex items-center gap-4">
-        <select
-          onChange={(e) => setSortBy(e.target.value)}
-          value={sortBy || ''}
-          className="rounded-md border-gray-300 shadow-sm p-2"
-        >
-          <option value="">Sortuj według...</option>
-          <option value="price-asc">Cena: rosnąco</option>
-          <option value="price-desc">Cena: malejąco</option>
-          <option value="area-asc">Powierzchnia: rosnąco</option>
-          <option value="area-desc">Powierzchnia: malejąco</option>
-          <option value="date-asc">Data: najstarsze</option>
-          <option value="date-desc">Data: najnowsze</option>
-        </select>
-        <button
-          onClick={() => setIsFiltersVisible(!isFiltersVisible)}
-          className="px-4 py-2 bg-gray-100 text-gray-600 rounded hover:bg-gray-200 flex items-center gap-2"
-        >
-          <svg 
-            xmlns="http://www.w3.org/2000/svg" 
-            className="h-5 w-5" 
-            fill="none" 
-            viewBox="0 0 24 24" 
-            stroke="currentColor"
-          >
-            <path 
-              strokeLinecap="round" 
-              strokeLinejoin="round" 
-              strokeWidth={2} 
-              d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" 
-            />
-          </svg>
-          {isFiltersVisible ? 'Ukryj filtry' : 'Pokaż filtry'}
-        </button>
-      </div>
-      <button
-        onClick={() => setIsFormVisible(!isFormVisible)}
-        className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-      >
-        {isFormVisible ? 'Zamknij formularz' : 'Dodaj nieruchomość'}
-      </button>
-    </div>
-  </div>
-</header>
-
-{/* Sekcja filtrów */}
-{isFiltersVisible && (
-  <div className="max-w-7xl mx-auto py-4 px-4 sm:px-6 lg:px-8">
-    <div className="bg-white p-4 rounded-lg shadow mb-4 transition-all duration-300">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {/* Sekcja ceny */}
-        <div>
-          <h3 className="font-medium mb-2">Cena (PLN)</h3>
-          <div className="flex gap-2">
-            <input
-              type="number"
-              placeholder="Od"
-              value={filters.priceMin}
-              onChange={(e) => setFilters({...filters, priceMin: e.target.value})}
-              className="w-full rounded border p-2"
-            />
-            <input
-              type="number"
-              placeholder="Do"
-              value={filters.priceMax}
-              onChange={(e) => setFilters({...filters, priceMax: e.target.value})}
-              className="w-full rounded border p-2"
-            />
-          </div>
-        </div>
-        
-        {/* Sekcja powierzchni */}
-        <div>
-          <h3 className="font-medium mb-2">Powierzchnia (m²)</h3>
-          <div className="flex gap-2">
-            <input
-              type="number"
-              placeholder="Od"
-              value={filters.areaMin}
-              onChange={(e) => setFilters({...filters, areaMin: e.target.value})}
-              className="w-full rounded border p-2"
-            />
-            <input
-              type="number"
-              placeholder="Do"
-              value={filters.areaMax}
-              onChange={(e) => setFilters({...filters, areaMax: e.target.value})}
-              className="w-full rounded border p-2"
-            />
-          </div>
-        </div>
-
-        {/* Sekcja stanu i oceny */}
-        <div className="space-y-2">
-          <div>
-            <h3 className="font-medium mb-2">Stan</h3>
-            <select
-              value={filters.status}
-              onChange={(e) => setFilters({...filters, status: e.target.value})}
-              className="w-full rounded border p-2"
+            <button
+              onClick={() => setIsFormVisible(!isFormVisible)}
+              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
             >
-              <option value="">Wszystkie</option>
-              <option value="do zamieszkania">Do zamieszkania</option>
-              <option value="do remontu">Do remontu</option>
-              <option value="w budowie">W budowie</option>
-              <option value="stan deweloperski">Stan deweloperski</option>
-            </select>
-          </div>
-          
-          <div>
-            <h3 className="font-medium mb-2">Ocena</h3>
-            <select
-              value={filters.rating}
-              onChange={(e) => setFilters({...filters, rating: e.target.value})}
-              className="w-full rounded border p-2"
-            >
-              <option value="">Wszystkie</option>
-              <option value="favorite">⭐ Ulubione</option>
-              <option value="interested">👍 Zainteresowany</option>
-              <option value="not_interested">👎 Niezainteresowany</option>
-            </select>
+              {isFormVisible ? 'Zamknij formularz' : 'Dodaj nieruchomość'}
+            </button>
           </div>
         </div>
-      </div>
+      </header>
 
-      <div className="mt-4 flex justify-end">
-        <button
-          onClick={() => setFilters({
-            priceMin: '',
-            priceMax: '',
-            areaMin: '',
-            areaMax: '',
-            status: '',
-            rating: '',
-          })}
-          className="px-4 py-2 bg-gray-100 text-gray-600 rounded hover:bg-gray-200"
-        >
-          Wyczyść filtry
-        </button>
-      </div>
-    </div>
-  </div>
-)}
+      <main className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+        {isFormVisible && (
+          <PropertyForm
+            onSubmit={handleScrape}
+            isLoading={isLoading}
+            url={url}
+            setUrl={setUrl}
+          />
+        )}
+
+        {editingProperty && (
+          <PropertyEditForm
+            property={editingProperty}
+            onSave={handleSaveEdit}
+            onCancel={() => setEditingProperty(null)}
+          />
+        )}
+
+        {isLoadingProperties ? (
+          <div className="text-center py-4">
+            <p>Ładowanie nieruchomości...</p>
+          </div>
+        ) : (
+          <div>
+            {isFiltersVisible && (
+              <div className="max-w-7xl mx-auto py-4 px-4 sm:px-6 lg:px-8">
+                <div className="bg-white p-4 rounded-lg shadow mb-4 transition-all duration-300">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <h3 className="font-medium mb-2">Cena (PLN)</h3>
+                      <div className="flex gap-2">
+                        <input
+                          type="number"
+                          placeholder="Od"
+                          value={filters.priceMin}
+                          onChange={(e) => setFilters({...filters, priceMin: e.target.value})}
+                          className="w-full rounded border p-2"
+                        />
+                        <input
+                          type="number"
+                          placeholder="Do"
+                          value={filters.priceMax}
+                          onChange={(e) => setFilters({...filters, priceMax: e.target.value})}
+                          className="w-full rounded border p-2"
+                        />
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <h3 className="font-medium mb-2">Powierzchnia (m²)</h3>
+                      <div className="flex gap-2">
+                        <input
+                          type="number"
+                          placeholder="Od"
+                          value={filters.areaMin}
+                          onChange={(e) => setFilters({...filters, areaMin: e.target.value})}
+                          className="w-full rounded border p-2"
+                        />
+                        <input
+                          type="number"
+                          placeholder="Do"
+                          value={filters.areaMax}
+                          onChange={(e) => setFilters({...filters, areaMax: e.target.value})}
+                          className="w-full rounded border p-2"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <div>
+                        <h3 className="font-medium mb-2">Stan</h3>
+                        <select
+                          value={filters.status}
+                          onChange={(e) => setFilters({...filters, status: e.target.value})}
+                          className="w-full rounded border p-2"
+                        >
+                          <option value="">Wszystkie</option>
+                          <option value="do zamieszkania">Do zamieszkania</option>
+                          <option value="do remontu">Do remontu</option>
+                          <option value="w budowie">W budowie</option>
+                          <option value="stan deweloperski">Stan deweloperski</option>
+                        </select>
+                      </div>
+                      
+                      <div>
+                        <h3 className="font-medium mb-2">Ocena</h3>
+                        <select
+                          value={filters.rating}
+                          onChange={(e) => setFilters({...filters, rating: e.target.value})}
+                          className="w-full rounded border p-2"
+                        >
+                          <option value="">Wszystkie</option>
+                          <option value="favorite">⭐ Ulubione</option>
+                          <option value="interested">👍 Zainteresowany</option>
+                          <option value="not_interested">👎 Niezainteresowany</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="mt-4 flex justify-end">
+                    <button
+                      onClick={() => setFilters({
+                        priceMin: '',
+                        priceMax: '',
+                        areaMin: '',
+                        areaMax: '',
+                        status: '',
+                        rating: '',
+                      })}
+                      className="px-4 py-2 bg-gray-100 text-gray-600 rounded hover:bg-gray-200"
+                    >
+                      Wyczyść filtry
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {getFilteredAndSortedProperties().map((property, index) => (
@@ -572,6 +553,5 @@ return (
       </main>
     </div>
   );
-}
 
 export default App;
