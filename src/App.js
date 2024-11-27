@@ -820,8 +820,7 @@ return (
             </div>
           </div>
         )}
-      </div>
-    </main>
+   </main>
   </div>
 );
 }
