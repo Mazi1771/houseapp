@@ -19,6 +19,7 @@ function App() {
   const [expandedProperty, setExpandedProperty] = useState(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [refreshProgress, setRefreshProgress] = useState(null);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [filters, setFilters] = useState({
     priceMin: '',
     priceMax: '',
@@ -355,134 +356,160 @@ function App() {
     );
   }
 // ===== SEGMENT 7: RENDER - GŁÓWNY WIDOK APLIKACJI =====
-  return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Sticky header */}
-      <header className="fixed top-0 w-full bg-white border-b border-gray-200 z-50">
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="flex items-center justify-between h-16">
-            {/* Logo i tytuł */}
-            <div className="flex items-center gap-3">
-              <Home className="h-8 w-8 text-blue-600" />
-              <span className="text-xl font-bold bg-gradient-to-r from-blue-600 to-blue-400 bg-clip-text text-transparent">
-                HouseApp
-              </span>
-            </div>
-            
-            {/* Desktop navigation */}
-            <nav className="hidden md:flex items-center gap-4">
-              <button
-                onClick={fetchProperties}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                title="Odśwież dane"
-              >
-                <Star className="h-5 w-5 text-gray-600" />
-              </button>
-              {isRefreshing ? (
-                <span className="text-sm text-gray-600">
-                  Aktualizacja...
-                </span>
-              ) : (
-                <button
-                  onClick={handleRefreshAll}
-                  className="px-4 py-2 text-sm bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors"
-                >
-                  Aktualizuj wszystkie
-                </button>
-              )}
-              <div className="h-6 w-px bg-gray-200" />
-              <button className="flex items-center gap-2 px-3 py-2 hover:bg-gray-100 rounded-lg transition-colors">
-                <User className="h-5 w-5 text-gray-600" />
-                <span className="text-sm text-gray-600">
-                  {user?.name || user?.email}
-                </span>
-              </button>
-              <button
-                onClick={handleLogout}
-                className="flex items-center gap-2 text-red-600 px-3 py-2 hover:bg-red-50 rounded-lg transition-colors"
-              >
-                <LogOut className="h-5 w-5" />
-                <span className="text-sm">Wyloguj</span>
-              </button>
-            </nav>
-            
-            {/* Mobile menu button */}
-            <button className="md:hidden p-2 hover:bg-gray-100 rounded-lg transition-colors">
-              <Menu className="h-6 w-6 text-gray-600" />
-            </button>
+return (
+  <div className="min-h-screen bg-gray-50">
+    {/* Sticky header */}
+    <header className="fixed top-0 w-full bg-white border-b border-gray-200 z-50">
+      <div className="max-w-7xl mx-auto px-4">
+        <div className="flex items-center justify-between h-16">
+          {/* Logo i tytuł */}
+          <div className="flex items-center gap-3">
+            <Home className="h-8 w-8 text-blue-600" />
+            <span className="text-xl font-bold bg-gradient-to-r from-blue-600 to-blue-400 bg-clip-text text-transparent">
+              HouseApp
+            </span>
           </div>
-        </div>
-      </header>
-
-      {/* Search and controls */}
-      <div className="fixed top-16 w-full bg-white border-b border-gray-200 z-40">
-        <div className="max-w-7xl mx-auto px-4 py-4">
-          <div className="flex flex-col md:flex-row gap-4">
-            {/* Search and basic filters */}
-            <div className="flex-grow flex items-center gap-4">
-              <div className="relative flex-grow">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-                <input 
-                  type="text"
-                  placeholder="Szukaj nieruchomości..."
-                  className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all"
-                />
-              </div>
-              <button
-                onClick={() => setIsFiltersVisible(!isFiltersVisible)}
-                className="px-4 py-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 flex items-center gap-2"
-              >
-                <Settings className="h-5 w-5" />
-                {isFiltersVisible ? 'Ukryj filtry' : 'Pokaż filtry'}
-              </button>
-            </div>
-            
-            {/* Add property button */}
+          
+          {/* Desktop navigation */}
+          <nav className="hidden md:flex items-center gap-4">
             <button
-              onClick={() => setIsFormVisible(!isFormVisible)}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center"
+              onClick={fetchProperties}
+              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              title="Odśwież dane"
             >
-              {isFormVisible ? 'Zamknij formularz' : 'Dodaj nieruchomość'}
+              <RefreshCw className="h-5 w-5 text-gray-600" />
             </button>
-          </div>
-
-          {/* Extended filters */}
-          {isFiltersVisible && (
-            <div className="mt-4 pb-2">
-              {/* Tu zostawiamy istniejący kod filtrów */}
-            </div>
-          )}
+            {isRefreshing ? (
+              <span className="text-sm text-gray-600">
+                Aktualizacja...
+              </span>
+            ) : (
+              <button
+                onClick={handleRefreshAll}
+                className="px-4 py-2 text-sm bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors"
+              >
+                Aktualizuj wszystkie
+              </button>
+            )}
+            <div className="h-6 w-px bg-gray-200" />
+            <button className="flex items-center gap-2 px-3 py-2 hover:bg-gray-100 rounded-lg transition-colors">
+              <User className="h-5 w-5 text-gray-600" />
+              <span className="text-sm text-gray-600">
+                {user?.name || user?.email}
+              </span>
+            </button>
+            <button
+              onClick={handleLogout}
+              className="flex items-center gap-2 text-red-600 px-3 py-2 hover:bg-red-50 rounded-lg transition-colors"
+            >
+              <LogOut className="h-5 w-5" />
+              <span className="text-sm">Wyloguj</span>
+            </button>
+          </nav>
+          
+          {/* Mobile menu button */}
+          <button 
+            className="md:hidden p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          >
+            <Menu className="h-6 w-6 text-gray-600" />
+          </button>
         </div>
       </div>
+    </header>
 
-      {/* Main content */}
-      <main className="pt-32 pb-6 px-4">
-        <div className="max-w-7xl mx-auto">
-          {isFormVisible && (
-            <PropertyForm
-              onSubmit={handleScrape}
-              isLoading={isLoading}
-              url={url}
-              setUrl={setUrl}
-            />
-          )}
+    {/* Mobile menu */}
+    {isMobileMenuOpen && (
+      <div className="md:hidden fixed top-16 inset-x-0 bg-white border-b border-gray-200 z-40">
+        <div className="p-4 space-y-4">
+          <button
+            onClick={fetchProperties}
+            className="w-full flex items-center gap-2 px-4 py-2 hover:bg-gray-100 rounded-lg"
+          >
+            <RefreshCw className="h-5 w-5 text-gray-600" />
+            <span>Odśwież dane</span>
+          </button>
+          <button
+            onClick={handleRefreshAll}
+            disabled={isRefreshing}
+            className="w-full flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg"
+          >
+            <RefreshCw className="h-5 w-5" />
+            <span>Aktualizuj wszystkie</span>
+          </button>
+          <button
+            onClick={handleLogout}
+            className="w-full flex items-center gap-2 px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg"
+          >
+            <LogOut className="h-5 w-5" />
+            <span>Wyloguj</span>
+          </button>
+        </div>
+      </div>
+    )}
 
-          {editingProperty && (
-            <div ref={editFormRef}>
-              <PropertyEditForm
-                property={editingProperty}
-                onSave={handleSaveEdit}
-                onCancel={() => setEditingProperty(null)}
+    {/* Search and controls */}
+    <div className="fixed top-16 w-full bg-white border-b border-gray-200 z-40">
+      <div className="max-w-7xl mx-auto px-4 py-4">
+        <div className="flex flex-col md:flex-row gap-4">
+          {/* Search and basic filters */}
+          <div className="flex-grow flex items-center gap-4">
+            <div className="relative flex-grow">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+              <input 
+                type="text"
+                placeholder="Szukaj nieruchomości..."
+                className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all"
               />
             </div>
-          )}
+            <button
+              onClick={() => setIsFiltersVisible(!isFiltersVisible)}
+              className="px-4 py-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 flex items-center gap-2"
+            >
+              <Settings className="h-5 w-5" />
+              {isFiltersVisible ? 'Ukryj filtry' : 'Pokaż filtry'}
+            </button>
+          </div>
+          
+          {/* Add property button */}
+          <button
+            onClick={() => setIsFormVisible(!isFormVisible)}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center"
+          >
+            {isFormVisible ? 'Zamknij formularz' : 'Dodaj nieruchomość'}
+          </button>
+        </div>
+      </div>
+    </div>
 
-          {isLoadingProperties ? (
-            <div className="text-center py-4">
-              <p>Ładowanie nieruchomości...</p>
-            </div>
-          ) : (
-            <div className="space-y-6">
+    {/* Main content */}
+    <main className="pt-32 pb-6 px-4">
+      <div className="max-w-7xl mx-auto">
+        {isFormVisible && (
+          <PropertyForm
+            onSubmit={handleScrape}
+            isLoading={isLoading}
+            url={url}
+            setUrl={setUrl}
+          />
+        )}
+
+        {editingProperty && (
+          <div ref={editFormRef}>
+            <PropertyEditForm
+              property={editingProperty}
+              onSave={handleSaveEdit}
+              onCancel={() => setEditingProperty(null)}
+            />
+          </div>
+        )}
+
+        {isLoadingProperties ? (
+          <div className="text-center py-4">
+            <p>Ładowanie nieruchomości...</p>
+          </div>
+        ) : (
+          <div className="space-y-6">
             {isRefreshing && (
               <div className="bg-blue-50 text-blue-600 p-4 rounded-md">
                 Trwa aktualizacja nieruchomości...
