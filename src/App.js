@@ -358,7 +358,7 @@ if (!isAuthenticated) {
 
 // ===== SEGMENT 7: RENDER - GŁÓWNY WIDOK APLIKACJI =====
 return (
-  <div className="min-h-screen bg-gray-50 flex flex-col">
+  <div className="min-h-screen bg-gray-50">
     {/* header */}
     <header className="fixed top-0 left-0 right-0 bg-white border-b border-gray-200 z-50">
       <div className="max-w-7xl mx-auto px-4">
@@ -457,51 +457,53 @@ return (
    
 
     {/* Search and controls */}
-  <div className="fixed top-16 left-0 right-0 bg-white border-b border-gray-200 z-40">
-      <div className="max-w-7xl mx-auto px-4 py-4">
+  <div className="fixed top-16 left-0 right-0 bg-white shadow-sm z-40">
+    <div className="max-w-7xl mx-auto p-4">
     {/* Dodajemy lepszy układ dla mobile */}
     <div className="flex flex-col gap-4">
       {/* Search input i filtry w jednej linii */}
-      <div className="flex gap-2 items-center">
-        <div className="relative flex-grow">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-          <input 
-            type="text"
-            placeholder="Szukaj nieruchomości..."
-            className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all"
-          />
-        </div>
-      </div>
+               <div className="relative flex-grow">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+            <input 
+              type="text"
+              placeholder="Szukaj nieruchomości..."
+              className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all"
+            />
+          </div>
+
       
       {/* Przyciski w drugiej linii */}
       <div className="flex gap-2 justify-between">
-        <button
-          onClick={() => setIsFiltersVisible(!isFiltersVisible)}
-          className="px-4 py-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 flex items-center gap-2 flex-grow"
-        >
-          <Settings className="h-5 w-5" />
-          {isFiltersVisible ? 'Ukryj filtry' : 'Pokaż filtry'}
-        </button>
+       <button
+            onClick={() => setIsFiltersVisible(!isFiltersVisible)}
+            className="px-4 py-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 flex items-center gap-2 justify-center"
+          >
+            <Settings className="h-5 w-5" />
+            {isFiltersVisible ? 'Ukryj filtry' : 'Pokaż filtry'}
+          </button>
+        </div>
         <button
           onClick={() => setIsFormVisible(!isFormVisible)}
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center"
         >
-          {isFormVisible ? 'Zamknij' : 'Dodaj'}
+          {isFormVisible ? 'Zamknij formularz' : 'Dodaj nieruchomość'}
         </button>
       </div>
     </div>
   </div>
-</div>
 
     {/* Main content */}
-     <main className="flex-1 max-w-7xl mx-auto px-4 w-full pt-16">
+     <main className="pt-36"> {/* 16px (header) + 84px (search bar) + extra space */}
+    <div className="max-w-7xl mx-auto px-4">
       {isFormVisible && (
+        <div className="bg-white rounded-lg shadow mb-4">
         <PropertyForm
           onSubmit={handleScrape}
           isLoading={isLoading}
           url={url}
           setUrl={setUrl}
         />
+     </div>
       )}
 
       {editingProperty && (
