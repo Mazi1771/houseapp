@@ -358,9 +358,9 @@ if (!isAuthenticated) {
 
 // ===== SEGMENT 7: RENDER - GŁÓWNY WIDOK APLIKACJI =====
 return (
-   <div className="min-h-screen bg-gray-50">
-    {/* Sticky header */}
-    <header className="fixed top-0 w-full bg-white border-b border-gray-200 z-50">
+  <div className="min-h-screen bg-gray-50 flex flex-col">
+    {/* header */}
+    <header className="fixed top-0 left-0 right-0 bg-white border-b border-gray-200 z-50">
       <div className="max-w-7xl mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           {/* Logo i tytuł */}
@@ -421,8 +421,12 @@ return (
 
     {/* Mobile menu */}
     {isMobileMenuOpen && (
-  <div className="md:hidden fixed top-16 inset-x-0 bg-white border-b border-gray-200 z-51 shadow-lg">
-    <div className="p-4 space-y-4">
+      <>
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 z-40"
+          onClick={() => setIsMobileMenuOpen(false)}
+        />
+        <div className="md:hidden fixed top-16 left-0 right-0 bg-white border-b border-gray-200 z-50 shadow-lg">
           <button
             onClick={fetchProperties}
             className="w-full flex items-center gap-2 px-4 py-2 hover:bg-gray-100 rounded-lg"
@@ -450,8 +454,8 @@ return (
     )}
 
     {/* Search and controls */}
-   <div className="fixed top-16 w-full bg-white border-b border-gray-200 z-40">
-  <div className="max-w-7xl mx-auto px-4 py-4">
+  <div className="fixed top-16 left-0 right-0 bg-white border-b border-gray-200 z-40">
+      <div className="max-w-7xl mx-auto px-4 py-4">
     {/* Dodajemy lepszy układ dla mobile */}
     <div className="flex flex-col gap-4">
       {/* Search input i filtry w jednej linii */}
@@ -487,33 +491,32 @@ return (
 </div>
 
     {/* Main content */}
-    <main className="pt-40 md:pt-32 pb-6 px-4">
-      <div className="max-w-7xl mx-auto">
-        {isFormVisible && (
-          <PropertyForm
-            onSubmit={handleScrape}
-            isLoading={isLoading}
-            url={url}
-            setUrl={setUrl}
+     <main className="flex-1 max-w-7xl mx-auto px-4 w-full pt-16">
+      {isFormVisible && (
+        <PropertyForm
+          onSubmit={handleScrape}
+          isLoading={isLoading}
+          url={url}
+          setUrl={setUrl}
+        />
+      )}
+
+      {editingProperty && (
+        <div ref={editFormRef}>
+          <PropertyEditForm
+            property={editingProperty}
+            onSave={handleSaveEdit}
+            onCancel={() => setEditingProperty(null)}
           />
-        )}
+        </div>
+      )}
 
-        {editingProperty && (
-          <div ref={editFormRef}>
-            <PropertyEditForm
-              property={editingProperty}
-              onSave={handleSaveEdit}
-              onCancel={() => setEditingProperty(null)}
-            />
-          </div>
-        )}
-
-        {isLoadingProperties ? (
-          <div className="text-center py-4">
-            <p>Ładowanie nieruchomości...</p>
-          </div>
-        ) : (
-          <div className="space-y-6">
+         {isLoadingProperties ? (
+        <div className="text-center py-4">
+          <p>Ładowanie nieruchomości...</p>
+        </div>
+      ) : (
+        <div className="space-y-6">
             {isRefreshing && (
               <div className="bg-blue-50 text-blue-600 p-4 rounded-md">
                 Trwa aktualizacja nieruchomości...
