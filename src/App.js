@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import PropertyForm from './components/PropertyForm';
 import PropertyEditForm from './components/PropertyEditForm';
 import Login from './components/Login';
@@ -26,6 +26,7 @@ function App() {
   const [authMode, setAuthMode] = useState('login');
   const [isLoadingProperties, setIsLoadingProperties] = useState(true);
   const [isFiltersVisible, setIsFiltersVisible] = useState(false);
+  const editFormRef = useRef(null);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -84,6 +85,12 @@ function App() {
   const handleEditClick = (property) => {
     setEditingProperty(property);
     setExpandedProperty(null);
+    setTimeout(() => {
+      editFormRef.current?.scrollIntoView({ 
+        behavior: 'smooth',
+        block: 'start'
+      });
+    }, 100);
   };
 
   const handleLogin = (data) => {
@@ -381,12 +388,13 @@ function App() {
               onClick={() => setIsFormVisible(!isFormVisible)}
               className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
             >
-              {isFormVisible ? 'Zamknij formularz' : 'Dodaj nieruchomość'}
+                {isFormVisible ? 'Zamknij formularz' : 'Dodaj nieruchomość'}
             </button>
           </div>
         </div>
       </header>
-<main className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+
+      <main className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
         {isFormVisible && (
           <PropertyForm
             onSubmit={handleScrape}
@@ -397,11 +405,13 @@ function App() {
         )}
 
         {editingProperty && (
-          <PropertyEditForm
-            property={editingProperty}
-            onSave={handleSaveEdit}
-            onCancel={() => setEditingProperty(null)}
-          />
+          <div ref={editFormRef}>
+            <PropertyEditForm
+              property={editingProperty}
+              onSave={handleSaveEdit}
+              onCancel={() => setEditingProperty(null)}
+            />
+          </div>
         )}
 
         {isLoadingProperties ? (
@@ -552,7 +562,7 @@ function App() {
                           </span>
                         </p>
 
-                        <div className="mt-4 border-t pt-4">
+                        <div className="mt-4 border-t pt-4 price-history-chart">
                           <PriceHistoryChart propertyId={property._id} />
                         </div>
 
