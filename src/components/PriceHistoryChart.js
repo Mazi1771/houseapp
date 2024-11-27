@@ -25,8 +25,6 @@ const PriceHistoryChart = ({ propertyId }) => {
         }
 
         const data = await response.json();
-        
-        // Dodajemy console.log do sprawdzenia surowych danych
         console.log('Surowe dane historii:', data);
 
         const formattedData = data
@@ -34,14 +32,11 @@ const PriceHistoryChart = ({ propertyId }) => {
             date: new Date(entry.date).toLocaleDateString(),
             price: entry.price,
             fullDate: new Date(entry.date),
-            // Dodajemy oryginalną datę do debugowania
             originalDate: entry.date
           }))
-          .sort((a, b) => b.fullDate - a.fullDate); // Sortuj od najnowszych
+          .sort((a, b) => b.fullDate - a.fullDate);
           
-        // Dodajemy console.log do sprawdzenia posortowanych danych
         console.log('Posortowane dane:', formattedData);
-
         setPriceHistory(formattedData);
       } catch (error) {
         console.error('Błąd podczas pobierania historii cen:', error);
@@ -67,30 +62,26 @@ const PriceHistoryChart = ({ propertyId }) => {
     return change.toFixed(1) + '%';
   };
 
-  if (loading) return <div className="p-4">Ładowanie historii cen...</div>;
-  if (error) return <div className="p-4 text-red-600">Błąd: {error}</div>;
+  const handleHistoryToggle = (e) => {
+    e.stopPropagation(); // Zatrzymaj propagację kliknięcia
+    setShowFullHistory(!showFullHistory);
+  };
+
+  if (loading) return <div className="p-4" onClick={e => e.stopPropagation()}>Ładowanie historii cen...</div>;
+  if (error) return <div className="p-4 text-red-600" onClick={e => e.stopPropagation()}>Błąd: {error}</div>;
   if (priceHistory.length === 0) return null;
 
   const displayedHistory = showFullHistory ? priceHistory : priceHistory.slice(0, 2);
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4" onClick={e => e.stopPropagation()}>
       <h4 className="text-lg font-medium">Historia cen</h4>
       
-      {/* Ostatnie zmiany cen */}
       <div className="space-y-2">
         {displayedHistory.map((entry, index) => {
           const previousEntry = priceHistory[index + 1];
-          
-          // Dodajemy console.log do debugowania każdej zmiany ceny
-          console.log('Aktualna cena:', entry.price, 'Data:', entry.originalDate);
-          console.log('Poprzednia cena:', previousEntry?.price, 'Data:', previousEntry?.originalDate);
-          
           const priceChange = previousEntry ? entry.price - previousEntry.price : null;
           const percentageChange = getPercentageChange(entry.price, previousEntry?.price);
-          
-          // Dodajemy console.log do sprawdzenia obliczonej różnicy
-          console.log('Obliczona zmiana:', priceChange);
 
           return (
             <div key={entry.date} className="flex items-center justify-between p-2 bg-gray-50 rounded">
@@ -115,10 +106,9 @@ const PriceHistoryChart = ({ propertyId }) => {
         })}
       </div>
 
-      {/* Reszta kodu pozostaje bez zmian */}
       {priceHistory.length > 2 && (
         <button
-          onClick={() => setShowFullHistory(!showFullHistory)}
+          onClick={handleHistoryToggle}
           className="w-full py-2 px-4 text-sm text-blue-600 hover:bg-blue-50 rounded transition-colors"
         >
           {showFullHistory ? 'Pokaż mniej' : `Pokaż pełną historię (${priceHistory.length} zmian)`}
