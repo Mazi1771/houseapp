@@ -1,10 +1,12 @@
 // ===== SEGMENT 1: IMPORTY I INICJALIZACJA =====
 import React, { useState, useEffect, useRef } from 'react';
+import { Menu, Bell, User, Search, Home, Star, Settings, LogOut } from 'lucide-react';
 import PropertyForm from './components/PropertyForm';
 import PropertyEditForm from './components/PropertyEditForm';
 import Login from './components/Login';
 import Register from './components/Register';
 import PriceHistoryChart from './components/PriceHistoryChart';
+
 
 function App() {
   // ===== SEGMENT 1A: STANY APLIKACJI =====
@@ -354,130 +356,133 @@ function App() {
   }
 // ===== SEGMENT 7: RENDER - GŁÓWNY WIDOK APLIKACJI =====
   return (
-    <div className="min-h-screen bg-gray-100">
-      {/* Header */}
-      <header className="bg-white shadow">
-        <div className="max-w-7xl mx-auto py-6 px-4">
-          <div className="flex justify-between items-center">
-            <h1 className="text-3xl font-bold text-gray-900">
-              HouseApp
-            </h1>
-            <div className="flex items-center gap-4">
+    <div className="min-h-screen bg-gray-50">
+      {/* Sticky header */}
+      <header className="fixed top-0 w-full bg-white border-b border-gray-200 z-50">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="flex items-center justify-between h-16">
+            {/* Logo i tytuł */}
+            <div className="flex items-center gap-3">
+              <Home className="h-8 w-8 text-blue-600" />
+              <span className="text-xl font-bold bg-gradient-to-r from-blue-600 to-blue-400 bg-clip-text text-transparent">
+                HouseApp
+              </span>
+            </div>
+            
+            {/* Desktop navigation */}
+            <nav className="hidden md:flex items-center gap-4">
               <button
                 onClick={fetchProperties}
-                className="p-2 rounded-md hover:bg-gray-100 transition-colors"
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
                 title="Odśwież dane"
               >
-                <svg 
-                  xmlns="http://www.w3.org/2000/svg" 
-                  className="h-5 w-5" 
-                  fill="none" 
-                  viewBox="0 0 24 24" 
-                  stroke="currentColor"
+                <Star className="h-5 w-5 text-gray-600" />
+              </button>
+              {isRefreshing ? (
+                <span className="text-sm text-gray-600">
+                  Aktualizacja...
+                </span>
+              ) : (
+                <button
+                  onClick={handleRefreshAll}
+                  className="px-4 py-2 text-sm bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors"
                 >
-                  <path 
-                    strokeLinecap="round" 
-                    strokeLinejoin="round" 
-                    strokeWidth={2} 
-                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" 
-                  />
-                </svg>
+                  Aktualizuj wszystkie
+                </button>
+              )}
+              <div className="h-6 w-px bg-gray-200" />
+              <button className="flex items-center gap-2 px-3 py-2 hover:bg-gray-100 rounded-lg transition-colors">
+                <User className="h-5 w-5 text-gray-600" />
+                <span className="text-sm text-gray-600">
+                  {user?.name || user?.email}
+                </span>
               </button>
-              <button
-                onClick={handleRefreshAll}
-                disabled={isRefreshing}
-                className={`px-4 py-2 ${
-                  isRefreshing ? 'bg-gray-300 cursor-not-allowed' : 'bg-green-600 hover:bg-green-700'
-                } text-white rounded-md transition-colors`}
-              >
-                {isRefreshing ? 'Aktualizacja...' : 'Aktualizuj wszystkie'}
-              </button>
-              <span className="text-gray-600">
-                {user?.name || user?.email}
-              </span>
               <button
                 onClick={handleLogout}
-                className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
+                className="flex items-center gap-2 text-red-600 px-3 py-2 hover:bg-red-50 rounded-lg transition-colors"
               >
-                Wyloguj
+                <LogOut className="h-5 w-5" />
+                <span className="text-sm">Wyloguj</span>
               </button>
-            </div>
-          </div>
-          
-          {/* Kontrolki sortowania i filtrów */}
-          <div className="flex justify-between items-center mt-4">
-            <div className="flex items-center gap-4">
-              <select
-                onChange={(e) => setSortBy(e.target.value)}
-                value={sortBy || ''}
-                className="rounded-md border-gray-300 shadow-sm p-2"
-              >
-                <option value="">Sortuj według...</option>
-                <option value="price-asc">Cena: rosnąco</option>
-                <option value="price-desc">Cena: malejąco</option>
-                <option value="area-asc">Powierzchnia: rosnąco</option>
-                <option value="area-desc">Powierzchnia: malejąco</option>
-                <option value="date-asc">Data: najstarsze</option>
-                <option value="date-desc">Data: najnowsze</option>
-              </select>
-              <button
-                onClick={() => setIsFiltersVisible(!isFiltersVisible)}
-                className="px-4 py-2 bg-gray-100 text-gray-600 rounded hover:bg-gray-200 flex items-center gap-2"
-              >
-                <svg 
-                  xmlns="http://www.w3.org/2000/svg" 
-                  className="h-5 w-5" 
-                  fill="none" 
-                  viewBox="0 0 24 24" 
-                  stroke="currentColor"
-                >
-                  <path 
-                    strokeLinecap="round" 
-                    strokeLinejoin="round" 
-                    strokeWidth={2} 
-                    d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" 
-                  />
-                </svg>
-                {isFiltersVisible ? 'Ukryj filtry' : 'Pokaż filtry'}
-              </button>
-            </div>
-            <button
-              onClick={() => setIsFormVisible(!isFormVisible)}
-              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-            >
-              {isFormVisible ? 'Zamknij formularz' : 'Dodaj nieruchomość'}
+            </nav>
+            
+            {/* Mobile menu button */}
+            <button className="md:hidden p-2 hover:bg-gray-100 rounded-lg transition-colors">
+              <Menu className="h-6 w-6 text-gray-600" />
             </button>
           </div>
         </div>
       </header>
 
+      {/* Search and controls */}
+      <div className="fixed top-16 w-full bg-white border-b border-gray-200 z-40">
+        <div className="max-w-7xl mx-auto px-4 py-4">
+          <div className="flex flex-col md:flex-row gap-4">
+            {/* Search and basic filters */}
+            <div className="flex-grow flex items-center gap-4">
+              <div className="relative flex-grow">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+                <input 
+                  type="text"
+                  placeholder="Szukaj nieruchomości..."
+                  className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all"
+                />
+              </div>
+              <button
+                onClick={() => setIsFiltersVisible(!isFiltersVisible)}
+                className="px-4 py-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 flex items-center gap-2"
+              >
+                <Settings className="h-5 w-5" />
+                {isFiltersVisible ? 'Ukryj filtry' : 'Pokaż filtry'}
+              </button>
+            </div>
+            
+            {/* Add property button */}
+            <button
+              onClick={() => setIsFormVisible(!isFormVisible)}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center"
+            >
+              {isFormVisible ? 'Zamknij formularz' : 'Dodaj nieruchomość'}
+            </button>
+          </div>
+
+          {/* Extended filters */}
+          {isFiltersVisible && (
+            <div className="mt-4 pb-2">
+              {/* Tu zostawiamy istniejący kod filtrów */}
+            </div>
+          )}
+        </div>
+      </div>
+
       {/* Main content */}
-      <main className="max-w-7xl mx-auto py-6 px-4">
-        {isFormVisible && (
-          <PropertyForm
-            onSubmit={handleScrape}
-            isLoading={isLoading}
-            url={url}
-            setUrl={setUrl}
-          />
-        )}
-
-        {editingProperty && (
-          <div ref={editFormRef}>
-            <PropertyEditForm
-              property={editingProperty}
-              onSave={handleSaveEdit}
-              onCancel={() => setEditingProperty(null)}
+      <main className="pt-32 pb-6 px-4">
+        <div className="max-w-7xl mx-auto">
+          {isFormVisible && (
+            <PropertyForm
+              onSubmit={handleScrape}
+              isLoading={isLoading}
+              url={url}
+              setUrl={setUrl}
             />
-          </div>
-        )}
+          )}
 
-        {isLoadingProperties ? (
-          <div className="text-center py-4">
-            <p>Ładowanie nieruchomości...</p>
-          </div>
-        ) : (
-          <div className="space-y-6">
+          {editingProperty && (
+            <div ref={editFormRef}>
+              <PropertyEditForm
+                property={editingProperty}
+                onSave={handleSaveEdit}
+                onCancel={() => setEditingProperty(null)}
+              />
+            </div>
+          )}
+
+          {isLoadingProperties ? (
+            <div className="text-center py-4">
+              <p>Ładowanie nieruchomości...</p>
+            </div>
+          ) : (
+            <div className="space-y-6">
             {isRefreshing && (
               <div className="bg-blue-50 text-blue-600 p-4 rounded-md">
                 Trwa aktualizacja nieruchomości...
