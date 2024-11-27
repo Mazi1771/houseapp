@@ -421,8 +421,8 @@ return (
 
     {/* Mobile menu */}
     {isMobileMenuOpen && (
-      <div className="md:hidden fixed top-16 inset-x-0 bg-white border-b border-gray-200 z-40">
-        <div className="p-4 space-y-4">
+  <div className="md:hidden fixed top-16 inset-x-0 bg-white border-b border-gray-200 z-51 shadow-lg">
+    <div className="p-4 space-y-4">
           <button
             onClick={fetchProperties}
             className="w-full flex items-center gap-2 px-4 py-2 hover:bg-gray-100 rounded-lg"
@@ -450,41 +450,44 @@ return (
     )}
 
     {/* Search and controls */}
-    <div className="fixed top-16 w-full bg-white border-b border-gray-200 z-40">
-      <div className="max-w-7xl mx-auto px-4 py-4">
-        <div className="flex flex-col md:flex-row gap-4">
-          {/* Search and basic filters */}
-          <div className="flex-grow flex items-center gap-4">
-            <div className="relative flex-grow">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-              <input 
-                type="text"
-                placeholder="Szukaj nieruchomości..."
-                className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all"
-              />
-            </div>
-            <button
-              onClick={() => setIsFiltersVisible(!isFiltersVisible)}
-              className="px-4 py-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 flex items-center gap-2"
-            >
-              <Settings className="h-5 w-5" />
-              {isFiltersVisible ? 'Ukryj filtry' : 'Pokaż filtry'}
-            </button>
-          </div>
-          
-          {/* Add property button */}
-          <button
-            onClick={() => setIsFormVisible(!isFormVisible)}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center"
-          >
-            {isFormVisible ? 'Zamknij formularz' : 'Dodaj nieruchomość'}
-          </button>
+   <div className="fixed top-16 w-full bg-white border-b border-gray-200 z-40">
+  <div className="max-w-7xl mx-auto px-4 py-4">
+    {/* Dodajemy lepszy układ dla mobile */}
+    <div className="flex flex-col gap-4">
+      {/* Search input i filtry w jednej linii */}
+      <div className="flex gap-2 items-center">
+        <div className="relative flex-grow">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+          <input 
+            type="text"
+            placeholder="Szukaj nieruchomości..."
+            className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all"
+          />
         </div>
       </div>
+      
+      {/* Przyciski w drugiej linii */}
+      <div className="flex gap-2 justify-between">
+        <button
+          onClick={() => setIsFiltersVisible(!isFiltersVisible)}
+          className="px-4 py-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 flex items-center gap-2 flex-grow"
+        >
+          <Settings className="h-5 w-5" />
+          {isFiltersVisible ? 'Ukryj filtry' : 'Pokaż filtry'}
+        </button>
+        <button
+          onClick={() => setIsFormVisible(!isFormVisible)}
+          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+        >
+          {isFormVisible ? 'Zamknij' : 'Dodaj'}
+        </button>
+      </div>
     </div>
+  </div>
+</div>
 
     {/* Main content */}
-    <main className="pt-32 pb-6 px-4">
+    <main className="pt-40 md:pt-32 pb-6 px-4">
       <div className="max-w-7xl mx-auto">
         {isFormVisible && (
           <PropertyForm
@@ -524,8 +527,8 @@ return (
 
             {/* Sekcja filtrów */}
             {isFiltersVisible && (
-              <div className="bg-white p-4 rounded-lg shadow mb-4">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+               <div className="bg-white p-4 rounded-lg shadow mb-4 mt-4">
+                <div className="grid grid-cols-1 gap-4">
                   <div>
                     <h3 className="font-medium mb-2">Cena (PLN)</h3>
                     <div className="flex gap-2">
