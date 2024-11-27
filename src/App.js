@@ -29,7 +29,7 @@ function App() {
   const [isLoadingProperties, setIsLoadingProperties] = useState(true);
   const [isFiltersVisible, setIsFiltersVisible] = useState(false);
   const editFormRef = useRef(null);
-
+  
   useEffect(() => {
     const token = localStorage.getItem('token');
     const savedUser = localStorage.getItem('user');
