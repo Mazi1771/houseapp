@@ -451,6 +451,7 @@ return (
           </button>
         </div>
       </div>
+     </>
     )}
 
     {/* Search and controls */}
