@@ -606,14 +606,50 @@ function App() {
                     </div>
 
                     {/* Podstawowe informacje zawsze widoczne */}
-                    <div className="space-y-2">
-                      <p>Cena: {property.price ? `${property.price.toLocaleString()} PLN` : 'Brak danych'}</p>
-                      <p>Powierzchnia: {property.area ? `${property.area} m²` : 'Brak danych'}</p>
-                      <p>Lokalizacja: {property.location || 'Brak danych'}</p>
-                      {property.isActive === false && (
-                        <p className="text-red-600">Oferta nieaktywna</p>
-                      )}
-                    </div>
+                   <div className="space-y-2">
+  <div className="flex items-center justify-between">
+    <div>
+      <p>Cena: {property.price ? `${property.price.toLocaleString()} PLN` : 'Brak danych'}</p>
+      <p>Powierzchnia: {property.area ? `${property.area} m²` : 'Brak danych'}</p>
+      <p>Lokalizacja: {property.location || 'Brak danych'}</p>
+      {property.isActive === false && (
+        <p className="text-red-600">Oferta nieaktywna</p>
+      )}
+    </div>
+    <div className="flex gap-2">
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          handleRating(property._id, 'favorite');
+        }}
+        className={`p-2 rounded ${property.rating === 'favorite' ? 'bg-yellow-100 text-yellow-600' : 'bg-gray-100'}`}
+        title="Ulubione"
+      >
+        ⭐
+      </button>
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          handleRating(property._id, 'interested');
+        }}
+        className={`p-2 rounded ${property.rating === 'interested' ? 'bg-green-100 text-green-600' : 'bg-gray-100'}`}
+        title="Zainteresowany"
+      >
+        👍
+      </button>
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          handleRating(property._id, 'not_interested');
+        }}
+        className={`p-2 rounded ${property.rating === 'not_interested' ? 'bg-red-100 text-red-600' : 'bg-gray-100'}`}
+        title="Niezainteresowany"
+      >
+        👎
+      </button>
+    </div>
+  </div>
+</div>
 
                     {/* Rozszerzone informacje */}
                     {expandedProperty === property._id && (
