@@ -619,147 +619,195 @@ return (
             {/* Lista nieruchomości */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {getFilteredAndSortedProperties().map((property, index) => (
-                <div 
-                  key={property._id || index} 
-                  className={`bg-white rounded-lg shadow transition-all duration-300 cursor-pointer
-                    ${expandedProperty === property._id ? 'col-span-full' : ''}`}
-                  onClick={() => setExpandedProperty(expandedProperty === property._id ? null : property._id)}
-                >
-                  <div className="p-6 space-y-2">
-                    <div className="flex justify-between items-center">
-                      <h3 className="text-lg font-semibold">{property.title}</h3>
-                      <button 
-                        className="text-gray-400 hover:text-gray-600"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setExpandedProperty(expandedProperty === property._id ? null : property._id);
-                        }}
-                      >
-                        {expandedProperty === property._id ? '▼' : '▶'}
-                      </button>
-                    </div>
+  <div 
+    key={property._id || index} 
+    className={`group bg-white rounded-xl shadow-sm hover:shadow-md border border-gray-200 transition-all duration-300
+      ${expandedProperty === property._id ? 'col-span-full' : ''}`}
+    onClick={() => setExpandedProperty(expandedProperty === property._id ? null : property._id)}
+  >
+    <div className="p-4">
+      {/* Nagłówek karty */}
+      <div className="flex justify-between items-start mb-3">
+        <div>
+          <h3 className="font-semibold text-gray-900 mb-1">{property.title}</h3>
+          <p className="text-sm text-gray-500">{property.location || 'Brak lokalizacji'}</p>
+        </div>
+        <div className="flex items-center gap-2">
+          {/* Status aktywności */}
+          {property.isActive === false ? (
+            <span className="px-2 py-1 bg-red-100 text-red-800 text-xs font-medium rounded-full">
+              Nieaktywne
+            </span>
+          ) : (
+            <span className="px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded-full">
+              Aktywne
+            </span>
+          )}
+          {/* Przycisk rozwijania */}
+          <button 
+            className="text-gray-400 hover:text-gray-600 p-1 rounded-full hover:bg-gray-100"
+            onClick={(e) => {
+              e.stopPropagation();
+              setExpandedProperty(expandedProperty === property._id ? null : property._id);
+            }}
+          >
+            {expandedProperty === property._id ? '▼' : '▶'}
+          </button>
+        </div>
+      </div>
 
-                    {/* Podstawowe informacje zawsze widoczne */}
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p>Cena: {property.price ? `${property.price.toLocaleString()} PLN` : 'Brak danych'}</p>
-                          <p>Powierzchnia: {property.area ? `${property.area} m²` : 'Brak danych'}</p>
-                          <p>Lokalizacja: {property.location || 'Brak danych'}</p>
-                          {property.isActive === false && (
-                            <p className="text-red-600">Oferta nieaktywna</p>
-                          )}
-                        </div>
-                        <div className="flex gap-2">
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleRating(property._id, 'favorite');
-                            }}
-                            className={`p-2 rounded ${property.rating === 'favorite' ? 'bg-yellow-100 text-yellow-600' : 'bg-gray-100'}`}
-                            title="Ulubione"
-                          >
-                            ⭐
-                          </button>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleRating(property._id, 'interested');
-                            }}
-                              className={`p-2 rounded ${property.rating === 'interested' ? 'bg-green-100 text-green-600' : 'bg-gray-100'}`}
-                            title="Zainteresowany"
-                          >
-                            👍
-                          </button>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleRating(property._id, 'not_interested');
-                            }}
-                            className={`p-2 rounded ${property.rating === 'not_interested' ? 'bg-red-100 text-red-600' : 'bg-gray-100'}`}
-                            title="Niezainteresowany"
-                          >
-                            👎
-                          </button>
-                        </div>
-                      </div>
-                    </div>
+      {/* Podstawowe informacje */}
+      <div className="grid grid-cols-2 gap-3 mb-4">
+        <div className="bg-gray-50 p-3 rounded-lg">
+          <p className="text-sm text-gray-500 mb-1">Cena</p>
+          <p className="font-semibold text-gray-900">
+            {property.price ? `${property.price.toLocaleString()} PLN` : 'Brak danych'}
+          </p>
+        </div>
+        <div className="bg-gray-50 p-3 rounded-lg">
+          <p className="text-sm text-gray-500 mb-1">Powierzchnia</p>
+          <p className="font-semibold text-gray-900">
+            {property.area ? `${property.area} m²` : 'Brak danych'}
+          </p>
+        </div>
+      </div>
 
-                    {/* Rozszerzone informacje */}
-                    {expandedProperty === property._id && (
-                      <div className="mt-4 space-y-4">
-                        {property.plotArea && (
-                          <p>Powierzchnia działki: {property.plotArea} m²</p>
-                        )}
-                        <p>Pokoje: {property.rooms || 'Brak danych'}</p>
-                        <p>Stan: 
-                          <span className={`ml-2 px-2 py-1 rounded-full text-sm font-medium ${
-                            property.status === 'do zamieszkania' ? 'bg-green-100 text-green-800' :
-                            property.status === 'do remontu' ? 'bg-red-100 text-red-800' :
-                            property.status === 'w budowie' ? 'bg-yellow-100 text-yellow-800' :
-                            'bg-blue-100 text-blue-800'
-                          }`}>
-                            {property.status}
-                          </span>
-                        </p>
+      {/* Przyciski oceny */}
+      <div className="flex gap-2 justify-end">
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            handleRating(property._id, 'favorite');
+          }}
+          className={`p-2 rounded-lg transition-colors ${
+            property.rating === 'favorite' 
+              ? 'bg-yellow-100 text-yellow-600 hover:bg-yellow-200' 
+              : 'bg-gray-100 hover:bg-gray-200'
+          }`}
+          title="Ulubione"
+        >
+          ⭐
+        </button>
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            handleRating(property._id, 'interested');
+          }}
+          className={`p-2 rounded-lg transition-colors ${
+            property.rating === 'interested' 
+              ? 'bg-green-100 text-green-600 hover:bg-green-200' 
+              : 'bg-gray-100 hover:bg-gray-200'
+          }`}
+          title="Zainteresowany"
+        >
+          👍
+        </button>
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            handleRating(property._id, 'not_interested');
+          }}
+          className={`p-2 rounded-lg transition-colors ${
+            property.rating === 'not_interested' 
+              ? 'bg-red-100 text-red-600 hover:bg-red-200' 
+              : 'bg-gray-100 hover:bg-gray-200'
+          }`}
+          title="Niezainteresowany"
+        >
+          👎
+        </button>
+      </div>
 
-                        <div className="mt-4 border-t pt-4">
-                          <PriceHistoryChart propertyId={property._id} />
-                        </div>
+      {/* Rozszerzone informacje */}
+      {expandedProperty === property._id && (
+        <div className="mt-4 pt-4 border-t border-gray-200 space-y-4">
+          <div className="grid grid-cols-2 gap-3">
+            {property.plotArea && (
+              <div className="bg-gray-50 p-3 rounded-lg">
+                <p className="text-sm text-gray-500 mb-1">Powierzchnia działki</p>
+                <p className="font-semibold text-gray-900">{property.plotArea} m²</p>
+              </div>
+            )}
+            <div className="bg-gray-50 p-3 rounded-lg">
+              <p className="text-sm text-gray-500 mb-1">Pokoje</p>
+              <p className="font-semibold text-gray-900">{property.rooms || 'Brak danych'}</p>
+            </div>
+          </div>
 
-                        {property.sourceUrl && (
-                          <a 
-                            href={property.sourceUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-blue-600 hover:text-blue-800 hover:underline"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            Zobacz ogłoszenie →
-                          </a>
-                        )}
+          <div className="bg-gray-50 p-3 rounded-lg">
+            <p className="text-sm text-gray-500 mb-1">Stan</p>
+            <span className={`px-2 py-1 rounded-full text-sm font-medium ${
+              property.status === 'do zamieszkania' ? 'bg-green-100 text-green-800' :
+              property.status === 'do remontu' ? 'bg-red-100 text-red-800' :
+              property.status === 'w budowie' ? 'bg-yellow-100 text-yellow-800' :
+              'bg-blue-100 text-blue-800'
+            }`}>
+              {property.status}
+            </span>
+          </div>
 
-                        {property.description && (
-                          <p className="text-gray-600">{property.description}</p>
-                        )}
+          {property.description && (
+            <div className="bg-gray-50 p-3 rounded-lg">
+              <p className="text-sm text-gray-500 mb-1">Opis</p>
+              <p className="text-gray-700">{property.description}</p>
+            </div>
+          )}
 
-                        <div className="flex justify-between items-center mt-4">
-                          <div className="space-x-2">
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleRefreshProperty(property._id);
-                              }}
-                              className="px-4 py-2 bg-green-100 text-green-600 rounded hover:bg-green-200"
-                              disabled={!property.sourceUrl}
-                            >
-                              Odśwież dane
-                            </button>
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleEditClick(property);
-                              }}
-                              className="px-4 py-2 bg-blue-100 text-blue-600 rounded hover:bg-blue-200"
-                            >
-                              Edytuj
-                            </button>
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleDelete(property._id);
-                              }}
-                              className="px-4 py-2 bg-red-100 text-red-600 rounded hover:bg-red-200"
-                            >
-                              Usuń
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ))}
+          <div className="border-t border-gray-200 pt-4">
+            <h4 className="font-medium text-gray-900 mb-3">Historia cen</h4>
+            <div className="price-history-chart">
+              <PriceHistoryChart propertyId={property._id} />
+            </div>
+          </div>
+
+          {property.sourceUrl && (
+            <a 
+              href={property.sourceUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center text-blue-600 hover:text-blue-800 hover:underline"
+              onClick={(e) => e.stopPropagation()}
+            >
+              Zobacz ogłoszenie →
+            </a>
+          )}
+
+          {/* Przyciski akcji */}
+          <div className="flex justify-end gap-2 mt-4">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                handleRefreshProperty(property._id);
+              }}
+              className="px-4 py-2 bg-green-100 text-green-600 rounded-lg hover:bg-green-200 transition-colors"
+              disabled={!property.sourceUrl}
+            >
+              Odśwież dane
+            </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                handleEditClick(property);
+              }}
+              className="px-4 py-2 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 transition-colors"
+            >
+              Edytuj
+            </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                handleDelete(property._id);
+              }}
+              className="px-4 py-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors"
+            >
+              Usuń
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  </div>
+))}
             </div>
           </div>
         )}
