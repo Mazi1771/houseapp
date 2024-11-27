@@ -324,7 +324,6 @@ const handleRefreshAll = async () => {
 
   if (!isAuthenticated) {
     return (
-      return (
   <div className="min-h-screen bg-gray-100">
     <header className="bg-white shadow">
       <div className="max-w-7xl mx-auto py-6 px-4">
