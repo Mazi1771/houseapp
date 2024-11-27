@@ -427,32 +427,34 @@ return (
           onClick={() => setIsMobileMenuOpen(false)}
         />
         <div className="md:hidden fixed top-16 left-0 right-0 bg-white border-b border-gray-200 z-50 shadow-lg">
-          <button
-            onClick={fetchProperties}
-            className="w-full flex items-center gap-2 px-4 py-2 hover:bg-gray-100 rounded-lg"
-          >
-            <RefreshCw className="h-5 w-5 text-gray-600" />
-            <span>Odśwież dane</span>
-          </button>
-          <button
-            onClick={handleRefreshAll}
-            disabled={isRefreshing}
-            className="w-full flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg"
-          >
-            <RefreshCw className="h-5 w-5" />
-            <span>Aktualizuj wszystkie</span>
-          </button>
-          <button
-            onClick={handleLogout}
-            className="w-full flex items-center gap-2 px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg"
-          >
-            <LogOut className="h-5 w-5" />
-            <span>Wyloguj</span>
-          </button>
+          <div className="p-4 space-y-4">
+            <button
+              onClick={fetchProperties}
+              className="w-full flex items-center gap-2 px-4 py-2 hover:bg-gray-100 rounded-lg"
+            >
+              <RefreshCw className="h-5 w-5 text-gray-600" />
+              <span>Odśwież dane</span>
+            </button>
+            <button
+              onClick={handleRefreshAll}
+              disabled={isRefreshing}
+              className="w-full flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg"
+            >
+              <RefreshCw className="h-5 w-5" />
+              <span>Aktualizuj wszystkie</span>
+            </button>
+            <button
+              onClick={handleLogout}
+              className="w-full flex items-center gap-2 px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg"
+            >
+              <LogOut className="h-5 w-5" />
+              <span>Wyloguj</span>
+            </button>
+          </div>
         </div>
-      </div>
-     </>
+      </>
     )}
+   
 
     {/* Search and controls */}
   <div className="fixed top-16 left-0 right-0 bg-white border-b border-gray-200 z-40">
