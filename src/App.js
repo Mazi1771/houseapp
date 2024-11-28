@@ -6,6 +6,8 @@ import PropertyEditForm from './components/PropertyEditForm';
 import Login from './components/Login';
 import Register from './components/Register';
 import PriceHistoryChart from './components/PriceHistoryChart';
+import { Home, LogOut, RefreshCw, Settings, Map, Grid } from 'lucide-react';
+import MapView from './components/MapView';
 
 
 function App() {
@@ -20,6 +22,7 @@ function App() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [refreshProgress, setRefreshProgress] = useState(null);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [viewMode, setViewMode] = useState('grid'); // 'grid' lub 'map'
   const [filters, setFilters] = useState({
     priceMin: '',
     priceMax: '',
@@ -427,7 +430,23 @@ return (
                 <Settings className="h-4 w-4" />
                 <span>{isFiltersVisible ? 'Ukryj filtry' : 'Pokaż filtry'}</span>
               </button>
-              
+              <button
+    onClick={() => setViewMode(viewMode === 'grid' ? 'map' : 'grid')}
+    className="px-4 py-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 flex items-center gap-2"
+  >
+    {viewMode === 'grid' ? (
+      <>
+        <Map className="h-5 w-5" />
+        <span>Pokaż mapę</span>
+      </>
+    ) : (
+      <>
+        <Grid className="h-5 w-5" />
+        <span>Pokaż listę</span>
+      </>
+    )}
+  </button>
+</div>
               <select
                 onChange={(e) => setSortBy(e.target.value)}
                 value={sortBy || ''}
@@ -447,163 +466,184 @@ return (
       </div>
 
       {/* Main content */}
-      <main className="flex-1 py-6">
-        <div className="max-w-7xl mx-auto px-4">
-          {/* Formularz dodawania */}
-          {isFormVisible && (
-            <div className="mb-6">
-              <PropertyForm
-                onSubmit={handleScrape}
-                isLoading={isLoading}
-                url={url}
-                setUrl={setUrl}
-              />
-            </div>
-          )}
+      {/* Main content */}
+<main className="flex-1 py-6">
+  <div className="max-w-7xl mx-auto px-4">
+    {/* Formularz dodawania */}
+    {isFormVisible && (
+      <div className="mb-6">
+        <PropertyForm
+          onSubmit={handleScrape}
+          isLoading={isLoading}
+          url={url}
+          setUrl={setUrl}
+        />
+      </div>
+    )}
 
-          {/* Formularz edycji */}
-          {editingProperty && (
-            <div ref={editFormRef} className="mb-6">
-              <PropertyEditForm
-                property={editingProperty}
-                onSave={handleSaveEdit}
-                onCancel={() => setEditingProperty(null)}
-              />
-            </div>
-          )}
+    {/* Formularz edycji */}
+    {editingProperty && (
+      <div ref={editFormRef} className="mb-6">
+        <PropertyEditForm
+          property={editingProperty}
+          onSave={handleSaveEdit}
+          onCancel={() => setEditingProperty(null)}
+        />
+      </div>
+    )}
 
-          {/* Status aktualizacji */}
-          {isRefreshing && (
-            <div className="mb-6 bg-blue-50 text-blue-600 p-4 rounded-lg">
-              Trwa aktualizacja nieruchomości...
-              {refreshProgress && (
-                <div className="mt-2">
-                  Postęp: {refreshProgress.current}/{refreshProgress.total}
+  {/* Lista nieruchomości */}
+{isLoadingProperties ? (
+  <div className="text-center py-4">
+    <p>Ładowanie nieruchomości...</p>
+  </div>
+) : (
+  <div className="space-y-6">
+    {/* Status aktualizacji */}
+    {isRefreshing && (
+      <div className="bg-blue-50 text-blue-600 p-4 rounded-md">
+        Trwa aktualizacja nieruchomości...
+        {refreshProgress && (
+          <div className="mt-2">
+            Postęp: {refreshProgress.current}/{refreshProgress.total}
+          </div>
+        )}
+      </div>
+    )}
+
+        {/* Filtry */}
+    {isFiltersVisible && (
+      <div className="bg-white p-4 rounded-lg shadow mb-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <h3 className="font-medium mb-2">Cena (PLN)</h3>
+                <div className="flex gap-2">
+                  <input
+                    type="number"
+                    placeholder="Od"
+                    value={filters.priceMin}
+                    onChange={(e) => setFilters({...filters, priceMin: e.target.value})}
+                    className="w-full rounded border p-2"
+                  />
+                  <input
+                    type="number"
+                    placeholder="Do"
+                    value={filters.priceMax}
+                    onChange={(e) => setFilters({...filters, priceMax: e.target.value})}
+                    className="w-full rounded border p-2"
+                  />
                 </div>
-              )}
-            </div>
-          )}
+              </div>
+              
+              <div>
+                <h3 className="font-medium mb-2">Powierzchnia (m²)</h3>
+                <div className="flex gap-2">
+                  <input
+                    type="number"
+                    placeholder="Od"
+                    value={filters.areaMin}
+                    onChange={(e) => setFilters({...filters, areaMin: e.target.value})}
+                    className="w-full rounded border p-2"
+                  />
+                  <input
+                    type="number"
+                    placeholder="Do"
+                    value={filters.areaMax}
+                    onChange={(e) => setFilters({...filters, areaMax: e.target.value})}
+                    className="w-full rounded border p-2"
+                  />
+                </div>
+              </div>
 
-          {/* Filtry */}
-          {isFiltersVisible && (
-            <div className="mb-6 bg-white rounded-xl shadow-sm border border-gray-200 p-4">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="space-y-2">
                 <div>
-                  <h3 className="font-medium mb-2">Cena (PLN)</h3>
-                  <div className="flex gap-2">
-                    <input
-                      type="number"
-                      placeholder="Od"
-                      value={filters.priceMin}
-                      onChange={(e) => setFilters({...filters, priceMin: e.target.value})}
-                      className="w-full rounded border p-2"
-                    />
-                    <input
-                      type="number"
-                      placeholder="Do"
-                      value={filters.priceMax}
-                      onChange={(e) => setFilters({...filters, priceMax: e.target.value})}
-                      className="w-full rounded border p-2"
-                    />
-                  </div>
+                  <h3 className="font-medium mb-2">Stan</h3>
+                  <select
+                    value={filters.status}
+                    onChange={(e) => setFilters({...filters, status: e.target.value})}
+                    className="w-full rounded border p-2"
+                  >
+                    <option value="">Wszystkie</option>
+                    <option value="do zamieszkania">Do zamieszkania</option>
+                    <option value="do remontu">Do remontu</option>
+                    <option value="w budowie">W budowie</option>
+                    <option value="stan deweloperski">Stan deweloperski</option>
+                  </select>
                 </div>
                 
                 <div>
-                  <h3 className="font-medium mb-2">Powierzchnia (m²)</h3>
-                  <div className="flex gap-2">
-                    <input
-                      type="number"
-                      placeholder="Od"
-                      value={filters.areaMin}
-                      onChange={(e) => setFilters({...filters, areaMin: e.target.value})}
-                      className="w-full rounded border p-2"
-                    />
-                    <input
-                      type="number"
-                      placeholder="Do"
-                      value={filters.areaMax}
-                      onChange={(e) => setFilters({...filters, areaMax: e.target.value})}
-                      className="w-full rounded border p-2"
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <div>
-                    <h3 className="font-medium mb-2">Stan</h3>
-                    <select
-                      value={filters.status}
-                      onChange={(e) => setFilters({...filters, status: e.target.value})}
-                      className="w-full rounded border p-2"
-                    >
-                      <option value="">Wszystkie</option>
-                      <option value="do zamieszkania">Do zamieszkania</option>
-                      <option value="do remontu">Do remontu</option>
-                      <option value="w budowie">W budowie</option>
-                      <option value="stan deweloperski">Stan deweloperski</option>
-                    </select>
-                  </div>
-                  
-                  <div>
-                    <h3 className="font-medium mb-2">Ocena</h3>
-                    <select
-                      value={filters.rating}
-                      onChange={(e) => setFilters({...filters, rating: e.target.value})}
-                      className="w-full rounded border p-2"
-                    >
-                      <option value="">Wszystkie</option>
-                      <option value="favorite">⭐ Ulubione</option>
-                      <option value="interested">👍 Zainteresowany</option>
-                      <option value="not_interested">👎 Niezainteresowany</option>
-                    </select>
-                  </div>
+                  <h3 className="font-medium mb-2">Ocena</h3>
+                  <select
+                    value={filters.rating}
+                    onChange={(e) => setFilters({...filters, rating: e.target.value})}
+                    className="w-full rounded border p-2"
+                  >
+                    <option value="">Wszystkie</option>
+                    <option value="favorite">⭐ Ulubione</option>
+                    <option value="interested">👍 Zainteresowany</option>
+                    <option value="not_interested">👎 Niezainteresowany</option>
+                  </select>
                 </div>
               </div>
             </div>
-          )}
 
-          {/* Lista nieruchomości */}
-          {isLoadingProperties ? (
-            <div className="text-center py-8">
-              <p className="text-gray-600">Ładowanie nieruchomości...</p>
+            <div className="mt-4 flex justify-end">
+              <button
+                onClick={() => setFilters({
+                  priceMin: '',
+                  priceMax: '',
+                  areaMin: '',
+                  areaMax: '',
+                  status: '',
+                  rating: '',
+                })}
+                className="px-4 py-2 bg-gray-100 text-gray-600 rounded hover:bg-gray-200"
+              >
+                Wyczyść filtry
+              </button>
             </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {getFilteredAndSortedProperties().map((property, index) => (
- <div 
-    key={property._id || index} 
-    className={`bg-white rounded-xl shadow-sm border border-gray-200 transition-all duration-300
-      ${expandedProperty === property._id ? 'col-span-full' : ''}`}
-    onClick={() => setExpandedProperty(expandedProperty === property._id ? null : property._id)}
-  >
-    <div className="p-4">
-      <div className="flex justify-between items-start mb-3">
-        <div>
-          <h3 className="font-semibold text-gray-900">{property.title}</h3>
-          <p className="text-sm text-gray-500">{property.location || 'Brak lokalizacji'}</p>
-        </div>
-        <div className="flex items-center gap-2">
-          {property.isActive === false ? (
-            <span className="px-2 py-1 bg-red-100 text-red-800 text-xs font-medium rounded-full">
-              Nieaktywne
-            </span>
-          ) : (
-            <span className="px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded-full">
-              Aktywne
-            </span>
-          )}
-          <button 
-            onClick={(e) => {
-              e.stopPropagation();
-              setExpandedProperty(expandedProperty === property._id ? null : property._id);
-            }}
-            className="text-gray-400 hover:text-gray-600"
+          </div>
+        )}
+  {/* Przełączanie między mapą a listą */}
+    {viewMode === 'map' ? (
+      <MapView properties={getFilteredAndSortedProperties()} />
+    ) : (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {getFilteredAndSortedProperties().map((property, index) => (
+          <div 
+            key={property._id || index} 
+            className={`bg-white rounded-xl shadow-sm border border-gray-200 transition-all duration-300
+              ${expandedProperty === property._id ? 'col-span-full' : ''}`}
+            onClick={() => setExpandedProperty(expandedProperty === property._id ? null : property._id)}
           >
-            {expandedProperty === property._id ? '▼' : '▶'}
-          </button>
-        </div>
-      </div>
-
+            <div className="p-4">
+              <div className="flex justify-between items-start mb-3">
+                <div>
+                  <h3 className="font-semibold text-gray-900">{property.title}</h3>
+                  <p className="text-sm text-gray-500">{property.location || 'Brak lokalizacji'}</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  {property.isActive === false ? (
+                    <span className="px-2 py-1 bg-red-100 text-red-800 text-xs font-medium rounded-full">
+                      Nieaktywne
+                    </span>
+                  ) : (
+                    <span className="px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded-full">
+                      Aktywne
+                    </span>
+                  )}
+                  <button 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setExpandedProperty(expandedProperty === property._id ? null : property._id);
+                    }}
+                    className="text-gray-400 hover:text-gray-600"
+                  >
+                    {expandedProperty === property._id ? '▼' : '▶'}
+                  </button>
+                </div>
+              </div>
+              
       <div className="grid grid-cols-2 gap-3 mb-4">
         <div className="bg-gray-50 p-3 rounded-lg">
           <p className="text-sm text-gray-500 mb-1">Cena</p>
