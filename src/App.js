@@ -604,8 +604,11 @@ return (
 
             {/* Przełączanie między mapą a listą */}
             {viewMode === 'map' ? (
-              <MapView properties={getFilteredAndSortedProperties()} />
-            ) : (
+  <MapView 
+    properties={getFilteredAndSortedProperties()} 
+    setExpandedProperty={setExpandedProperty}
+  />
+) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {getFilteredAndSortedProperties().map((property, index) => (
                   <div 
