@@ -118,35 +118,41 @@ function App() {
   };
   // ===== SEGMENT 4: FUNKCJE OBSŁUGI NIERUCHOMOŚCI =====
   const handleScrape = async () => {
-    if (!url) return;
-    setIsLoading(true);
-    try {
-      const token = localStorage.getItem('token');
-      const response = await fetch('https://houseapp-backend.onrender.com/api/scrape', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ url })
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-        setProperties([data, ...properties]);
-        setUrl('');
-        setIsFormVisible(false);
+  if (!url) return;
+  setIsLoading(true);
+  try {
+    const token = localStorage.getItem('token');
+    const response = await fetch('https://houseapp-backend.onrender.com/api/scrape', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({ url })
+    });
+    
+    const data = await response.json();
+    
+    if (!response.ok) {
+      if (response.status === 400 && data.error.includes('nieaktywna')) {
+        // Specjalna obsługa dla nieaktywnych ofert
+        alert('Ta oferta jest już nieaktywna lub została usunięta. Spróbuj dodać inną ofertę.');
       } else {
-        const errorData = await response.json();
-        alert(errorData.error || 'Wystąpił błąd podczas pobierania danych');
+        alert(data.error || 'Wystąpił błąd podczas pobierania danych');
       }
-    } catch (error) {
-      alert('Wystąpił błąd podczas komunikacji z serwerem');
-    } finally {
-      setIsLoading(false);
+      return;
     }
-  };
 
+    setProperties([data, ...properties]);
+    setUrl('');
+    setIsFormVisible(false);
+  } catch (error) {
+    console.error('Błąd:', error);
+    alert('Wystąpił błąd podczas komunikacji z serwerem');
+  } finally {
+    setIsLoading(false);
+  }
+};
   const handleRating = async (propertyId, rating) => {
     try {
       const token = localStorage.getItem('token');
