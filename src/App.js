@@ -316,335 +316,267 @@ function App() {
   };
   // ===== SEGMENT 6: RENDER - CZĘŚĆ LOGOWANIA =====
 if (!isAuthenticated) {
-  return (
-    <div className="min-h-screen bg-gray-100">
-      <div className="max-w-7xl mx-auto py-6 px-4">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">
-            HouseApp
-          </h1>
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <div className="max-w-7xl mx-auto py-6 px-4">
+          <div className="text-center mb-8">
+            <h1 className="text-3xl font-bold text-gray-900">
+              HouseApp
+            </h1>
+          </div>
+          {authMode === 'login' ? (
+            <div>
+              <Login onLogin={handleLogin} />
+              <p className="text-center mt-4">
+                Nie masz jeszcze konta?{' '}
+                <button
+                  onClick={() => setAuthMode('register')}
+                  className="text-blue-600 hover:text-blue-800"
+                >
+                  Zarejestruj się
+                </button>
+              </p>
+            </div>
+          ) : (
+            <div>
+              <Register onRegister={handleRegister} />
+              <p className="text-center mt-4">
+                Masz już konto?{' '}
+                <button
+                  onClick={() => setAuthMode('login')}
+                  className="text-blue-600 hover:text-blue-800"
+                >
+                  Zaloguj się
+                </button>
+              </p>
+            </div>
+          )}
         </div>
-        {authMode === 'login' ? (
-          <div>
-            <Login onLogin={handleLogin} />
-            <p className="text-center mt-4">
-              Nie masz jeszcze konta?{' '}
-              <button
-                onClick={() => setAuthMode('register')}
-                className="text-blue-600 hover:text-blue-800"
-              >
-                Zarejestruj się
-              </button>
-            </p>
-          </div>
-        ) : (
-          <div>
-            <Register onRegister={handleRegister} />
-            <p className="text-center mt-4">
-              Masz już konto?{' '}
-              <button
-                onClick={() => setAuthMode('login')}
-                className="text-blue-600 hover:text-blue-800"
-              >
-                Zaloguj się
-              </button>
-            </p>
-          </div>
-        )}
       </div>
-    </div>
-  );
-}
+    );
+  }
 
 // ===== SEGMENT 7: RENDER - GŁÓWNY WIDOK APLIKACJI =====
 return (
-  <div className="min-h-screen bg-gray-50">
-    {/* header */}
-    <header className="fixed top-0 left-0 right-0 bg-white border-b border-gray-200 z-50">
-      <div className="max-w-7xl mx-auto px-4">
-        <div className="flex items-center justify-between h-16">
-          {/* Logo i tytuł */}
+    <div className="min-h-screen flex flex-col bg-gray-50">
+      {/* Top navbar */}
+      <nav className="bg-white border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Home className="h-8 w-8 text-blue-600" />
             <span className="text-xl font-bold bg-gradient-to-r from-blue-600 to-blue-400 bg-clip-text text-transparent">
               HouseApp
             </span>
           </div>
-          
-          {/* Desktop navigation */}
-          <nav className="hidden md:flex items-center gap-4">
-            <button
-              onClick={fetchProperties}
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-              title="Odśwież dane"
-            >
-              <RefreshCw className="h-5 w-5 text-gray-600" />
-            </button>
-            {isRefreshing ? (
-              <span className="text-sm text-gray-600">
-                Aktualizacja...
-              </span>
-            ) : (
-              <button
-                onClick={handleRefreshAll}
-                className="px-4 py-2 text-sm bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors"
-              >
-                Aktualizuj wszystkie
-              </button>
-            )}
-            <div className="h-6 w-px bg-gray-200" />
-            <button className="flex items-center gap-2 px-3 py-2 hover:bg-gray-100 rounded-lg transition-colors">
-              <User className="h-5 w-5 text-gray-600" />
-              <span className="text-sm text-gray-600">
-                {user?.name || user?.email}
-              </span>
-            </button>
-            <button
-              onClick={handleLogout}
-              className="flex items-center gap-2 text-red-600 px-3 py-2 hover:bg-red-50 rounded-lg transition-colors"
-            >
-              <LogOut className="h-5 w-5" />
-              <span className="text-sm">Wyloguj</span>
-            </button>
-          </nav>
-          
-          {/* Mobile menu button */}
-          <button 
-            className="md:hidden p-2 hover:bg-gray-100 rounded-lg transition-colors"
-            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-          >
-            <Menu className="h-6 w-6 text-gray-600" />
-          </button>
-        </div>
-      </div>
-    </header>
 
-    {/* Mobile menu */}
-    {isMobileMenuOpen && (
-      <>
-        <div 
-          className="fixed inset-0 bg-black bg-opacity-50 z-40"
-          onClick={() => setIsMobileMenuOpen(false)}
-        />
-        <div className="md:hidden fixed top-16 left-0 right-0 bg-white border-b border-gray-200 z-50 shadow-lg">
-          <div className="p-4 space-y-4">
-            <button
-              onClick={fetchProperties}
-              className="w-full flex items-center gap-2 px-4 py-2 hover:bg-gray-100 rounded-lg"
-            >
-              <RefreshCw className="h-5 w-5 text-gray-600" />
-              <span>Odśwież dane</span>
-            </button>
+          <div className="flex items-center gap-4">
             <button
               onClick={handleRefreshAll}
               disabled={isRefreshing}
-              className="w-full flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg"
+              className="hidden md:flex items-center gap-2 px-4 py-2 text-sm bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors"
             >
-              <RefreshCw className="h-5 w-5" />
-              <span>Aktualizuj wszystkie</span>
+              <RefreshCw className="h-4 w-4" />
+              {isRefreshing ? 'Aktualizacja...' : 'Aktualizuj wszystkie'}
             </button>
-            <button
-              onClick={handleLogout}
-              className="w-full flex items-center gap-2 px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg"
-            >
-              <LogOut className="h-5 w-5" />
-              <span>Wyloguj</span>
-            </button>
+            
+            <div className="flex items-center gap-2">
+              <span className="text-gray-600">{user?.name || user?.email}</span>
+              <button
+                onClick={handleLogout}
+                className="text-red-600 hover:text-red-700"
+              >
+                <LogOut className="h-5 w-5" />
+              </button>
+            </div>
           </div>
         </div>
-      </>
-    )}
-   
+      </nav>
 
-    {/* Search and controls */}
-  <div className="fixed top-16 left-0 right-0 bg-white shadow-sm z-40">
-    <div className="max-w-7xl mx-auto p-4">
-    {/* Dodajemy lepszy układ dla mobile */}
-    <div className="flex flex-col gap-4">
-      {/* Search input i filtry w jednej linii */}
-               <div className="relative flex-grow">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-            <input 
-              type="text"
-              placeholder="Szukaj nieruchomości..."
-              className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all"
-            />
-          </div>
-
-      
-      {/* Przyciski w drugiej linii */}
-      <div className="flex gap-2 justify-between">
-       <button
-            onClick={() => setIsFiltersVisible(!isFiltersVisible)}
-            className="px-4 py-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 flex items-center gap-2 justify-center"
-          >
-            <Settings className="h-5 w-5" />
-            {isFiltersVisible ? 'Ukryj filtry' : 'Pokaż filtry'}
-          </button>
-        </div>
-        <button
-          onClick={() => setIsFormVisible(!isFormVisible)}
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center"
-        >
-          {isFormVisible ? 'Zamknij formularz' : 'Dodaj nieruchomość'}
-        </button>
-      </div>
-    </div>
-  </div>
-
-    {/* Main content */}
-     <main className="pt-36"> {/* 16px (header) + 84px (search bar) + extra space */}
-    <div className="max-w-7xl mx-auto px-4">
-      {isFormVisible && (
-        <div className="bg-white rounded-lg shadow mb-4">
-        <PropertyForm
-          onSubmit={handleScrape}
-          isLoading={isLoading}
-          url={url}
-          setUrl={setUrl}
-        />
-     </div>
-      )}
-
-      {editingProperty && (
-        <div ref={editFormRef}>
-          <PropertyEditForm
-            property={editingProperty}
-            onSave={handleSaveEdit}
-            onCancel={() => setEditingProperty(null)}
-          />
-        </div>
-      )}
-
-         {isLoadingProperties ? (
-        <div className="text-center py-4">
-          <p>Ładowanie nieruchomości...</p>
-        </div>
-      ) : (
-        <div className="space-y-6">
-            {isRefreshing && (
-              <div className="bg-blue-50 text-blue-600 p-4 rounded-md">
-                Trwa aktualizacja nieruchomości...
-                {refreshProgress && (
-                  <div className="mt-2">
-                    Postęp: {refreshProgress.current}/{refreshProgress.total}
-                  </div>
-                )}
+      {/* Search bar */}
+      <div className="bg-white border-b border-gray-200 py-4">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="flex flex-col gap-4">
+            <div className="flex items-center gap-4">
+              <div className="flex-grow relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+                <input 
+                  type="text"
+                  placeholder="Szukaj nieruchomości..."
+                  className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all"
+                />
               </div>
-            )}
+              <button
+                onClick={() => setIsFormVisible(!isFormVisible)}
+                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors whitespace-nowrap"
+              >
+                {isFormVisible ? 'Zamknij' : 'Dodaj nieruchomość'}
+              </button>
+            </div>
 
-            {/* Sekcja filtrów */}
-            {isFiltersVisible && (
-               <div className="bg-white p-4 rounded-lg shadow mb-4 mt-4">
-                <div className="grid grid-cols-1 gap-4">
+            <div className="flex items-center gap-4">
+              <button
+                onClick={() => setIsFiltersVisible(!isFiltersVisible)}
+                className="flex items-center gap-2 px-4 py-2 text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+              >
+                <Settings className="h-4 w-4" />
+                <span>{isFiltersVisible ? 'Ukryj filtry' : 'Pokaż filtry'}</span>
+              </button>
+              
+              <select
+                onChange={(e) => setSortBy(e.target.value)}
+                value={sortBy || ''}
+                className="px-4 py-2 rounded-lg border border-gray-200 bg-white text-gray-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none"
+              >
+                <option value="">Sortuj według...</option>
+                <option value="price-asc">Cena: rosnąco</option>
+                <option value="price-desc">Cena: malejąco</option>
+                <option value="area-asc">Powierzchnia: rosnąco</option>
+                <option value="area-desc">Powierzchnia: malejąco</option>
+                <option value="date-asc">Data: najstarsze</option>
+                <option value="date-desc">Data: najnowsze</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Main content */}
+      <main className="flex-1 py-6">
+        <div className="max-w-7xl mx-auto px-4">
+          {/* Formularz dodawania */}
+          {isFormVisible && (
+            <div className="mb-6">
+              <PropertyForm
+                onSubmit={handleScrape}
+                isLoading={isLoading}
+                url={url}
+                setUrl={setUrl}
+              />
+            </div>
+          )}
+
+          {/* Formularz edycji */}
+          {editingProperty && (
+            <div ref={editFormRef} className="mb-6">
+              <PropertyEditForm
+                property={editingProperty}
+                onSave={handleSaveEdit}
+                onCancel={() => setEditingProperty(null)}
+              />
+            </div>
+          )}
+
+          {/* Status aktualizacji */}
+          {isRefreshing && (
+            <div className="mb-6 bg-blue-50 text-blue-600 p-4 rounded-lg">
+              Trwa aktualizacja nieruchomości...
+              {refreshProgress && (
+                <div className="mt-2">
+                  Postęp: {refreshProgress.current}/{refreshProgress.total}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Filtry */}
+          {isFiltersVisible && (
+            <div className="mb-6 bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <h3 className="font-medium mb-2">Cena (PLN)</h3>
+                  <div className="flex gap-2">
+                    <input
+                      type="number"
+                      placeholder="Od"
+                      value={filters.priceMin}
+                      onChange={(e) => setFilters({...filters, priceMin: e.target.value})}
+                      className="w-full rounded border p-2"
+                    />
+                    <input
+                      type="number"
+                      placeholder="Do"
+                      value={filters.priceMax}
+                      onChange={(e) => setFilters({...filters, priceMax: e.target.value})}
+                      className="w-full rounded border p-2"
+                    />
+                  </div>
+                </div>
+                
+                <div>
+                  <h3 className="font-medium mb-2">Powierzchnia (m²)</h3>
+                  <div className="flex gap-2">
+                    <input
+                      type="number"
+                      placeholder="Od"
+                      value={filters.areaMin}
+                      onChange={(e) => setFilters({...filters, areaMin: e.target.value})}
+                      className="w-full rounded border p-2"
+                    />
+                    <input
+                      type="number"
+                      placeholder="Do"
+                      value={filters.areaMax}
+                      onChange={(e) => setFilters({...filters, areaMax: e.target.value})}
+                      className="w-full rounded border p-2"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
                   <div>
-                    <h3 className="font-medium mb-2">Cena (PLN)</h3>
-                    <div className="flex gap-2">
-                      <input
-                        type="number"
-                        placeholder="Od"
-                        value={filters.priceMin}
-                        onChange={(e) => setFilters({...filters, priceMin: e.target.value})}
-                        className="w-full rounded border p-2"
-                      />
-                      <input
-                        type="number"
-                        placeholder="Do"
-                        value={filters.priceMax}
-                        onChange={(e) => setFilters({...filters, priceMax: e.target.value})}
-                        className="w-full rounded border p-2"
-                      />
-                    </div>
+                    <h3 className="font-medium mb-2">Stan</h3>
+                    <select
+                      value={filters.status}
+                      onChange={(e) => setFilters({...filters, status: e.target.value})}
+                      className="w-full rounded border p-2"
+                    >
+                      <option value="">Wszystkie</option>
+                      <option value="do zamieszkania">Do zamieszkania</option>
+                      <option value="do remontu">Do remontu</option>
+                      <option value="w budowie">W budowie</option>
+                      <option value="stan deweloperski">Stan deweloperski</option>
+                    </select>
                   </div>
                   
                   <div>
-                    <h3 className="font-medium mb-2">Powierzchnia (m²)</h3>
-                    <div className="flex gap-2">
-                      <input
-                        type="number"
-                        placeholder="Od"
-                        value={filters.areaMin}
-                        onChange={(e) => setFilters({...filters, areaMin: e.target.value})}
-                        className="w-full rounded border p-2"
-                      />
-                      <input
-                        type="number"
-                        placeholder="Do"
-                        value={filters.areaMax}
-                        onChange={(e) => setFilters({...filters, areaMax: e.target.value})}
-                        className="w-full rounded border p-2"
-                      />
-                    </div>
+                    <h3 className="font-medium mb-2">Ocena</h3>
+                    <select
+                      value={filters.rating}
+                      onChange={(e) => setFilters({...filters, rating: e.target.value})}
+                      className="w-full rounded border p-2"
+                    >
+                      <option value="">Wszystkie</option>
+                      <option value="favorite">⭐ Ulubione</option>
+                      <option value="interested">👍 Zainteresowany</option>
+                      <option value="not_interested">👎 Niezainteresowany</option>
+                    </select>
                   </div>
-
-                  <div className="space-y-2">
-                    <div>
-                      <h3 className="font-medium mb-2">Stan</h3>
-                      <select
-                        value={filters.status}
-                        onChange={(e) => setFilters({...filters, status: e.target.value})}
-                        className="w-full rounded border p-2"
-                      >
-                        <option value="">Wszystkie</option>
-                        <option value="do zamieszkania">Do zamieszkania</option>
-                        <option value="do remontu">Do remontu</option>
-                        <option value="w budowie">W budowie</option>
-                        <option value="stan deweloperski">Stan deweloperski</option>
-                      </select>
-                    </div>
-                    
-                    <div>
-                      <h3 className="font-medium mb-2">Ocena</h3>
-                      <select
-                        value={filters.rating}
-                        onChange={(e) => setFilters({...filters, rating: e.target.value})}
-                        className="w-full rounded border p-2"
-                      >
-                        <option value="">Wszystkie</option>
-                        <option value="favorite">⭐ Ulubione</option>
-                        <option value="interested">👍 Zainteresowany</option>
-                        <option value="not_interested">👎 Niezainteresowany</option>
-                      </select>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="mt-4 flex justify-end">
-                  <button
-                    onClick={() => setFilters({
-                      priceMin: '',
-                      priceMax: '',
-                      areaMin: '',
-                      areaMax: '',
-                      status: '',
-                      rating: '',
-                    })}
-                    className="px-4 py-2 bg-gray-100 text-gray-600 rounded hover:bg-gray-200"
-                  >
-                    Wyczyść filtry
-                  </button>
                 </div>
               </div>
-            )}
+            </div>
+          )}
 
-            {/* Lista nieruchomości */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {/* Lista nieruchomości */}
+          {isLoadingProperties ? (
+            <div className="text-center py-8">
+              <p className="text-gray-600">Ładowanie nieruchomości...</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {getFilteredAndSortedProperties().map((property, index) => (
-  <div 
+ <div 
     key={property._id || index} 
-    className={`group bg-white rounded-xl shadow-sm hover:shadow-md border border-gray-200 transition-all duration-300
+    className={`bg-white rounded-xl shadow-sm border border-gray-200 transition-all duration-300
       ${expandedProperty === property._id ? 'col-span-full' : ''}`}
     onClick={() => setExpandedProperty(expandedProperty === property._id ? null : property._id)}
   >
     <div className="p-4">
-      {/* Nagłówek karty */}
       <div className="flex justify-between items-start mb-3">
         <div>
-          <h3 className="font-semibold text-gray-900 mb-1">{property.title}</h3>
+          <h3 className="font-semibold text-gray-900">{property.title}</h3>
           <p className="text-sm text-gray-500">{property.location || 'Brak lokalizacji'}</p>
         </div>
         <div className="flex items-center gap-2">
-          {/* Status aktywności */}
           {property.isActive === false ? (
             <span className="px-2 py-1 bg-red-100 text-red-800 text-xs font-medium rounded-full">
               Nieaktywne
@@ -654,20 +586,18 @@ return (
               Aktywne
             </span>
           )}
-          {/* Przycisk rozwijania */}
           <button 
-            className="text-gray-400 hover:text-gray-600 p-1 rounded-full hover:bg-gray-100"
             onClick={(e) => {
               e.stopPropagation();
               setExpandedProperty(expandedProperty === property._id ? null : property._id);
             }}
+            className="text-gray-400 hover:text-gray-600"
           >
             {expandedProperty === property._id ? '▼' : '▶'}
           </button>
         </div>
       </div>
 
-      {/* Podstawowe informacje */}
       <div className="grid grid-cols-2 gap-3 mb-4">
         <div className="bg-gray-50 p-3 rounded-lg">
           <p className="text-sm text-gray-500 mb-1">Cena</p>
@@ -683,17 +613,14 @@ return (
         </div>
       </div>
 
-      {/* Przyciski oceny */}
-      <div className="flex gap-2 justify-end">
+      <div className="flex justify-end gap-2">
         <button
           onClick={(e) => {
             e.stopPropagation();
             handleRating(property._id, 'favorite');
           }}
           className={`p-2 rounded-lg transition-colors ${
-            property.rating === 'favorite' 
-              ? 'bg-yellow-100 text-yellow-600 hover:bg-yellow-200' 
-              : 'bg-gray-100 hover:bg-gray-200'
+            property.rating === 'favorite' ? 'bg-yellow-100 text-yellow-600' : 'bg-gray-100'
           }`}
           title="Ulubione"
         >
@@ -705,9 +632,7 @@ return (
             handleRating(property._id, 'interested');
           }}
           className={`p-2 rounded-lg transition-colors ${
-            property.rating === 'interested' 
-              ? 'bg-green-100 text-green-600 hover:bg-green-200' 
-              : 'bg-gray-100 hover:bg-gray-200'
+            property.rating === 'interested' ? 'bg-green-100 text-green-600' : 'bg-gray-100'
           }`}
           title="Zainteresowany"
         >
@@ -719,9 +644,7 @@ return (
             handleRating(property._id, 'not_interested');
           }}
           className={`p-2 rounded-lg transition-colors ${
-            property.rating === 'not_interested' 
-              ? 'bg-red-100 text-red-600 hover:bg-red-200' 
-              : 'bg-gray-100 hover:bg-gray-200'
+            property.rating === 'not_interested' ? 'bg-red-100 text-red-600' : 'bg-gray-100'
           }`}
           title="Niezainteresowany"
         >
@@ -732,29 +655,29 @@ return (
       {/* Rozszerzone informacje */}
       {expandedProperty === property._id && (
         <div className="mt-4 pt-4 border-t border-gray-200 space-y-4">
+          {property.plotArea && (
+            <div className="bg-gray-50 p-3 rounded-lg">
+              <p className="text-sm text-gray-500 mb-1">Powierzchnia działki</p>
+              <p className="font-semibold text-gray-900">{property.plotArea} m²</p>
+            </div>
+          )}
+          
           <div className="grid grid-cols-2 gap-3">
-            {property.plotArea && (
-              <div className="bg-gray-50 p-3 rounded-lg">
-                <p className="text-sm text-gray-500 mb-1">Powierzchnia działki</p>
-                <p className="font-semibold text-gray-900">{property.plotArea} m²</p>
-              </div>
-            )}
             <div className="bg-gray-50 p-3 rounded-lg">
               <p className="text-sm text-gray-500 mb-1">Pokoje</p>
               <p className="font-semibold text-gray-900">{property.rooms || 'Brak danych'}</p>
             </div>
-          </div>
-
-          <div className="bg-gray-50 p-3 rounded-lg">
-            <p className="text-sm text-gray-500 mb-1">Stan</p>
-            <span className={`px-2 py-1 rounded-full text-sm font-medium ${
-              property.status === 'do zamieszkania' ? 'bg-green-100 text-green-800' :
-              property.status === 'do remontu' ? 'bg-red-100 text-red-800' :
-              property.status === 'w budowie' ? 'bg-yellow-100 text-yellow-800' :
-              'bg-blue-100 text-blue-800'
-            }`}>
-              {property.status}
-            </span>
+            <div className="bg-gray-50 p-3 rounded-lg">
+              <p className="text-sm text-gray-500 mb-1">Stan</p>
+              <span className={`px-2 py-1 rounded-full text-sm font-medium ${
+                property.status === 'do zamieszkania' ? 'bg-green-100 text-green-800' :
+                property.status === 'do remontu' ? 'bg-red-100 text-red-800' :
+                property.status === 'w budowie' ? 'bg-yellow-100 text-yellow-800' :
+                'bg-blue-100 text-blue-800'
+              }`}>
+                {property.status}
+              </span>
+            </div>
           </div>
 
           {property.description && (
@@ -783,7 +706,6 @@ return (
             </a>
           )}
 
-          {/* Przyciski akcji */}
           <div className="flex justify-end gap-2 mt-4">
             <button
               onClick={(e) => {
@@ -820,7 +742,7 @@ return (
   </div>
 ))}
             </div>
-          </div>
+        
         )}
         
       </div>  
