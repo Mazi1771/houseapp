@@ -1,10 +1,9 @@
 import React from 'react';
 import { GoogleMap, LoadScript, Marker, InfoWindow } from '@react-google-maps/api';
 
-const MapView = ({ properties }) => {
+const MapView = ({ properties, setExpandedProperty }) => {
   const [selectedProperty, setSelectedProperty] = React.useState(null);
 
-  // Oblicz centrum mapy na podstawie wszystkich nieruchomości
   const center = React.useMemo(() => {
     if (!properties?.length) return { lat: 52.0692, lng: 19.4803 }; // Centrum Polski
 
