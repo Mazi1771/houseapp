@@ -1,12 +1,12 @@
 // ===== SEGMENT 1: IMPORTY I INICJALIZACJA =====
 import React, { useState, useEffect, useRef } from 'react';
-import { Menu, User, Search, Home, RefreshCw, Settings, LogOut } from 'lucide-react';
+import { Menu, User, Search, Home, RefreshCw, Settings, LogOut, Map, Grid } from 'lucide-react';
 import PropertyForm from './components/PropertyForm';
 import PropertyEditForm from './components/PropertyEditForm';
 import Login from './components/Login';
 import Register from './components/Register';
 import PriceHistoryChart from './components/PriceHistoryChart';
-import { Home, LogOut, RefreshCw, Settings, Map, Grid } from 'lucide-react';
+
 import MapView from './components/MapView';
 
 
