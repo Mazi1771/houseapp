@@ -465,115 +465,7 @@ return (
         </div>
       </div>
 
-       {/* Main content */}
-      <main className="flex-1 py-6">
-        <div className="max-w-7xl mx-auto px-4">
-        {/* Formularz dodawania */}
-        {isFormVisible && (
-        <div className="mb-6">
-          <PropertyForm
-            onSubmit={handleScrape}
-            isLoading={isLoading}
-            url={url}
-            setUrl={setUrl}
-          />
-      </div>
-    )}
-
-    {/* Formularz edycji */}
-    {editingProperty && (
-      <div ref={editFormRef} className="mb-6">
-        <PropertyEditForm
-          property={editingProperty}
-          onSave={handleSaveEdit}
-          onCancel={() => setEditingProperty(null)}
-        />
-      </div>
-    )}
-
-  {/* Lista nieruchomości */}
-{isLoadingProperties ? (
-  <div className="text-center py-4">
-    <p>Ładowanie nieruchomości...</p>
-  </div>
-) : (
-  <div className="space-y-6">
-    {/* Status aktualizacji */}
-    {isRefreshing && (
-      <div className="bg-blue-50 text-blue-600 p-4 rounded-md">
-        Trwa aktualizacja nieruchomości...
-        {refreshProgress && (
-          <div className="mt-2">
-            Postęp: {refreshProgress.current}/{refreshProgress.total}
-          </div>
-        )}
-      </div>
-    )}
-
-        {/* Filtry */}
-    {isFiltersVisible && (
-      <div className="bg-white p-4 rounded-lg shadow mb-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <h3 className="font-medium mb-2">Cena (PLN)</h3>
-                <div className="flex gap-2">
-                  <input
-                    type="number"
-                    placeholder="Od"
-                    value={filters.priceMin}
-                    onChange={(e) => setFilters({...filters, priceMin: e.target.value})}
-                    className="w-full rounded border p-2"
-                  />
-                  <input
-                    type="number"
-                    placeholder="Do"
-                    value={filters.priceMax}
-                    onChange={(e) => setFilters({...filters, priceMax: e.target.value})}
-                    className="w-full rounded border p-2"
-                  />
-                </div>
-              </div>
-              
-              <div>
-                <h3 className="font-medium mb-2">Powierzchnia (m²)</h3>
-                <div className="flex gap-2">
-                  <input
-                    type="number"
-                    placeholder="Od"
-                    value={filters.areaMin}
-                    onChange={(e) => setFilters({...filters, areaMin: e.target.value})}
-                    className="w-full rounded border p-2"
-                  />
-                  <input
-                    type="number"
-                    placeholder="Do"
-                    value={filters.areaMax}
-                    onChange={(e) => setFilters({...filters, areaMax: e.target.value})}
-                    className="w-full rounded border p-2"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <div>
-                  <h3 className="font-medium mb-2">Stan</h3>
-                  <select
-                    value={filters.status}
-                    onChange={(e) => setFilters({...filters, status: e.target.value})}
-                    className="w-full rounded border p-2"
-                  >
-                    <option value="">Wszystkie</option>
-                    <option value="do zamieszkania">Do zamieszkania</option>
-                    <option value="do remontu">Do remontu</option>
-                    <option value="w budowie">W budowie</option>
-                    <option value="stan deweloperski">Stan deweloperski</option>
-                  </select>
-                </div>
-                
-                <div>
-                  <h3 className="font-medium mb-2">Ocena</h3>
-                  <select
-                    value={filters.rating}
+                           value={filters.rating}
                     onChange={(e) => setFilters({...filters, rating: e.target.value})}
                     className="w-full rounded border p-2"
                   >
@@ -603,45 +495,46 @@ return (
             </div>
           </div>
         )}
-  {/* Przełączanie między mapą a listą */}
-    {viewMode === 'map' ? (
-      <MapView properties={getFilteredAndSortedProperties()} />
-    ) : (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {getFilteredAndSortedProperties().map((property, index) => (
-          <div 
-            key={property._id || index} 
-            className={`bg-white rounded-xl shadow-sm border border-gray-200 transition-all duration-300
-              ${expandedProperty === property._id ? 'col-span-full' : ''}`}
-            onClick={() => setExpandedProperty(expandedProperty === property._id ? null : property._id)}
-          >
-            <div className="p-4">
-              <div className="flex justify-between items-start mb-3">
-                <div>
-                  <h3 className="font-semibold text-gray-900">{property.title}</h3>
-                  <p className="text-sm text-gray-500">{property.location || 'Brak lokalizacji'}</p>
-                </div>
-                <div className="flex items-center gap-2">
-                  {property.isActive === false ? (
-                    <span className="px-2 py-1 bg-red-100 text-red-800 text-xs font-medium rounded-full">
-                      Nieaktywne
-                    </span>
-                  ) : (
-                    <span className="px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded-full">
-                      Aktywne
-                    </span>
-                  )}
-                  <button 
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setExpandedProperty(expandedProperty === property._id ? null : property._id);
-                    }}
-                    className="text-gray-400 hover:text-gray-600"
-                  >
-                    {expandedProperty === property._id ? '▼' : '▶'}
-                  </button>
-                </div>
-              </div>
+
+        {/* Przełączanie między mapą a listą */}
+        {viewMode === 'map' ? (
+          <MapView properties={getFilteredAndSortedProperties()} />
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {getFilteredAndSortedProperties().map((property, index) => (
+              <div 
+                key={property._id || index} 
+                className={`bg-white rounded-xl shadow-sm border border-gray-200 transition-all duration-300
+                  ${expandedProperty === property._id ? 'col-span-full' : ''}`}
+                onClick={() => setExpandedProperty(expandedProperty === property._id ? null : property._id)}
+              >
+                <div className="p-4">
+                  <div className="flex justify-between items-start mb-3">
+                    <div>
+                      <h3 className="font-semibold text-gray-900">{property.title}</h3>
+                      <p className="text-sm text-gray-500">{property.location || 'Brak lokalizacji'}</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {property.isActive === false ? (
+                        <span className="px-2 py-1 bg-red-100 text-red-800 text-xs font-medium rounded-full">
+                          Nieaktywne
+                        </span>
+                      ) : (
+                        <span className="px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded-full">
+                          Aktywne
+                        </span>
+                      )}
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setExpandedProperty(expandedProperty === property._id ? null : property._id);
+                        }}
+                        className="text-gray-400 hover:text-gray-600"
+                      >
+                        {expandedProperty === property._id ? '▼' : '▶'}
+                      </button>
+                    </div>
+                  </div>
               
       <div className="grid grid-cols-2 gap-3 mb-4">
         <div className="bg-gray-50 p-3 rounded-lg">
