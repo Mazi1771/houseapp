@@ -466,7 +466,6 @@ return (
       </div>
 
       {/* Main content */}
-      {/* Main content */}
 <main className="flex-1 py-6">
   <div className="max-w-7xl mx-auto px-4">
     {/* Formularz dodawania */}
