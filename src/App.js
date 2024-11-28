@@ -465,18 +465,18 @@ return (
         </div>
       </div>
 
-      {/* Main content */}
-<main className="flex-1 py-6">
-  <div className="max-w-7xl mx-auto px-4">
-    {/* Formularz dodawania */}
-    {isFormVisible && (
-      <div className="mb-6">
-        <PropertyForm
-          onSubmit={handleScrape}
-          isLoading={isLoading}
-          url={url}
-          setUrl={setUrl}
-        />
+       {/* Main content */}
+      <main className="flex-1 py-6">
+        <div className="max-w-7xl mx-auto px-4">
+        {/* Formularz dodawania */}
+        {isFormVisible && (
+        <div className="mb-6">
+          <PropertyForm
+            onSubmit={handleScrape}
+            isLoading={isLoading}
+            url={url}
+            setUrl={setUrl}
+          />
       </div>
     )}
 
