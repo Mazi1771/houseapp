@@ -3,14 +3,14 @@ import { MapPin } from 'lucide-react';
 
 function PropertyEditForm({ property, onSave, onCancel }) {
   const [formData, setFormData] = useState({
-    title: property.title || '',
-    price: property.price || '',
-    area: property.area || '',
-    rooms: property.rooms || '',
-    location: property.location || '',
-    description: property.description || '',
-    status: property.status || 'stan deweloperski',
-    coordinates: property.coordinates || null
+    title: property?.title || '',
+    price: property?.price || '',
+    area: property?.area || '',
+    rooms: property?.rooms || '',
+    location: property?.location || '',
+    description: property?.description || '',
+    status: property?.status || 'stan deweloperski',
+    coordinates: property?.coordinates || null
   });
 
   const [isGeocoding, setIsGeocoding] = useState(false);
@@ -33,30 +33,65 @@ function PropertyEditForm({ property, onSave, onCancel }) {
     try {
       const geocoder = new window.google.maps.Geocoder();
       const results = await new Promise((resolve, reject) => {
-        geocoder.geocode({ address, region: 'pl' }, (results, status) => {
+        geocoder.geocode({
+          address,
+          region: 'pl',
+          componentRestrictions: { country: 'pl' }
+        }, (results, status) => {
           if (status === 'OK' && results && results.length > 0) {
+            console.log('Znalezione wyniki:', results);
             resolve(results[0]);
           } else {
-            reject(new Error('Nie można znaleźć lokalizacji'));
+            console.error('Status geokodowania:', status);
+            reject(new Error(`Nie można znaleźć lokalizacji (${status})`));
           }
         });
       });
+
+      const accuracy = results.geometry.location_type;
+      console.log('Dokładność geokodowania:', accuracy);
 
       const coordinates = {
         lat: results.geometry.location.lat(),
         lng: results.geometry.location.lng()
       };
 
+      const addressComponents = {};
+      results.address_components.forEach(component => {
+        const type = component.types[0];
+        addressComponents[type] = component.long_name;
+      });
+
+      console.log('Komponenty adresu:', addressComponents);
+
+      let formattedAddress = results.formatted_address;
+      
+      if (addressComponents.locality && !addressComponents.route) {
+        formattedAddress = `${addressComponents.locality}${
+          addressComponents.administrative_area_level_1 
+            ? `, ${addressComponents.administrative_area_level_1}` 
+            : ''
+        }`;
+      }
+
       setFormData(prev => ({
         ...prev,
         coordinates,
-        location: results.formatted_address
+        location: formattedAddress
       }));
       
       setGeocodeError(null);
+      
+      if (accuracy === 'APPROXIMATE') {
+        console.log('Znaleziono przybliżoną lokalizację');
+      }
+
     } catch (error) {
-      console.error('Błąd geokodowania:', error);
-      setGeocodeError('Nie udało się znaleźć dokładnej lokalizacji');
+      console.error('Szczegóły błędu geokodowania:', error);
+      setGeocodeError(
+        'Nie udało się znaleźć dokładnej lokalizacji. ' +
+        'Spróbuj podać bardziej szczegółowy adres lub sprawdź pisownię.'
+      );
     } finally {
       setIsGeocoding(false);
     }
@@ -67,7 +102,7 @@ function PropertyEditForm({ property, onSave, onCancel }) {
     setFormData(prev => ({
       ...prev,
       location: newLocation,
-      coordinates: null // Reset coordinates when location changes manually
+      coordinates: null // Reset coordinates when location changes
     }));
   };
 
@@ -80,7 +115,6 @@ function PropertyEditForm({ property, onSave, onCancel }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    // Try to geocode one last time if location changed but we don't have coordinates
     if (formData.location !== property.location && !formData.coordinates) {
       try {
         await geocodeAddress(formData.location);
@@ -172,6 +206,7 @@ function PropertyEditForm({ property, onSave, onCancel }) {
               value={formData.location}
               onChange={handleLocationChange}
               onBlur={handleLocationBlur}
+              placeholder="Wpisz dokładny adres, np. ul. Przykładowa 10, Kraków"
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border pr-10"
             />
             <button
@@ -181,19 +216,43 @@ function PropertyEditForm({ property, onSave, onCancel }) {
               className="absolute right-2 top-1/2 -translate-y-1/2"
               title="Zaktualizuj lokalizację na mapie"
             >
-              <MapPin className={`h-5 w-5 ${isGeocoding ? 'text-gray-400' : 'text-blue-500 hover:text-blue-600'}`} />
+              <MapPin 
+                className={`h-5 w-5 ${
+                  isGeocoding 
+                    ? 'text-gray-400' 
+                    : formData.coordinates 
+                      ? 'text-green-500 hover:text-green-600' 
+                      : 'text-blue-500 hover:text-blue-600'
+                }`}
+              />
             </button>
           </div>
+          
           {isGeocoding && (
-            <p className="text-sm text-gray-500 mt-1">Trwa wyszukiwanie lokalizacji...</p>
-          )}
-          {geocodeError && (
-            <p className="text-sm text-red-500 mt-1">{geocodeError}</p>
-          )}
-          {formData.coordinates && (
-            <p className="text-sm text-green-600 mt-1">
-              Znaleziono lokalizację: {formData.coordinates.lat.toFixed(6)}, {formData.coordinates.lng.toFixed(6)}
+            <p className="text-sm text-gray-500 mt-1">
+              Trwa wyszukiwanie lokalizacji...
             </p>
+          )}
+          
+          {geocodeError && (
+            <p className="text-sm text-red-500 mt-1">
+              {geocodeError}
+              <br />
+              <span className="text-xs">
+                Wskazówka: Podaj pełny adres z nazwą ulicy i numerem
+              </span>
+            </p>
+          )}
+          
+          {formData.coordinates && (
+            <div className="text-sm mt-1">
+              <p className="text-green-600">
+                ✓ Znaleziono lokalizację
+              </p>
+              <p className="text-xs text-gray-500">
+                Współrzędne: {formData.coordinates.lat.toFixed(6)}, {formData.coordinates.lng.toFixed(6)}
+              </p>
+            </div>
           )}
         </div>
 
