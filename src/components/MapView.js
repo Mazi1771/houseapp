@@ -1,27 +1,74 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { GoogleMap, LoadScript, Marker, InfoWindow } from '@react-google-maps/api';
 
 const MapView = ({ properties, setExpandedProperty }) => {
-  const [selectedProperty, setSelectedProperty] = React.useState(null);
+  const [selectedMarker, setSelectedMarker] = useState(null);
+  const [markers, setMarkers] = useState([]);
 
-  const center = React.useMemo(() => {
-    if (!properties?.length) return { lat: 52.0692, lng: 19.4803 }; // Centrum Polski
+  // Konwersja adresu na współrzędne (geocoding)
+  const geocodeAddress = async (address) => {
+    try {
+      const geocoder = new window.google.maps.Geocoder();
+      return new Promise((resolve, reject) => {
+        geocoder.geocode({ address }, (results, status) => {
+          if (status === 'OK') {
+            resolve({
+              lat: results[0].geometry.location.lat(),
+              lng: results[0].geometry.location.lng()
+            });
+          } else {
+            reject(new Error('Nie można znaleźć lokalizacji'));
+          }
+        });
+      });
+    } catch (error) {
+      console.error('Błąd geokodowania:', error);
+      return null;
+    }
+  };
 
-    const validProperties = properties.filter(p => p.coordinates?.lat && p.coordinates?.lng);
-    if (!validProperties.length) return { lat: 52.0692, lng: 19.4803 };
+  // Przygotowanie markerów
+  useEffect(() => {
+    const prepareMarkers = async () => {
+      const markersData = await Promise.all(
+        properties.map(async (property) => {
+          let coords = property.coordinates;
 
-    const sumLat = validProperties.reduce((sum, p) => sum + p.coordinates.lat, 0);
-    const sumLng = validProperties.reduce((sum, p) => sum + p.coordinates.lng, 0);
-    
-    return {
-      lat: sumLat / validProperties.length,
-      lng: sumLng / validProperties.length
+          // Jeśli brak współrzędnych, spróbuj geokodować adres
+          if (!coords && property.location && property.location !== 'Brak lokalizacji') {
+            coords = await geocodeAddress(property.location);
+          }
+
+          if (coords) {
+            return {
+              id: property._id,
+              position: {
+                lat: coords.lat,
+                lng: coords.lng
+              },
+              title: property.title,
+              price: property.price,
+              property: property
+            };
+          }
+          return null;
+        })
+      );
+
+      setMarkers(markersData.filter(marker => marker !== null));
     };
+
+    prepareMarkers();
   }, [properties]);
 
   const mapStyles = {
-    height: '600px',
-    width: '100%'
+    height: "70vh",
+    width: "100%"
+  };
+
+  const defaultCenter = {
+    lat: 52.069167,
+    lng: 19.480556
   };
 
   return (
@@ -29,39 +76,40 @@ const MapView = ({ properties, setExpandedProperty }) => {
       <GoogleMap
         mapContainerStyle={mapStyles}
         zoom={6}
-        center={center}
+        center={defaultCenter}
       >
-        {properties?.map(property => (
-          property.coordinates?.lat && property.coordinates?.lng ? (
-            <Marker
-              key={property._id}
-              position={{
-                lat: property.coordinates.lat,
-                lng: property.coordinates.lng
-              }}
-              onClick={() => setSelectedProperty(property)}
-            />
-          ) : null
+        {markers.map(marker => (
+          <Marker
+            key={marker.id}
+            position={marker.position}
+            onClick={() => setSelectedMarker(marker)}
+            icon={{
+              url: 'https://maps.google.com/mapfiles/ms/icons/red-dot.png',
+              labelOrigin: new window.google.maps.Point(15, -10)
+            }}
+            label={{
+              text: marker.title,
+              color: "#000000",
+              fontSize: "12px",
+              fontWeight: "bold"
+            }}
+          />
         ))}
 
-        {selectedProperty && (
+        {selectedMarker && (
           <InfoWindow
-            position={{
-              lat: selectedProperty.coordinates.lat,
-              lng: selectedProperty.coordinates.lng
-            }}
-            onCloseClick={() => setSelectedProperty(null)}
+            position={selectedMarker.position}
+            onCloseClick={() => setSelectedMarker(null)}
           >
-            <div className="p-2 max-w-xs">
-              <h3 className="font-semibold text-sm mb-1">{selectedProperty.title}</h3>
-              <p className="text-sm">Cena: {selectedProperty.price?.toLocaleString()} PLN</p>
-              <p className="text-sm">Powierzchnia: {selectedProperty.area} m²</p>
+            <div className="p-2">
+              <h3 className="font-bold">{selectedMarker.title}</h3>
+              <p className="text-lg">{selectedMarker.price.toLocaleString()} PLN</p>
               <button
                 onClick={() => {
-                  setExpandedProperty(selectedProperty._id);
-                  setSelectedProperty(null);
+                  setExpandedProperty(selectedMarker.property._id);
+                  setSelectedMarker(null);
                 }}
-                className="mt-2 text-sm text-blue-600 hover:text-blue-800"
+                className="mt-2 px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
               >
                 Zobacz szczegóły
               </button>
