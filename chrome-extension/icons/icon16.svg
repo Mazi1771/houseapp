@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <!-- Tło -->
+  <rect width="128" height="128" fill="#ffffff" rx="16"/>
+  
+  <!-- Home icon w stylu Lucide -->
+  <path 
+    d="M48 109.333V61.333L24 80V56L64 24l40 32v24l-24-18.667v48H48z" 
+    fill="none" 
+    stroke="#3b82f6" 
+    stroke-width="8" 
+    stroke-linecap="round" 
+    stroke-linejoin="round"
+  />
+</svg>
