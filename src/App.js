@@ -74,15 +74,18 @@ function App() {
     }
   }, [isAuthenticated]);
   // ===== SEGMENT 3: FUNKCJE POMOCNICZE =====
-  const fetchProperties = async () => {
-    try {
-      setIsLoadingProperties(true);
-      const token = localStorage.getItem('token');
-      const response = await fetch('https://houseapp-backend.onrender.com/api/properties', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
+ const fetchProperties = async () => {
+  try {
+    setIsLoadingProperties(true);
+    const token = localStorage.getItem('token');
+    const response = await fetch('https://houseapp-backend.onrender.com/api/properties', {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      credentials: 'include'
+    });
       
       if (response.ok) {
         const data = await response.json();
@@ -134,7 +137,7 @@ function App() {
     setExpandedProperty(null);
   };
   // ===== SEGMENT 4: FUNKCJE OBSŁUGI NIERUCHOMOŚCI =====
-  const handleScrape = async () => {
+ const handleScrape = async () => {
   if (!url) return;
   setIsLoading(true);
   try {
@@ -145,6 +148,7 @@ function App() {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`
       },
+      credentials: 'include',
       body: JSON.stringify({ url })
     });
     
@@ -171,16 +175,17 @@ function App() {
   }
 };
   const handleRating = async (propertyId, rating) => {
-    try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`https://houseapp-backend.onrender.com/api/properties/${propertyId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ rating })
-      });
+  try {
+    const token = localStorage.getItem('token');
+    const response = await fetch(`https://houseapp-backend.onrender.com/api/properties/${propertyId}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      credentials: 'include',
+      body: JSON.stringify({ rating })
+    });
 
       if (response.ok) {
         const updatedProperty = await response.json();
@@ -193,19 +198,21 @@ function App() {
     }
   };
 
-  const handleDelete = async (propertyId) => {
-    if (!window.confirm('Czy na pewno chcesz usunąć to ogłoszenie?')) {
-      return;
-    }
-    
-    try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`https://houseapp-backend.onrender.com/api/properties/${propertyId}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
+ const handleDelete = async (propertyId) => {
+  if (!window.confirm('Czy na pewno chcesz usunąć to ogłoszenie?')) {
+    return;
+  }
+  
+  try {
+    const token = localStorage.getItem('token');
+    const response = await fetch(`https://houseapp-backend.onrender.com/api/properties/${propertyId}`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      credentials: 'include'
+    });
 
       if (response.ok) {
         setProperties(properties.filter(p => p._id !== propertyId));
@@ -219,14 +226,16 @@ function App() {
   };
   // ===== SEGMENT 5: FUNKCJE ODŚWIEŻANIA I AKTUALIZACJI =====
   const handleRefreshProperty = async (propertyId) => {
-    try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`https://houseapp-backend.onrender.com/api/properties/${propertyId}/refresh`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
+  try {
+    const token = localStorage.getItem('token');
+    const response = await fetch(`https://houseapp-backend.onrender.com/api/properties/${propertyId}/refresh`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      credentials: 'include'
+    });
 
       if (response.ok) {
         const data = await response.json();
@@ -249,14 +258,16 @@ function App() {
     setIsRefreshing(true);
     setRefreshProgress({ current: 0, total: properties.length });
 
-    try {
-      const token = localStorage.getItem('token');
-      const response = await fetch('https://houseapp-backend.onrender.com/api/properties/refresh-all', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
+   try {
+    const token = localStorage.getItem('token');
+    const response = await fetch('https://houseapp-backend.onrender.com/api/properties/refresh-all', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      credentials: 'include'
+    });
 
       if (response.ok) {
         const data = await response.json();
@@ -272,17 +283,18 @@ function App() {
     }
   };
 
-  const handleSaveEdit = async (updatedData) => {
-    try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`https://houseapp-backend.onrender.com/api/properties/${editingProperty._id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(updatedData)
-      });
+ const handleSaveEdit = async (updatedData) => {
+  try {
+    const token = localStorage.getItem('token');
+    const response = await fetch(`https://houseapp-backend.onrender.com/api/properties/${editingProperty._id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      credentials: 'include',
+      body: JSON.stringify(updatedData)
+    });
 
       if (response.ok) {
         const updatedProperty = await response.json();
