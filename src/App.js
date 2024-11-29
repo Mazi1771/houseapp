@@ -39,6 +39,20 @@ function App() {
   const editFormRef = useRef(null);
   // ===== SEGMENT 2: EFEKTY =====
   useEffect(() => {
+  // Sprawdź czy jest URL w parametrach
+  const queryParams = new URLSearchParams(window.location.search);
+  const urlParam = queryParams.get('url');
+  
+  if (urlParam && isAuthenticated) {
+    // Ustaw URL w formularzu
+    setUrl(urlParam);
+    // Pokaż formularz
+    setIsFormVisible(true);
+    // Przewiń do formularza
+    window.scrollTo(0, 0);
+  }
+}, [isAuthenticated]);
+  useEffect(() => {
     const token = localStorage.getItem('token');
     const savedUser = localStorage.getItem('user');
     if (token && savedUser) {
