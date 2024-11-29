@@ -142,14 +142,14 @@ function App() {
   setIsLoading(true);
   try {
     const token = localStorage.getItem('token');
+    console.log('Wysyłam URL:', url); // dla debugowania
     const response = await fetch('https://houseapp-backend.onrender.com/api/scrape', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`
       },
-      credentials: 'include',
-      body: JSON.stringify({ url })
+      body: JSON.stringify({ url: url }) // upewnij się, że wysyłasz obiekt z property url
     });
     
     const data = await response.json();
