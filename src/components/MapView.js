@@ -1,115 +1,122 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { GoogleMap, LoadScript, Marker, InfoWindow } from '@react-google-maps/api';
 
 const MapView = ({ properties, setExpandedProperty }) => {
   const [selectedMarker, setSelectedMarker] = useState(null);
-  const [markers, setMarkers] = useState([]);
+  const [mapLoaded, setMapLoaded] = useState(false);
 
-  // Konwersja adresu na współrzędne (geocoding)
-  const geocodeAddress = async (address) => {
-    try {
-      const geocoder = new window.google.maps.Geocoder();
-      return new Promise((resolve, reject) => {
-        geocoder.geocode({ address }, (results, status) => {
-          if (status === 'OK') {
-            resolve({
-              lat: results[0].geometry.location.lat(),
-              lng: results[0].geometry.location.lng()
-            });
-          } else {
-            reject(new Error('Nie można znaleźć lokalizacji'));
-          }
-        });
-      });
-    } catch (error) {
-      console.error('Błąd geokodowania:', error);
-      return null;
-    }
-  };
-
-  // Przygotowanie markerów
-  useEffect(() => {
-    const prepareMarkers = async () => {
-      const markersData = await Promise.all(
-        properties.map(async (property) => {
-          let coords = property.coordinates;
-
-          // Jeśli brak współrzędnych, spróbuj geokodować adres
-          if (!coords && property.location && property.location !== 'Brak lokalizacji') {
-            coords = await geocodeAddress(property.location);
-          }
-
-          if (coords) {
-            return {
-              id: property._id,
-              position: {
-                lat: coords.lat,
-                lng: coords.lng
-              },
-              title: property.title,
-              price: property.price,
-              property: property
-            };
-          }
-          return null;
-        })
-      );
-
-      setMarkers(markersData.filter(marker => marker !== null));
-    };
-
-    prepareMarkers();
-  }, [properties]);
-
-  const mapStyles = {
-    height: "70vh",
-    width: "100%"
-  };
-
-  const defaultCenter = {
+  // Optymalizacja - memoizacja centrum mapy i stylów
+  const defaultCenter = useMemo(() => ({
     lat: 52.069167,
     lng: 19.480556
-  };
+  }), []);
+
+  const mapStyles = useMemo(() => ({
+    height: "600px",
+    width: "100%"
+  }), []);
+
+  const mapOptions = useMemo(() => ({
+    disableDefaultUI: false,
+    clickableIcons: false,
+    scrollwheel: true,
+    gestureHandling: "cooperative",
+    maxZoom: 18,
+    minZoom: 4
+  }), []);
+
+  // Filtruj tylko właściwości z poprawnymi współrzędnymi
+  const validProperties = useMemo(() => 
+    properties.filter(prop => 
+      prop.coordinates?.lat && 
+      prop.coordinates?.lng && 
+      !isNaN(prop.coordinates.lat) && 
+      !isNaN(prop.coordinates.lng)
+    ),
+    [properties]
+  );
+
+  // Optymalizacja - callback dla zdarzenia onLoad
+  const onLoad = useCallback((map) => {
+    if (validProperties.length > 0) {
+      const bounds = new window.google.maps.LatLngBounds();
+      validProperties.forEach(property => {
+        bounds.extend({
+          lat: property.coordinates.lat,
+          lng: property.coordinates.lng
+        });
+      });
+      map.fitBounds(bounds, { padding: 50 });
+    }
+    setMapLoaded(true);
+  }, [validProperties]);
+
+  if (!mapLoaded) {
+    return (
+      <div className="flex justify-center items-center h-[600px] bg-gray-100">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Ładowanie mapy...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <LoadScript googleMapsApiKey={process.env.REACT_APP_GOOGLE_MAPS_API_KEY}>
+    <LoadScript 
+      googleMapsApiKey={process.env.REACT_APP_GOOGLE_MAPS_API_KEY}
+      loadingElement={
+        <div className="h-[600px] flex items-center justify-center">
+          <p>Ładowanie Google Maps...</p>
+        </div>
+      }
+    >
       <GoogleMap
         mapContainerStyle={mapStyles}
-        zoom={6}
         center={defaultCenter}
+        zoom={6}
+        options={mapOptions}
+        onLoad={onLoad}
       >
-        {markers.map(marker => (
+        {validProperties.map(property => (
           <Marker
-            key={marker.id}
-            position={marker.position}
-            onClick={() => setSelectedMarker(marker)}
-            icon={{
-              url: 'https://maps.google.com/mapfiles/ms/icons/red-dot.png',
-              labelOrigin: new window.google.maps.Point(15, -10)
+            key={property._id}
+            position={{
+              lat: property.coordinates.lat,
+              lng: property.coordinates.lng
             }}
+            onClick={() => setSelectedMarker(property)}
+            title={property.title}
             label={{
-              text: marker.title,
-              color: "#000000",
-              fontSize: "12px",
-              fontWeight: "bold"
+              text: property.price ? `${(property.price/1000000).toFixed(1)}M` : '',
+              color: 'white',
+              fontSize: '14px'
             }}
           />
         ))}
 
         {selectedMarker && (
           <InfoWindow
-            position={selectedMarker.position}
+            position={{
+              lat: selectedMarker.coordinates.lat,
+              lng: selectedMarker.coordinates.lng
+            }}
             onCloseClick={() => setSelectedMarker(null)}
           >
-            <div className="p-2">
-              <h3 className="font-bold">{selectedMarker.title}</h3>
-              <p className="text-lg">{selectedMarker.price.toLocaleString()} PLN</p>
+            <div className="p-2 max-w-xs">
+              <h3 className="font-bold text-lg mb-2">{selectedMarker.title}</h3>
+              <p className="text-lg font-semibold mb-2">
+                {selectedMarker.price?.toLocaleString()} PLN
+              </p>
+              <p className="text-sm mb-2">
+                {selectedMarker.area} m² • {selectedMarker.rooms} pokoje
+              </p>
               <button
                 onClick={() => {
-                  setExpandedProperty(selectedMarker.property._id);
+                  setExpandedProperty(selectedMarker._id);
                   setSelectedMarker(null);
                 }}
-                className="mt-2 px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
+                className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors w-full"
               >
                 Zobacz szczegóły
               </button>
@@ -121,4 +128,4 @@ const MapView = ({ properties, setExpandedProperty }) => {
   );
 };
 
-export default MapView;
+export default React.memo(MapView);
