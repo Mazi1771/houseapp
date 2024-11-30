@@ -1,14 +1,15 @@
-import React, { useState, useMemo, useCallback, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import { GoogleMap, useJsApiLoader, Marker, InfoWindow } from '@react-google-maps/api';
 
-const MapView = ({ properties, setExpandedProperty }) => {
-  const [selectedMarker, setSelectedMarker] = useState(null);
-  const [map, setMap] = useState(null);
+// Przenieś konfigurację bibliotek poza komponent
+const GOOGLE_MAPS_LIBRARIES = ['places'];
+const GOOGLE_MAPS_ID = 'google-map-script';
 
+const MapView = ({ properties, setExpandedProperty }) => {
   const { isLoaded } = useJsApiLoader({
-    id: 'google-map-script',
+    id: GOOGLE_MAPS_ID,
     googleMapsApiKey: process.env.REACT_APP_GOOGLE_MAPS_API_KEY,
-    libraries: ['places']
+    libraries: GOOGLE_MAPS_LIBRARIES  // używamy stałej referencji
   });
 
   // Filtruj właściwości z poprawnymi współrzędnymi
@@ -64,37 +65,36 @@ const MapView = ({ properties, setExpandedProperty }) => {
     );
   }
 
-  return (
+   return (
     <GoogleMap
-      mapContainerStyle={{
-        width: '100%',
-        height: '600px'
-      }}
-      center={{
-        lat: 52.069167,
-        lng: 19.480556
-      }}
+      mapContainerStyle={mapStyles}
+      center={defaultCenter}
       zoom={6}
-      onLoad={onMapLoad}
     >
-      {validProperties.map(property => (
-        <Marker
-          key={property._id}
-          position={{
-            lat: property.coordinates.lat,
-            lng: property.coordinates.lng
-          }}
-          onClick={() => setSelectedMarker(property)}
-          title={`${property.title} - ${property.price?.toLocaleString()} PLN`}
-          label={{
-            text: `${property.location.split(',')[0]}`, // Pokazuje pierwszą część lokalizacji
-            color: 'black',
-            fontSize: '13px',
-            fontWeight: 'bold',
-            className: 'marker-label'
-          }}
-        />
-      ))}
+      {validProperties.map(property => {
+        const position = {
+          lat: property.coordinates.lat,
+          lng: property.coordinates.lng
+        };
+
+        return (
+          <div key={property._id}>
+            <google.maps.marker.AdvancedMarkerElement
+              position={position}
+              title={property.title}
+              onClick={() => setSelectedMarker(property)}
+              content={
+                new google.maps.marker.PinElement({
+                  glyph: property.price ? `${(property.price/1000000).toFixed(1)}M` : '',
+                  glyphColor: 'white',
+                  background: '#1a73e8',
+                  borderColor: '#1a73e8'
+                })
+              }
+            />
+          </div>
+        );
+      })}
 
       {selectedMarker && (
         <InfoWindow
@@ -112,9 +112,6 @@ const MapView = ({ properties, setExpandedProperty }) => {
             <p className="text-sm mb-2">
               {selectedMarker.area} m² • {selectedMarker.rooms} pokoje
             </p>
-            <p className="text-sm mb-2 text-gray-600">
-              {selectedMarker.location}
-            </p>
             <button
               onClick={() => {
                 setExpandedProperty(selectedMarker._id);
@@ -131,4 +128,4 @@ const MapView = ({ properties, setExpandedProperty }) => {
   );
 };
 
-export default MapView;
+export default React.memo(MapView);
