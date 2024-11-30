@@ -1,8 +1,9 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { GoogleMap, useJsApiLoader, Marker, InfoWindow } from '@react-google-maps/api';
 
 const MapView = ({ properties, setExpandedProperty }) => {
   const [selectedMarker, setSelectedMarker] = useState(null);
+  const [map, setMap] = useState(null);
 
   const { isLoaded } = useJsApiLoader({
     id: 'google-map-script',
@@ -20,6 +21,37 @@ const MapView = ({ properties, setExpandedProperty }) => {
     ),
     [properties]
   );
+
+  // Funkcja do automatycznego dopasowania widoku mapy
+  const fitBoundsToMarkers = useCallback(() => {
+    if (map && validProperties.length > 0) {
+      const bounds = new window.google.maps.LatLngBounds();
+      validProperties.forEach(property => {
+        bounds.extend({
+          lat: property.coordinates.lat,
+          lng: property.coordinates.lng
+        });
+      });
+      map.fitBounds(bounds, { padding: { top: 50, right: 50, bottom: 50, left: 50 } });
+      
+      // Jeśli mamy tylko jedną pinezkę, ustaw odpowiedni zoom
+      if (validProperties.length === 1) {
+        map.setZoom(15);
+      }
+    }
+  }, [map, validProperties]);
+
+  // Wywołaj dopasowanie mapy przy pierwszym załadowaniu i przy zmianie właściwości
+  const onMapLoad = useCallback((map) => {
+    setMap(map);
+    fitBoundsToMarkers();
+  }, [fitBoundsToMarkers]);
+
+  useEffect(() => {
+    if (map) {
+      fitBoundsToMarkers();
+    }
+  }, [validProperties, map, fitBoundsToMarkers]);
 
   if (!isLoaded) {
     return (
@@ -43,6 +75,7 @@ const MapView = ({ properties, setExpandedProperty }) => {
         lng: 19.480556
       }}
       zoom={6}
+      onLoad={onMapLoad}
     >
       {validProperties.map(property => (
         <Marker
@@ -52,11 +85,13 @@ const MapView = ({ properties, setExpandedProperty }) => {
             lng: property.coordinates.lng
           }}
           onClick={() => setSelectedMarker(property)}
-          title={property.title}
+          title={`${property.title} - ${property.price?.toLocaleString()} PLN`}
           label={{
-            text: property.price ? `${(property.price/1000000).toFixed(1)}M` : '',
-            color: 'white',
-            fontSize: '14px'
+            text: `${property.location.split(',')[0]}`, // Pokazuje pierwszą część lokalizacji
+            color: 'black',
+            fontSize: '13px',
+            fontWeight: 'bold',
+            className: 'marker-label'
           }}
         />
       ))}
@@ -76,6 +111,9 @@ const MapView = ({ properties, setExpandedProperty }) => {
             </p>
             <p className="text-sm mb-2">
               {selectedMarker.area} m² • {selectedMarker.rooms} pokoje
+            </p>
+            <p className="text-sm mb-2 text-gray-600">
+              {selectedMarker.location}
             </p>
             <button
               onClick={() => {
