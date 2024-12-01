@@ -43,6 +43,7 @@ function App() {
   const [currentBoard, setCurrentBoard] = useState(null);
   const [boards, setBoards] = useState([]);
   const [sharedBoards, setSharedBoards] = useState([]);
+  const [isShareBoardVisible, setIsShareBoardVisible] = useState(false);
   // ===== SEGMENT 2: EFEKTY =====
   useEffect(() => {
   const fetchBoards = async () => {
@@ -564,6 +565,14 @@ return (
               <Settings className="h-4 w-4" />
               {isFiltersVisible ? 'Ukryj filtry' : 'Pokaż filtry'}
             </button>
+            //Udostepnianie przycisk
+            <div className="flex items-center gap-4">
+  <button
+    onClick={() => setIsShareBoardVisible(true)}
+    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+  >
+    Udostępnij Tablicę
+  </button>
             
             <button
               onClick={() => setViewMode(viewMode === 'grid' ? 'map' : 'grid')}
