@@ -83,3 +83,4 @@ function BoardSharing({ boardId }) {
     </div>
   );
 }
+export default BoardSharing; // Dodaj tę linię na końcu pliku
