@@ -659,9 +659,7 @@ return (
         </div>
       </div>
 
-      <div className="md:col-span-3 border-t pt-4 mt-4">
-        <BoardSharing boardId={currentBoard?._id} />
-      </div>
+     
 
       <div className="md:col-span-3 flex justify-end mt-4">
         <button
@@ -681,7 +679,9 @@ return (
     </div>
   </div>
 )}
-
+ <div className="md:col-span-3 border-t pt-4 mt-4">
+        <BoardSharing boardId={currentBoard?._id} />
+      </div>
             {/* Przełączanie między mapą a listą */}
             {viewMode === 'map' ? (
   <MapView 
