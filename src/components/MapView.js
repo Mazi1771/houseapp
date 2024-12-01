@@ -86,23 +86,26 @@ const MapView = ({ properties, setExpandedProperty }) => {
       zoom={6}
       onLoad={onMapLoad}
     >
-      {validProperties.map(property => (
-        <Marker
-          key={property._id}
-          position={{
-            lat: property.coordinates.lat,
-            lng: property.coordinates.lng
-          }}
-          onClick={() => setSelectedMarker(property)}
-          title={property.title}
-          label={{
-            text: property.price ? `${(property.price/1000000).toFixed(1)}M` : '',
-            color: 'white',
-            fontSize: '13px',
-            className: 'marker-label'
-          }}
-        />
-      ))}
+     {validProperties.map(property => (
+  <Marker
+    key={property._id}
+    position={{
+      lat: property.coordinates.lat,
+      lng: property.coordinates.lng
+    }}
+    onClick={() => setSelectedMarker(property)}
+    title={property.title}
+    label={{
+      text: `${property.title.length > 15 
+        ? property.title.substring(0, 15) + '...' 
+        : property.title} - ${(property.price/1000).toLocaleString()}k`,
+      color: '#000000',
+      fontSize: '12px',
+      fontWeight: 'bold',
+      className: 'marker-label'
+    }}
+  />
+))}
 
       {selectedMarker && (
         <InfoWindow
