@@ -11,9 +11,10 @@ function BoardSharing({ boardId }) {
     setIsLoading(true);
     try {
       const token = localStorage.getItem('token');
-      console.log('boardId:', boardId); // Dodany log do debugowania
+      console.log('boardId:', boardId); // Log do debugowania
       if (!boardId) {
         alert('Brak ID tablicy. Sprawdź konfigurację.');
+        setIsLoading(false);
         return;
       }
 
@@ -21,9 +22,9 @@ function BoardSharing({ boardId }) {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'Authorization': `Bearer ${token}`,
         },
-        body: JSON.stringify({ email, role })
+        body: JSON.stringify({ email, role }),
       });
 
       if (response.ok) {
@@ -34,6 +35,7 @@ function BoardSharing({ boardId }) {
         alert(data.error || 'Wystąpił błąd podczas wysyłania zaproszenia');
       }
     } catch (error) {
+      console.error('Błąd podczas wysyłania zaproszenia:', error);
       alert('Wystąpił błąd podczas wysyłania zaproszenia');
     } finally {
       setIsLoading(false);
@@ -43,7 +45,7 @@ function BoardSharing({ boardId }) {
   return (
     <div className="bg-white p-4 rounded-lg shadow">
       <h3 className="text-lg font-semibold mb-4">Udostępnij tablicę</h3>
-      
+
       <form onSubmit={handleInvite} className="space-y-4">
         <div>
           <label className="block text-sm font-medium text-gray-700">
@@ -77,8 +79,9 @@ function BoardSharing({ boardId }) {
         <button
           type="submit"
           disabled={isLoading}
-          className={`w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white
-            ${isLoading ? 'bg-blue-400' : 'bg-blue-600 hover:bg-blue-700'}`}
+          className={`w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white ${
+            isLoading ? 'bg-blue-400' : 'bg-blue-600 hover:bg-blue-700'
+          }`}
         >
           {isLoading ? 'Wysyłanie...' : 'Zaproś'}
         </button>
