@@ -1,15 +1,28 @@
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
-import { GoogleMap, useJsApiLoader, Marker, InfoWindow } from '@react-google-maps/api';
+import { GoogleMap, useJsApiLoader, InfoWindow } from '@react-google-maps/api';
 
-// Przenieś konfigurację bibliotek poza komponent
+// Stałe konfiguracyjne
 const GOOGLE_MAPS_LIBRARIES = ['places'];
 const GOOGLE_MAPS_ID = 'google-map-script';
 
+const mapStyles = {
+  width: '100%',
+  height: '600px'
+};
+
+const defaultCenter = {
+  lat: 52.069167,
+  lng: 19.480556
+};
+
 const MapView = ({ properties, setExpandedProperty }) => {
+  const [selectedMarker, setSelectedMarker] = useState(null);
+  const [mapInstance, setMapInstance] = useState(null);
+
   const { isLoaded } = useJsApiLoader({
     id: GOOGLE_MAPS_ID,
     googleMapsApiKey: process.env.REACT_APP_GOOGLE_MAPS_API_KEY,
-    libraries: GOOGLE_MAPS_LIBRARIES  // używamy stałej referencji
+    libraries: GOOGLE_MAPS_LIBRARIES
   });
 
   // Filtruj właściwości z poprawnymi współrzędnymi
@@ -25,7 +38,7 @@ const MapView = ({ properties, setExpandedProperty }) => {
 
   // Funkcja do automatycznego dopasowania widoku mapy
   const fitBoundsToMarkers = useCallback(() => {
-    if (map && validProperties.length > 0) {
+    if (mapInstance && validProperties.length > 0 && window.google) {
       const bounds = new window.google.maps.LatLngBounds();
       validProperties.forEach(property => {
         bounds.extend({
@@ -33,26 +46,24 @@ const MapView = ({ properties, setExpandedProperty }) => {
           lng: property.coordinates.lng
         });
       });
-      map.fitBounds(bounds, { padding: { top: 50, right: 50, bottom: 50, left: 50 } });
+      mapInstance.fitBounds(bounds, { padding: 50 });
       
-      // Jeśli mamy tylko jedną pinezkę, ustaw odpowiedni zoom
       if (validProperties.length === 1) {
-        map.setZoom(15);
+        mapInstance.setZoom(15);
       }
     }
-  }, [map, validProperties]);
+  }, [mapInstance, validProperties]);
 
-  // Wywołaj dopasowanie mapy przy pierwszym załadowaniu i przy zmianie właściwości
-  const onMapLoad = useCallback((map) => {
-    setMap(map);
-    fitBoundsToMarkers();
-  }, [fitBoundsToMarkers]);
-
+  // Wywołaj dopasowanie mapy przy zmianach
   useEffect(() => {
-    if (map) {
+    if (mapInstance) {
       fitBoundsToMarkers();
     }
-  }, [validProperties, map, fitBoundsToMarkers]);
+  }, [fitBoundsToMarkers, mapInstance]);
+
+  const onMapLoad = useCallback((map) => {
+    setMapInstance(map);
+  }, []);
 
   if (!isLoaded) {
     return (
@@ -65,11 +76,12 @@ const MapView = ({ properties, setExpandedProperty }) => {
     );
   }
 
-   return (
+  return (
     <GoogleMap
       mapContainerStyle={mapStyles}
       center={defaultCenter}
       zoom={6}
+      onLoad={onMapLoad}
     >
       {validProperties.map(property => {
         const position = {
@@ -77,23 +89,26 @@ const MapView = ({ properties, setExpandedProperty }) => {
           lng: property.coordinates.lng
         };
 
-        return (
-          <div key={property._id}>
-            <google.maps.marker.AdvancedMarkerElement
-              position={position}
-              title={property.title}
-              onClick={() => setSelectedMarker(property)}
-              content={
-                new google.maps.marker.PinElement({
-                  glyph: property.price ? `${(property.price/1000000).toFixed(1)}M` : '',
-                  glyphColor: 'white',
-                  background: '#1a73e8',
-                  borderColor: '#1a73e8'
-                })
-              }
-            />
-          </div>
-        );
+        if (window.google) {
+          return (
+            <div key={property._id}>
+              <window.google.maps.marker.AdvancedMarkerElement
+                position={position}
+                title={property.title}
+                onClick={() => setSelectedMarker(property)}
+                content={
+                  new window.google.maps.marker.PinElement({
+                    glyph: property.price ? `${(property.price/1000000).toFixed(1)}M` : '',
+                    glyphColor: 'white',
+                    background: '#1a73e8',
+                    borderColor: '#1a73e8'
+                  })
+                }
+              />
+            </div>
+          );
+        }
+        return null;
       })}
 
       {selectedMarker && (
