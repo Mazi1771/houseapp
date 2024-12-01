@@ -535,7 +535,21 @@ return (
     </div>
   </div>
 </nav>
-
+{/* Przełącznik między tablicami */}
+<div className="flex justify-center gap-4 my-4">
+  <button
+    onClick={() => setBoardViewType('own')}
+    className={`px-4 py-2 rounded-lg ${boardViewType === 'own' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'}`}
+  >
+    Moje Tablice
+  </button>
+  <button
+    onClick={() => setBoardViewType('shared')}
+    className={`px-4 py-2 rounded-lg ${boardViewType === 'shared' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'}`}
+  >
+    Udostępnione Tablice
+  </button>
+</div>
     {/* Search bar */}
     <div className="bg-white border-b border-gray-200 py-4">
       <div className="max-w-7xl mx-auto px-4">
@@ -647,24 +661,38 @@ return (
             />
           </div>
         )}
+{isShareBoardVisible && (
+  <div className="absolute inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50">
+    <div className="bg-white p-6 rounded-lg shadow-lg">
+      <h2 className="text-lg font-bold mb-4">Udostępnij Tablicę</h2>
+      <BoardSharing
+        boardId={currentBoard?._id}
+        onClose={() => setIsShareBoardVisible(false)}
+      />
+    </div>
+  </div>
+)}
+        {/* Lista tablic */}
+<BoardsList
+  boards={boardViewType === 'own' ? boards : sharedBoards}
+  currentBoard={currentBoard}
+  setCurrentBoard={setCurrentBoard}
+/>
 
-        {/* Lista nieruchomości */}
-        {isLoadingProperties ? (
-          <div className="text-center py-4">
-            <p>Ładowanie nieruchomości...</p>
-          </div>
-        ) : (
-          <div className="space-y-6">
-            {isRefreshing && (
-              <div className="bg-blue-50 text-blue-600 p-4 rounded-md">
-                Trwa aktualizacja nieruchomości...
-                {refreshProgress && (
-                  <div className="mt-2">
-                    Postęp: {refreshProgress.current}/{refreshProgress.total}
-                  </div>
-                )}
-              </div>
-            )}
+{/* Lista nieruchomości */}
+<div className="max-w-7xl mx-auto px-4 py-6">
+  {isLoadingProperties ? (
+    <p>Ładowanie nieruchomości...</p>
+  ) : (
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      {properties.map((property) => (
+        <div key={property._id} className="bg-white shadow-md rounded-lg p-4">
+          {/* Szczegóły nieruchomości */}
+        </div>
+      ))}
+    </div>
+  )}
+</div>
 
             {isFiltersVisible && (
   <div className="bg-white p-4 rounded-lg shadow mb-4">
@@ -771,7 +799,7 @@ return (
   />
 ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {getFilteredAndSortedProperties().map((property, index) => (
+               {getFilteredAndSortedProperties().map((property, index) => (
   <div 
     key={property._id || index} 
     className={`bg-white rounded-xl shadow-sm border border-gray-200 transition-all duration-300
@@ -779,6 +807,7 @@ return (
     onClick={() => setExpandedProperty(expandedProperty === property._id ? null : property._id)}
   >
     <div className="p-4">
+      {/* Nagłówek nieruchomości */}
       <div className="flex justify-between items-start mb-3">
         <div>
           <h3 className="font-semibold text-gray-900">{property.title}</h3>
@@ -794,15 +823,6 @@ return (
               Aktywne
             </span>
           )}
-          <button 
-            onClick={(e) => {
-              e.stopPropagation();
-              setExpandedProperty(expandedProperty === property._id ? null : property._id);
-            }}
-            className="text-gray-400 hover:text-gray-600"
-          >
-            {expandedProperty === property._id ? '▼' : '▶'}
-          </button>
         </div>
       </div>
 
@@ -823,7 +843,7 @@ return (
       </div>
 
       {/* Przyciski oceny */}
-      <div className="flex justify-end gap-2">
+      <div className="flex justify-end gap-2 mb-4">
         <button
           onClick={(e) => {
             e.stopPropagation();
@@ -909,6 +929,7 @@ return (
             </a>
           )}
 
+          {/* Przyciski edycji i usuwania */}
           <div className="flex justify-end gap-2 mt-4">
             <button
               onClick={(e) => {
@@ -944,6 +965,7 @@ return (
     </div>
   </div>
 ))}
+
 
               </div>
             )}
