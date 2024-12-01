@@ -9,7 +9,6 @@ function BoardSharing({ boardId }) {
   const handleInvite = async (e) => {
     e.preventDefault();
     setIsLoading(true);
-
     try {
       const token = localStorage.getItem('token');
       const response = await fetch(`https://houseapp-backend.onrender.com/api/boards/${boardId}/invite`, {
@@ -20,7 +19,6 @@ function BoardSharing({ boardId }) {
         },
         body: JSON.stringify({ email, role })
       });
-
       if (response.ok) {
         alert('Zaproszenie zostało wysłane');
         setEmail('');
@@ -56,7 +54,6 @@ function BoardSharing({ boardId }) {
             <Mail className="absolute right-3 top-2.5 h-5 w-5 text-gray-400" />
           </div>
         </div>
-
         <div>
           <label className="block text-sm font-medium text-gray-700">
             Uprawnienia
@@ -70,7 +67,6 @@ function BoardSharing({ boardId }) {
             <option value="editor">Edytowanie</option>
           </select>
         </div>
-
         <button
           type="submit"
           disabled={isLoading}
@@ -83,4 +79,5 @@ function BoardSharing({ boardId }) {
     </div>
   );
 }
-export default BoardSharing; // Dodaj tę linię na końcu pliku
+
+export default BoardSharing;
