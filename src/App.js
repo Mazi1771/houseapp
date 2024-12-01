@@ -42,7 +42,9 @@ function App() {
   const [showInvitations, setShowInvitations] = useState(false);
   const [currentBoard, setCurrentBoard] = useState(null);
   // ===== SEGMENT 2: EFEKTY =====
-  useEffect(() => {
+ useEffect(() => {
+  if (!isAuthenticated) return;
+
   const fetchData = async () => {
     const token = localStorage.getItem('token');
     try {
@@ -62,15 +64,9 @@ function App() {
     }
   };
 
-  if (isAuthenticated) {
-    fetchData();
-  }
+  fetchData();
 }, [isAuthenticated]);
-
-// Dodano obsługę braku tablicy
-if (!currentBoard) {
-  return <p>Nie udało się załadować tablicy domyślnej. Skontaktuj się z administratorem.</p>;
-}
+  
   useEffect(() => {
   // Sprawdź czy jest URL w parametrach
   const queryParams = new URLSearchParams(window.location.search);
