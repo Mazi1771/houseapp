@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
-import { GoogleMap, useJsApiLoader, InfoWindow } from '@react-google-maps/api';
+import { GoogleMap, useJsApiLoader, InfoWindow, Marker } from '@react-google-maps/api';
 
 // Stałe konfiguracyjne
 const GOOGLE_MAPS_LIBRARIES = ['places'];
@@ -18,6 +18,7 @@ const defaultCenter = {
 const MapView = ({ properties, setExpandedProperty }) => {
   const [selectedMarker, setSelectedMarker] = useState(null);
   const [mapInstance, setMapInstance] = useState(null);
+  const [googleMaps, setGoogleMaps] = useState(null);
 
   const { isLoaded } = useJsApiLoader({
     id: GOOGLE_MAPS_ID,
@@ -38,8 +39,8 @@ const MapView = ({ properties, setExpandedProperty }) => {
 
   // Funkcja do automatycznego dopasowania widoku mapy
   const fitBoundsToMarkers = useCallback(() => {
-    if (mapInstance && validProperties.length > 0 && window.google) {
-      const bounds = new window.google.maps.LatLngBounds();
+    if (mapInstance && validProperties.length > 0 && googleMaps) {
+      const bounds = new googleMaps.LatLngBounds();
       validProperties.forEach(property => {
         bounds.extend({
           lat: property.coordinates.lat,
@@ -52,7 +53,7 @@ const MapView = ({ properties, setExpandedProperty }) => {
         mapInstance.setZoom(15);
       }
     }
-  }, [mapInstance, validProperties]);
+  }, [mapInstance, validProperties, googleMaps]);
 
   // Wywołaj dopasowanie mapy przy zmianach
   useEffect(() => {
@@ -63,6 +64,8 @@ const MapView = ({ properties, setExpandedProperty }) => {
 
   const onMapLoad = useCallback((map) => {
     setMapInstance(map);
+    // @ts-ignore
+    setGoogleMaps(window.google.maps);
   }, []);
 
   if (!isLoaded) {
@@ -83,33 +86,23 @@ const MapView = ({ properties, setExpandedProperty }) => {
       zoom={6}
       onLoad={onMapLoad}
     >
-      {validProperties.map(property => {
-        const position = {
-          lat: property.coordinates.lat,
-          lng: property.coordinates.lng
-        };
-
-        if (window.google) {
-          return (
-            <div key={property._id}>
-              <window.google.maps.marker.AdvancedMarkerElement
-                position={position}
-                title={property.title}
-                onClick={() => setSelectedMarker(property)}
-                content={
-                  new window.google.maps.marker.PinElement({
-                    glyph: property.price ? `${(property.price/1000000).toFixed(1)}M` : '',
-                    glyphColor: 'white',
-                    background: '#1a73e8',
-                    borderColor: '#1a73e8'
-                  })
-                }
-              />
-            </div>
-          );
-        }
-        return null;
-      })}
+      {validProperties.map(property => (
+        <Marker
+          key={property._id}
+          position={{
+            lat: property.coordinates.lat,
+            lng: property.coordinates.lng
+          }}
+          onClick={() => setSelectedMarker(property)}
+          title={property.title}
+          label={{
+            text: property.price ? `${(property.price/1000000).toFixed(1)}M` : '',
+            color: 'white',
+            fontSize: '13px',
+            className: 'marker-label'
+          }}
+        />
+      ))}
 
       {selectedMarker && (
         <InfoWindow
