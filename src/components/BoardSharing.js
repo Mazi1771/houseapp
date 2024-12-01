@@ -11,6 +11,12 @@ function BoardSharing({ boardId }) {
     setIsLoading(true);
     try {
       const token = localStorage.getItem('token');
+      console.log('boardId:', boardId); // Dodany log do debugowania
+      if (!boardId) {
+        alert('Brak ID tablicy. Sprawdź konfigurację.');
+        return;
+      }
+
       const response = await fetch(`https://houseapp-backend.onrender.com/api/boards/${boardId}/invite`, {
         method: 'POST',
         headers: {
@@ -19,6 +25,7 @@ function BoardSharing({ boardId }) {
         },
         body: JSON.stringify({ email, role })
       });
+
       if (response.ok) {
         alert('Zaproszenie zostało wysłane');
         setEmail('');
