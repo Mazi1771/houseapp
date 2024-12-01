@@ -45,21 +45,32 @@ function App() {
   useEffect(() => {
   const fetchData = async () => {
     const token = localStorage.getItem('token');
-    const response = await fetch('https://houseapp-backend.onrender.com/api/boards/default', {
-      headers: {
-        'Authorization': `Bearer ${token}`
+    try {
+      const response = await fetch('https://houseapp-backend.onrender.com/api/boards/default', {
+        headers: { 'Authorization': `Bearer ${token}` },
+      });
+      console.log('Odpowiedź z API:', response);
+      if (response.ok) {
+        const data = await response.json();
+        setCurrentBoard(data);
+      } else {
+        const errorText = await response.text();
+        console.error('Błąd podczas pobierania tablicy domyślnej:', errorText);
       }
-    });
-    if (response.ok) {
-      const data = await response.json();
-      setCurrentBoard(data);
+    } catch (error) {
+      console.error('Błąd sieci:', error);
     }
   };
-  
+
   if (isAuthenticated) {
     fetchData();
   }
 }, [isAuthenticated]);
+
+// Dodano obsługę braku tablicy
+if (!currentBoard) {
+  return <p>Nie udało się załadować tablicy domyślnej. Skontaktuj się z administratorem.</p>;
+}
   useEffect(() => {
   // Sprawdź czy jest URL w parametrach
   const queryParams = new URLSearchParams(window.location.search);
