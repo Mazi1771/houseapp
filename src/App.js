@@ -41,7 +41,79 @@ function App() {
   const editFormRef = useRef(null);
   const [showInvitations, setShowInvitations] = useState(false);
   const [currentBoard, setCurrentBoard] = useState(null);
+  const [boards, setBoards] = useState([]);
+  const [sharedBoards, setSharedBoards] = useState([]);
   // ===== SEGMENT 2: EFEKTY =====
+  useEffect(() => {
+  const fetchBoards = async () => {
+    const token = localStorage.getItem('token');
+    try {
+      const response = await fetch('https://houseapp-backend.onrender.com/api/boards', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setBoards(data.boards);
+        setSharedBoards(data.sharedBoards);
+      }
+    } catch (error) {
+      console.error('Błąd podczas pobierania tablic:', error);
+    }
+  };
+  fetchBoards();
+}, []);
+  //Funkcja przenoszenia,kopiowania
+  const handleMoveProperty = async (propertyId, targetBoardId) => {
+  const token = localStorage.getItem('token');
+  try {
+    const response = await fetch(`https://houseapp-backend.onrender.com/api/properties/${propertyId}/move`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ targetBoardId }),
+    });
+
+    if (response.ok) {
+      alert('Nieruchomość została przeniesiona');
+      fetchProperties(); // Odśwież listę nieruchomości
+    } else {
+      const data = await response.json();
+      alert(data.error || 'Nie udało się przenieść nieruchomości');
+    }
+  } catch (error) {
+    console.error('Błąd podczas przenoszenia nieruchomości:', error);
+  }
+};
+
+const handleCopyProperty = async (propertyId, targetBoardId) => {
+  const token = localStorage.getItem('token');
+  try {
+    const response = await fetch(`https://houseapp-backend.onrender.com/api/properties/${propertyId}/copy`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ targetBoardId }),
+    });
+
+    if (response.ok) {
+      alert('Nieruchomość została skopiowana');
+      fetchProperties(); // Odśwież listę nieruchomości
+    } else {
+      const data = await response.json();
+      alert(data.error || 'Nie udało się skopiować nieruchomości');
+    }
+  } catch (error) {
+    console.error('Błąd podczas kopiowania nieruchomości:', error);
+  }
+};
+  
  useEffect(() => {
   if (!isAuthenticated) return;
 
