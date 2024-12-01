@@ -1,11 +1,13 @@
 // ===== SEGMENT 1: IMPORTY I INICJALIZACJA =====
 import React, { useState, useEffect, useRef } from 'react';
-import { Menu, User, Search, Home, RefreshCw, Settings, LogOut, Map, Grid } from 'lucide-react';
+import { Menu, User, Search, Home, RefreshCw, Settings, LogOut, Map, Grid, Mail } from 'lucide-react';
 import PropertyForm from './components/PropertyForm';
 import PropertyEditForm from './components/PropertyEditForm';
 import Login from './components/Login';
 import Register from './components/Register';
 import PriceHistoryChart from './components/PriceHistoryChart';
+import InvitationsView from './components/InvitationsView';
+import BoardSharing from './components/BoardSharing';
 
 import MapView from './components/MapView';
 
@@ -37,7 +39,27 @@ function App() {
   const [isLoadingProperties, setIsLoadingProperties] = useState(true);
   const [isFiltersVisible, setIsFiltersVisible] = useState(false);
   const editFormRef = useRef(null);
+  const [showInvitations, setShowInvitations] = useState(false);
+  const [currentBoard, setCurrentBoard] = useState(null);
   // ===== SEGMENT 2: EFEKTY =====
+  useEffect(() => {
+  const fetchData = async () => {
+    const token = localStorage.getItem('token');
+    const response = await fetch('https://houseapp-backend.onrender.com/api/boards/default', {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    if (response.ok) {
+      const data = await response.json();
+      setCurrentBoard(data);
+    }
+  };
+  
+  if (isAuthenticated) {
+    fetchData();
+  }
+}, [isAuthenticated]);
   useEffect(() => {
   // Sprawdź czy jest URL w parametrach
   const queryParams = new URLSearchParams(window.location.search);
@@ -413,18 +435,26 @@ return (
             {isRefreshing ? 'Aktualizacja...' : 'Aktualizuj wszystkie'}
           </button>
           
-          <div className="flex items-center gap-2">
-            <span className="text-gray-600">{user?.name || user?.email}</span>
-            <button
-              onClick={handleLogout}
-              className="text-red-600 hover:text-red-700"
-            >
-              <LogOut className="h-5 w-5" />
-            </button>
-          </div>
-        </div>
+         <button
+        onClick={() => setShowInvitations(!showInvitations)}
+        className="flex items-center gap-2 px-4 py-2 text-sm bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 transition-colors"
+      >
+        <Mail className="h-4 w-4" />
+        <span>Zaproszenia</span>
+      </button>
+      
+      <div className="flex items-center gap-2">
+        <span className="text-gray-600">{user?.name || user?.email}</span>
+        <button
+          onClick={handleLogout}
+          className="text-red-600 hover:text-red-700"
+        >
+          <LogOut className="h-5 w-5" />
+        </button>
       </div>
-    </nav>
+    </div>
+  </div>
+</nav>
 
     {/* Search bar */}
     <div className="bg-white border-b border-gray-200 py-4">
@@ -494,6 +524,19 @@ return (
     {/* Main content */}
     <main className="flex-1 py-6">
       <div className="max-w-7xl mx-auto px-4">
+      {/* Panel zaproszeń */}
+    {showInvitations && (
+      <div className="mb-6">
+        <div className="bg-white rounded-lg shadow">
+          <div className="p-4 border-b border-gray-200">
+            <h2 className="text-lg font-semibold">Zaproszenia do tablic</h2>
+          </div>
+          <div className="p-4">
+            <InvitationsView />
+          </div>
+        </div>
+      </div>
+    )}
         {/* Formularz dodawania */}
         {isFormVisible && (
           <div className="mb-6">
@@ -536,97 +579,101 @@ return (
             )}
 
             {isFiltersVisible && (
-              <div className="bg-white p-4 rounded-lg shadow mb-4">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div>
-                    <h3 className="font-medium mb-2">Cena (PLN)</h3>
-                    <div className="flex gap-2">
-                      <input
-                        type="number"
-                        placeholder="Od"
-                        value={filters.priceMin}
-                        onChange={(e) => setFilters({...filters, priceMin: e.target.value})}
-                        className="w-full rounded border p-2"
-                      />
-                      <input
-                        type="number"
-                        placeholder="Do"
-                        value={filters.priceMax}
-                        onChange={(e) => setFilters({...filters, priceMax: e.target.value})}
-                        className="w-full rounded border p-2"
-                      />
-                    </div>
-                  </div>
-                  
-                  <div>
-                    <h3 className="font-medium mb-2">Powierzchnia (m²)</h3>
-                    <div className="flex gap-2">
-                      <input
-                        type="number"
-                        placeholder="Od"
-                        value={filters.areaMin}
-                        onChange={(e) => setFilters({...filters, areaMin: e.target.value})}
-                        className="w-full rounded border p-2"
-                      />
-                      <input
-                        type="number"
-                        placeholder="Do"
-                        value={filters.areaMax}
-                        onChange={(e) => setFilters({...filters, areaMax: e.target.value})}
-                        className="w-full rounded border p-2"
-                      />
-                    </div>
-                  </div>
+  <div className="bg-white p-4 rounded-lg shadow mb-4">
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div>
+        <h3 className="font-medium mb-2">Cena (PLN)</h3>
+        <div className="flex gap-2">
+          <input
+            type="number"
+            placeholder="Od"
+            value={filters.priceMin}
+            onChange={(e) => setFilters({...filters, priceMin: e.target.value})}
+            className="w-full rounded border p-2"
+          />
+          <input
+            type="number"
+            placeholder="Do"
+            value={filters.priceMax}
+            onChange={(e) => setFilters({...filters, priceMax: e.target.value})}
+            className="w-full rounded border p-2"
+          />
+        </div>
+      </div>
+      
+      <div>
+        <h3 className="font-medium mb-2">Powierzchnia (m²)</h3>
+        <div className="flex gap-2">
+          <input
+            type="number"
+            placeholder="Od"
+            value={filters.areaMin}
+            onChange={(e) => setFilters({...filters, areaMin: e.target.value})}
+            className="w-full rounded border p-2"
+          />
+          <input
+            type="number"
+            placeholder="Do"
+            value={filters.areaMax}
+            onChange={(e) => setFilters({...filters, areaMax: e.target.value})}
+            className="w-full rounded border p-2"
+          />
+        </div>
+      </div>
 
-                  <div className="space-y-2">
-                    <div>
-                      <h3 className="font-medium mb-2">Stan</h3>
-                      <select
-                        value={filters.status}
-                        onChange={(e) => setFilters({...filters, status: e.target.value})}
-                        className="w-full rounded border p-2"
-                      >
-                        <option value="">Wszystkie</option>
-                        <option value="do zamieszkania">Do zamieszkania</option>
-                        <option value="do remontu">Do remontu</option>
-                        <option value="w budowie">W budowie</option>
-                        <option value="stan deweloperski">Stan deweloperski</option>
-                      </select>
-                    </div>
-                    
-                    <div>
-                      <h3 className="font-medium mb-2">Ocena</h3>
-                      <select
-                        value={filters.rating}
-                        onChange={(e) => setFilters({...filters, rating: e.target.value})}
-                        className="w-full rounded border p-2"
-                      >
-                        <option value="">Wszystkie</option>
-                        <option value="favorite">⭐ Ulubione</option>
-                        <option value="interested">👍 Zainteresowany</option>
-                        <option value="not_interested">👎 Niezainteresowany</option>
-                      </select>
-                    </div>
-                  </div>
+      <div className="space-y-2">
+        <div>
+          <h3 className="font-medium mb-2">Stan</h3>
+          <select
+            value={filters.status}
+            onChange={(e) => setFilters({...filters, status: e.target.value})}
+            className="w-full rounded border p-2"
+          >
+            <option value="">Wszystkie</option>
+            <option value="do zamieszkania">Do zamieszkania</option>
+            <option value="do remontu">Do remontu</option>
+            <option value="w budowie">W budowie</option>
+            <option value="stan deweloperski">Stan deweloperski</option>
+          </select>
+        </div>
+        
+        <div>
+          <h3 className="font-medium mb-2">Ocena</h3>
+          <select
+            value={filters.rating}
+            onChange={(e) => setFilters({...filters, rating: e.target.value})}
+            className="w-full rounded border p-2"
+          >
+            <option value="">Wszystkie</option>
+            <option value="favorite">⭐ Ulubione</option>
+            <option value="interested">👍 Zainteresowany</option>
+            <option value="not_interested">👎 Niezainteresowany</option>
+          </select>
+        </div>
+      </div>
 
-                  <div className="mt-4 flex justify-end">
-                    <button
-                      onClick={() => setFilters({
-                        priceMin: '',
-                        priceMax: '',
-                        areaMin: '',
-                        areaMax: '',
-                        status: '',
-                        rating: '',
-                      })}
-                      className="px-4 py-2 bg-gray-100 text-gray-600 rounded hover:bg-gray-200"
-                    >
-                      Wyczyść filtry
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
+      <div className="md:col-span-3 border-t pt-4 mt-4">
+        <BoardSharing boardId={currentBoard?._id} />
+      </div>
+
+      <div className="md:col-span-3 flex justify-end mt-4">
+        <button
+          onClick={() => setFilters({
+            priceMin: '',
+            priceMax: '',
+            areaMin: '',
+            areaMax: '',
+            status: '',
+            rating: '',
+          })}
+          className="px-4 py-2 bg-gray-100 text-gray-600 rounded hover:bg-gray-200"
+        >
+          Wyczyść filtry
+        </button>
+      </div>
+    </div>
+  </div>
+)}
 
             {/* Przełączanie między mapą a listą */}
             {viewMode === 'map' ? (
