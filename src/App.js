@@ -1088,7 +1088,7 @@ const PropertyCard = ({
     </h2>
   </div>
 )}
-
+</>
 </div> {/* Zamknięcie kontenera */}
 </main>
 
