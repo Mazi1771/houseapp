@@ -960,29 +960,25 @@ const PropertyCard = ({
           </select>
         </div>
       </div>
+
+      <div className="md:col-span-3 flex justify-end mt-4">
+        <button
+          onClick={() => setFilters({
+            priceMin: '',
+            priceMax: '',
+            areaMin: '',
+            areaMax: '',
+            status: '',
+            rating: '',
+          })}
+          className="px-4 py-2 bg-gray-100 text-gray-600 rounded hover:bg-gray-200"
+        >
+          Wyczyść filtry
+        </button>
+      </div>
     </div>
   </div>
 )}
-
-                    <div className="md:col-span-3 flex justify-end mt-4">
-                      <button
-                        onClick={() => setFilters({
-                          priceMin: '',
-                          priceMax: '',
-                          areaMin: '',
-                          areaMax: '',
-                          status: '',
-                          rating: '',
-                        })}
-                        className="px-4 py-2 bg-gray-100 text-gray-600 rounded hover:bg-gray-200"
-                      >
-                        Wyczyść filtry
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              )}
-
               {/* Lista nieruchomości */}
               {viewMode === 'map' ? (
                 <MapView 
