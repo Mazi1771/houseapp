@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { 
-  Menu, 
+  Menu as MenuIcon, // Zmieniona nazwa z Menu na MenuIcon
   Search, 
   Home, 
   RefreshCw, 
@@ -11,10 +11,15 @@ import {
   Mail,
   Share,
   MoreVertical,
-  X, // ikona zamykania
-  ChevronRight, // ikona rozwijania
-  ChevronLeft, // ikona zwijania
 } from 'lucide-react';
+
+// Import komponentów menu z naszego UI
+import {
+  Menu,
+  MenuTrigger,
+  MenuContent,
+  MenuItem,
+} from '@/components/ui/menu';
 import PropertyForm from './components/PropertyForm';
 import PropertyEditForm from './components/PropertyEditForm';
 import Login from './components/Login';
