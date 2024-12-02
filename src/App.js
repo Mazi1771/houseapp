@@ -61,6 +61,32 @@ function App() {
   const editFormRef = useRef(null);
   // === EFEKTY ===
   useEffect(() => {
+  const fetchBoards = async () => {
+    const token = localStorage.getItem('token');
+    try {
+      const response = await fetch('https://houseapp-backend.onrender.com/api/boards', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setBoards(data.boards);
+        if (!selectedBoard && data.boards.length > 0) {
+          setSelectedBoard(data.boards[0]); // Automatyczne ustawienie pierwszej tablicy
+        }
+      }
+    } catch (error) {
+      console.error('Błąd podczas pobierania tablic:', error);
+    }
+  };
+
+  if (isAuthenticated) {
+    fetchBoards();
+  }
+}, [isAuthenticated, selectedBoard]);
+  useEffect(() => {
   const createDefaultBoard = async () => {
     const token = localStorage.getItem('token');
     try {
@@ -205,47 +231,53 @@ function App() {
   };
   // === OBSŁUGA NIERUCHOMOŚCI ===
   const handleAddProperty = async () => {
-    if (!url) {
-      alert('Wprowadź adres URL nieruchomości');
+  if (!selectedBoard) {
+    alert('Najpierw wybierz lub utwórz tablicę, aby dodać nieruchomość.');
+    return;
+  }
+
+  if (!url) {
+    alert('Wprowadź adres URL nieruchomości.');
+    return;
+  }
+
+  setIsLoading(true);
+  try {
+    const token = localStorage.getItem('token');
+    const response = await fetch('https://houseapp-backend.onrender.com/api/scrape', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify({ 
+        url, 
+        boardId: selectedBoard._id, // Użycie ID wybranej tablicy
+      }),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      if (response.status === 400 && error.error.includes('nieaktywna')) {
+        alert('Ta oferta jest już nieaktywna lub została usunięta. Spróbuj dodać inną ofertę.');
+      } else {
+        alert(error.error || 'Wystąpił błąd podczas pobierania danych.');
+      }
       return;
     }
 
-    setIsLoading(true);
-    try {
-      const token = localStorage.getItem('token');
-      const response = await fetch('https://houseapp-backend.onrender.com/api/scrape', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ 
-          url,
-          boardId: selectedBoard?._id 
-        })
-      });
-      
-      const data = await response.json();
-      
-      if (!response.ok) {
-        if (response.status === 400 && data.error.includes('nieaktywna')) {
-          alert('Ta oferta jest już nieaktywna lub została usunięta. Spróbuj dodać inną ofertę.');
-        } else {
-          alert(data.error || 'Wystąpił błąd podczas pobierania danych');
-        }
-        return;
-      }
-
-      await fetchBoardProperties(selectedBoard._id);
-      setUrl('');
-      setIsFormVisible(false);
-    } catch (error) {
-      console.error('Błąd:', error);
-      alert('Wystąpił błąd podczas komunikacji z serwerem');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    const data = await response.json();
+    await fetchBoardProperties(selectedBoard._id); // Odśwież nieruchomości dla bieżącej tablicy
+    setUrl('');
+    setIsFormVisible(false);
+    alert('Nieruchomość została dodana pomyślnie!');
+  } catch (error) {
+    console.error('Błąd podczas dodawania nieruchomości:', error);
+    alert('Wystąpił problem z połączeniem z serwerem. Spróbuj ponownie później.');
+  } finally {
+    setIsLoading(false);
+  }
+};
 
   const handleEditClick = (property) => {
     setEditingProperty(property);
@@ -1038,25 +1070,25 @@ const PropertyCard = ({
       </main>
 
       {/* Modale */}
-      {shareModalOpen && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-lg font-bold">Udostępnij tablicę</h2>
-              <button 
-                onClick={() => setShareModalOpen(false)}
-                className="text-gray-400 hover:text-gray-600"
-              >
-                ×
-              </button>
-            </div>
-            <BoardSharing
-              boardId={selectedBoard?._id}
-              onClose={() => setShareModalOpen(false)}
-            />
-          </div>
-        </div>
-      )}
+     {shareModalOpen && selectedBoard && (
+  <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+    <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full">
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-lg font-bold">Udostępnij tablicę</h2>
+        <button 
+          onClick={() => setShareModalOpen(false)}
+          className="text-gray-400 hover:text-gray-600"
+        >
+          ×
+        </button>
+      </div>
+      <BoardSharing
+        boardId={selectedBoard._id} // Przekazanie ID tablicy
+        onClose={() => setShareModalOpen(false)}
+      />
+    </div>
+  </div>
+)}
 
       {propertyToMove && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
