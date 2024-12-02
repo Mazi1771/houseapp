@@ -21,7 +21,7 @@ import PriceHistoryChart from './components/PriceHistoryChart';
 import InvitationsView from './components/InvitationsView';
 import BoardSharing from './components/BoardSharing';
 import MapView from './components/MapView';
-import { Menu, MenuButton, MenuItem, MenuList, MenuTrigger, MenuContent } from '@/components/ui/menu';
+import { Menu, MenuButton, MenuItem, MenuList, MenuTrigger, MenuContent } from './components/ui/menu';
 
 function App() {
   // === PODSTAWOWE STANY ===
