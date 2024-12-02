@@ -1089,11 +1089,11 @@ const PropertyCard = ({
   </div>
 )}
 
-        </div>
-      </main>
+</div> {/* Zamknięcie kontenera */}
+</main>
 
-      {/* Modale */}
-     {shareModalOpen && selectedBoard && (
+{/* Modale */}
+{shareModalOpen && selectedBoard && (
   <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
     <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full">
       <div className="flex justify-between items-center mb-4">
@@ -1113,55 +1113,56 @@ const PropertyCard = ({
   </div>
 )}
 
-      {propertyToMove && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full">
-            <h2 className="text-lg font-bold mb-4">Przenieś nieruchomość</h2>
-            <div className="space-y-4">
-              {boards.map(board => (
-                <button
-                  key={board._id}
-                  onClick={() => {
-                    handlePropertyMove(propertyToMove._id, board._id);
-                    setPropertyToMove(null);
-                  }}
-                  className="w-full text-left p-4 rounded-lg hover:bg-gray-50"
-                >
-                  <p className="font-medium">{board.name}</p>
-                  <p className="text-sm text-gray-500">
-                    {board._id === selectedBoard?._id ? 'Obecna tablica' : 'Inna tablica'}
-                  </p>
-                </button>
-              ))}
-            </div>
-            <button 
-              onClick={() => setPropertyToMove(null)}
-              className="mt-4 w-full p-2 bg-gray-100 rounded-lg"
-            >
-              Anuluj
-            </button>
-          </div>
-        </div>
-      )}
-
-      {showInvitations && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-lg font-bold">Zaproszenia do tablic</h2>
-              <button 
-                onClick={() => setShowInvitations(false)}
-                className="text-gray-400 hover:text-gray-600"
-              >
-                ×
-              </button>
-            </div>
-            <InvitationsView onClose={() => setShowInvitations(false)} />
-          </div>
-        </div>
-      )}
+{propertyToMove && (
+  <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+    <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full">
+      <h2 className="text-lg font-bold mb-4">Przenieś nieruchomość</h2>
+      <div className="space-y-4">
+        {boards.map(board => (
+          <button
+            key={board._id}
+            onClick={() => {
+              handlePropertyMove(propertyToMove._id, board._id);
+              setPropertyToMove(null);
+            }}
+            className="w-full text-left p-4 rounded-lg hover:bg-gray-50"
+          >
+            <p className="font-medium">{board.name}</p>
+            <p className="text-sm text-gray-500">
+              {board._id === selectedBoard?._id ? 'Obecna tablica' : 'Inna tablica'}
+            </p>
+          </button>
+        ))}
+      </div>
+      <button 
+        onClick={() => setPropertyToMove(null)}
+        className="mt-4 w-full p-2 bg-gray-100 rounded-lg"
+      >
+        Anuluj
+      </button>
     </div>
-  );
+  </div>
+)}
+
+{showInvitations && (
+  <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+    <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full">
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-lg font-bold">Zaproszenia do tablic</h2>
+        <button 
+          onClick={() => setShowInvitations(false)}
+          className="text-gray-400 hover:text-gray-600"
+        >
+          ×
+        </button>
+      </div>
+      <InvitationsView onClose={() => setShowInvitations(false)} />
+    </div>
+  </div>
+)}
+
+</div> {/* Zamknięcie głównego kontenera */}
+);
 }
 
 export default App;
