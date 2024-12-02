@@ -66,347 +66,335 @@ function App() {
   const editFormRef = useRef(null);
 
   // === POMOCNICZE FUNKCJE ===
-  const isPropertyShared = (property) => {
-    const board = [...boards, ...sharedBoards].find(b => b._id === property.board);
-    return board?.owner !== user?._id;
-  };
-
-  const getCurrentBoard = () => {
-    return selectedBoard || boards[0];
-  };
-  // === EFEKTY ===
-  useEffect(() => {
-    const fetchBoards = async () => {
-      const token = localStorage.getItem('token');
-      try {
-        const response = await fetch('https://houseapp-backend.onrender.com/api/boards', {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-        });
-        if (response.ok) {
-          const data = await response.json();
-          setBoards(data.boards);
-          setSharedBoards(data.sharedBoards);
-          // Ustaw domyślnie pierwszą tablicę jako wybraną
-          if (data.boards.length && !selectedBoard) {
-            setSelectedBoard(data.boards[0]);
-          }
-        }
-      } catch (error) {
-        console.error('Błąd podczas pobierania tablic:', error);
-      }
-    };
-    
-    if (isAuthenticated) {
-      fetchBoards();
-    }
-  }, [isAuthenticated]);
-
-  useEffect(() => {
-    const token = localStorage.getItem('token');
-    const savedUser = localStorage.getItem('user');
-    if (token && savedUser) {
-      setIsAuthenticated(true);
-      setUser(JSON.parse(savedUser));
-    } else {
-      setIsLoadingProperties(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    if (isAuthenticated && selectedBoard) {
-      fetchBoardProperties(selectedBoard._id);
-    }
-  }, [isAuthenticated, selectedBoard]);
-
-  // === FUNKCJE FETCHOWANIA DANYCH ===
-  const fetchBoardProperties = async (boardId) => {
+  const fetchProperties = async () => {
     try {
       setIsLoadingProperties(true);
       const token = localStorage.getItem('token');
-      const response = await fetch(`https://houseapp-backend.onrender.com/api/boards/${boardId}/properties`, {
+      const response = await fetch('https://houseapp-backend.onrender.com/api/properties', {
+        method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         },
+        credentials: 'include'
       });
         
       if (response.ok) {
         const data = await response.json();
         setProperties(data);
-      } else if (response.status === 401) {
-        handleLogout();
+      } else {
+        const errorData = await response.json();
+        if (response.status === 401) {
+          handleLogout();
+        }
       }
     } catch (error) {
-      console.error('Błąd podczas pobierania nieruchomości:', error);
+      console.error('Błąd podczas pobierania danych:', error);
     } finally {
       setIsLoadingProperties(false);
     }
   };
 
-  // === FUNKCJE OBSŁUGI TABLIC ===
-  const handleBoardSelect = (board) => {
-    setSelectedBoard(board);
+  const handleEditClick = (property) => {
+    setEditingProperty(property);
+    setExpandedProperty(null);
+    setTimeout(() => {
+      editFormRef.current?.scrollIntoView({ 
+        behavior: 'smooth',
+        block: 'start'
+      });
+    }, 100);
   };
 
-  const handlePropertyMove = async (propertyId, targetBoardId) => {
-    const token = localStorage.getItem('token');
+  const handleLogin = (data) => {
+    localStorage.setItem('token', data.token);
+    localStorage.setItem('user', JSON.stringify(data.user));
+    setIsAuthenticated(true);
+    setUser(data.user);
+    fetchProperties();
+  };
+
+  const handleRegister = (data) => {
+    setIsAuthenticated(true);
+    setUser(data.user);
+    fetchProperties();
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    setIsAuthenticated(false);
+    setUser(null);
+    setProperties([]);
+    setExpandedProperty(null);
+  };
+
+  const handleScrape = async () => {
+    if (!url) return;
+    setIsLoading(true);
     try {
-      const response = await fetch(`https://houseapp-backend.onrender.com/api/properties/${propertyId}/move`, {
+      const token = localStorage.getItem('token');
+      const response = await fetch('https://houseapp-backend.onrender.com/api/scrape', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({ targetBoardId }),
+        body: JSON.stringify({ url })
       });
-
-      if (response.ok) {
-        // Odśwież właściwości na aktualnej tablicy
-        await fetchBoardProperties(selectedBoard._id);
-        setPropertyToMove(null);
-      } else {
-        const data = await response.json();
-        alert(data.error || 'Nie udało się przenieść nieruchomości');
+      
+      const data = await response.json();
+      
+      if (!response.ok) {
+        if (response.status === 400 && data.error.includes('nieaktywna')) {
+          alert('Ta oferta jest już nieaktywna lub została usunięta. Spróbuj dodać inną ofertę.');
+        } else {
+          alert(data.error || 'Wystąpił błąd podczas pobierania danych');
+        }
+        return;
       }
+
+      setProperties([data, ...properties]);
+      setUrl('');
+      setIsFormVisible(false);
     } catch (error) {
-      console.error('Błąd podczas przenoszenia nieruchomości:', error);
+      console.error('Błąd:', error);
+      alert('Wystąpił błąd podczas komunikacji z serwerem');
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const handlePropertyCopy = async (propertyId, targetBoardId) => {
-    const token = localStorage.getItem('token');
+  const handleRating = async (propertyId, rating) => {
     try {
-      const response = await fetch(`https://houseapp-backend.onrender.com/api/properties/${propertyId}/copy`, {
-        method: 'POST',
+      const token = localStorage.getItem('token');
+      const response = await fetch(`https://houseapp-backend.onrender.com/api/properties/${propertyId}`, {
+        method: 'PUT',
         headers: {
-          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({ targetBoardId }),
+        credentials: 'include',
+        body: JSON.stringify({ rating })
       });
 
       if (response.ok) {
-        await fetchBoardProperties(selectedBoard._id);
-      } else {
-        const data = await response.json();
-        alert(data.error || 'Nie udało się skopiować nieruchomości');
+        const updatedProperty = await response.json();
+        setProperties(properties.map(p => 
+          p._id === propertyId ? updatedProperty : p
+        ));
       }
     } catch (error) {
-      console.error('Błąd podczas kopiowania nieruchomości:', error);
+      console.error('Błąd podczas aktualizacji oceny:', error);
     }
   };
 
-  // === KOMPONENTY UI ===
-  const BoardSidebar = ({ isOpen }) => (
-    <div
-      className={`fixed left-0 top-16 h-full bg-white shadow-lg transition-all duration-300 z-20
-        ${isOpen ? 'w-64' : 'w-0'} overflow-hidden`}
-    >
-      <div className="p-4">
-        <BoardNavigation
-          boards={boards}
-          sharedBoards={sharedBoards}
-          selectedBoard={selectedBoard}
-          onBoardSelect={handleBoardSelect}
-          onShareClick={(board) => {
-            setShareModalOpen(true);
-            setSelectedBoard(board);
-          }}
-        />
-      </div>
-    </div>
-  );
+  const handleDelete = async (propertyId) => {
+    if (!window.confirm('Czy na pewno chcesz usunąć to ogłoszenie?')) {
+      return;
+    }
+    
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`https://houseapp-backend.onrender.com/api/properties/${propertyId}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        credentials: 'include'
+      });
 
-  const PropertyList = () => (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-      {getFilteredAndSortedProperties().map((property) => (
-        <PropertyCard
-          key={property._id}
-          property={property}
-          isShared={isPropertyShared(property)}
-          onMove={setPropertyToMove}
-          onCopy={handlePropertyCopy}
-          onEdit={handleEditClick}
-          onDelete={handleDelete}
-          onRate={handleRating}
-          onRefresh={handleRefreshProperty}
-          isExpanded={expandedProperty === property._id}
-          onExpandToggle={() => setExpandedProperty(
-            expandedProperty === property._id ? null : property._id
-          )}
-        />
-      ))}
-    </div>
-  );
-  // === KOMPONENT KARTY NIERUCHOMOŚCI ===
- const PropertyCard = ({ 
-  property, 
-  isShared, 
-  onMove, 
-  onCopy, 
-  onEdit, 
-  onDelete, 
-  onRate,
-  onRefresh,
-  isExpanded,
-  onExpandToggle
-}) => {
-  return (
-    <div 
-      className={`bg-white rounded-xl shadow-sm border-l-4 ${
-        isShared ? 'border-l-purple-500' : 'border-l-blue-500'
-      } relative`}
-      onClick={onExpandToggle}
-    >
-      <div className="p-4">
-        {/* Menu w prawym górnym rogu */}
-       <div className="absolute top-2 right-2 z-10">
-  <Menu>
-    <MenuTrigger>
-      <button className="p-1 hover:bg-gray-100 rounded-full">
-        <MoreVertical className="w-5 h-5 text-gray-400" />
-      </button>
-    </MenuTrigger>
-    <MenuContent>
-      {!isShared && (
-        <MenuItem onClick={() => onMove(property)}>
-          Przenieś do innej tablicy
-        </MenuItem>
-      )}
-      <MenuItem onClick={() => onCopy(property._id)}>
-        Kopiuj do wspólnej tablicy
-      </MenuItem>
-      <MenuItem onClick={() => onEdit(property)}>
-        Edytuj
-      </MenuItem>
-      {!isShared && (
-        <MenuItem onClick={() => onDelete(property._id)} className="text-red-600">
-          Usuń
-        </MenuItem>
-      )}
-    </MenuContent>
-  </Menu>
-</div>
-        {/* Podstawowe informacje */}
-        <div className="flex justify-between items-start mb-3">
-          <div>
-            <h3 className="font-semibold text-gray-900">{property.title}</h3>
-            <p className="text-sm text-gray-500">{property.location || 'Brak lokalizacji'}</p>
-            {isShared && (
-              <p className="text-xs text-purple-600 mt-1">
-                Udostępnione przez: {property.owner?.name || 'Inny użytkownik'}
-              </p>
-            )}
-          </div>
-          <div className="mr-10">
-            {property.isActive === false ? (
-              <span className="px-2 py-1 bg-red-100 text-red-800 text-xs font-medium rounded-full">
-                Nieaktywne
+      if (response.ok) {
+        setProperties(properties.filter(p => p._id !== propertyId));
+        setExpandedProperty(null);
+      } else {
+        alert('Nie udało się usunąć ogłoszenia');
+      }
+    } catch (error) {
+      alert('Wystąpił błąd podczas usuwania ogłoszenia');
+    }
+  };
+
+  const handleRefreshProperty = async (propertyId) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`https://houseapp-backend.onrender.com/api/properties/${propertyId}/refresh`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        credentials: 'include'
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setProperties(properties.map(p => 
+          p._id === propertyId ? data.property : p
+        ));
+        alert('Nieruchomość została zaktualizowana');
+      }
+    } catch (error) {
+      console.error('Błąd podczas odświeżania:', error);
+      alert('Wystąpił błąd podczas aktualizacji');
+    }
+  };
+
+  const handleRefreshAll = async () => {
+    if (!window.confirm('Czy chcesz zaktualizować wszystkie nieruchomości? To może potrwać kilka minut.')) {
+      return;
+    }
+
+    setIsRefreshing(true);
+    setRefreshProgress({ current: 0, total: properties.length });
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch('https://houseapp-backend.onrender.com/api/properties/refresh-all', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        credentials: 'include'
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        await fetchProperties();
+        alert(`Zaktualizowano ${data.updated} nieruchomości`);
+      }
+    } catch (error) {
+      console.error('Błąd podczas odświeżania wszystkich nieruchomości:', error);
+      alert('Wystąpił błąd podczas aktualizacji');
+    } finally {
+      setIsRefreshing(false);
+      setRefreshProgress(null);
+    }
+  };
+
+  const handleSaveEdit = async (updatedData) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`https://houseapp-backend.onrender.com/api/properties/${editingProperty._id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        credentials: 'include',
+        body: JSON.stringify(updatedData)
+      });
+
+      if (response.ok) {
+        const updatedProperty = await response.json();
+        setProperties(properties.map(p => 
+          p._id === editingProperty._id ? updatedProperty : p
+        ));
+        setEditingProperty(null);
+      } else {
+        const errorData = await response.json();
+        alert(errorData.error || 'Wystąpił błąd podczas aktualizacji');
+      }
+    } catch (error) {
+      alert('Wystąpił błąd podczas aktualizacji');
+    }
+  };
+
+  const getFilteredAndSortedProperties = () => {
+    let filtered = properties.filter(property => {
+      const matchesPrice = (!filters.priceMin || property.price >= Number(filters.priceMin)) &&
+                          (!filters.priceMax || property.price <= Number(filters.priceMax));
+                          
+      const matchesArea = (!filters.areaMin || property.area >= Number(filters.areaMin)) &&
+                         (!filters.areaMax || property.area <= Number(filters.areaMax));
+                         
+      const matchesStatus = !filters.status || property.status === filters.status;
+      
+      const matchesRating = !filters.rating || property.rating === filters.rating;
+
+      return matchesPrice && matchesArea && matchesStatus && matchesRating;
+    });
+
+    if (sortBy) {
+      filtered.sort((a, b) => {
+        switch (sortBy) {
+          case 'price-asc':
+            return (a.price || 0) - (b.price || 0);
+          case 'price-desc':
+            return (b.price || 0) - (a.price || 0);
+          case 'area-asc':
+            return (a.area || 0) - (b.area || 0);
+          case 'area-desc':
+            return (b.area || 0) - (a.area || 0);
+          case 'date-asc':
+            return new Date(a.createdAt) - new Date(b.createdAt);
+          case 'date-desc':
+            return new Date(b.createdAt) - new Date(a.createdAt);
+          default:
+            return 0;
+        }
+      });
+    }
+
+    return filtered;
+  };
+
+  const BoardNavigation = ({ boards, sharedBoards, selectedBoard, onBoardSelect, onShareClick }) => {
+    return (
+      <div className="bg-white p-4 rounded-lg shadow">
+        <h2 className="font-semibold text-lg mb-4">Moje tablice</h2>
+        <div className="space-y-2">
+          {boards.map(board => (
+            <div 
+              key={board._id}
+              className={`flex items-center justify-between p-2 rounded-lg cursor-pointer ${
+                selectedBoard?._id === board._id ? 'bg-blue-50' : 'hover:bg-gray-50'
+              }`}
+            >
+              <span 
+                onClick={() => onBoardSelect(board)}
+                className="flex-grow"
+              >
+                {board.name}
               </span>
-            ) : (
-              <span className="px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded-full">
-                Aktywne
-              </span>
-            )}
-          </div>
+              <button
+                onClick={() => onShareClick(board)}
+                className="p-2 text-gray-400 hover:text-blue-600 rounded-full hover:bg-blue-50"
+              >
+                <Share className="w-4 h-4" />
+              </button>
+            </div>
+          ))}
         </div>
 
-        {/* Grid z ceną i powierzchnią */}
-        <div className="grid grid-cols-2 gap-3 mb-4">
-          <div className="bg-gray-50 p-3 rounded-lg">
-            <p className="text-sm text-gray-500 mb-1">Cena</p>
-            <p className="font-semibold text-gray-900">
-              {property.price ? `${property.price.toLocaleString()} PLN` : 'Brak danych'}
-            </p>
-          </div>
-          <div className="bg-gray-50 p-3 rounded-lg">
-            <p className="text-sm text-gray-500 mb-1">Powierzchnia</p>
-            <p className="font-semibold text-gray-900">
-              {property.area ? `${property.area} m²` : 'Brak danych'}
-            </p>
-          </div>
-        </div>
-
-        {/* Przyciski oceny */}
-        <div className="flex justify-end gap-2">
-          {!isShared && (
-            <>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onRate(property._id, 'favorite');
-                }}
-                className={`p-2 rounded-lg transition-colors ${
-                  property.rating === 'favorite' ? 'bg-yellow-100' : 'bg-gray-100'
-                }`}
-              >
-                ⭐
-              </button>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onRate(property._id, 'interested');
-                }}
-                className={`p-2 rounded-lg transition-colors ${
-                  property.rating === 'interested' ? 'bg-green-100' : 'bg-gray-100'
-                }`}
-              >
-                👍
-              </button>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onRate(property._id, 'not_interested');
-                }}
-                className={`p-2 rounded-lg transition-colors ${
-                  property.rating === 'not_interested' ? 'bg-red-100' : 'bg-gray-100'
-                }`}
-              >
-                👎
-              </button>
-            </>
-          )}
-        </div>
-
-        {/* Rozszerzone informacje */}
-        {isExpanded && (
-          <div className="mt-4 pt-4 border-t border-gray-200">
-            <p className="text-gray-700 mb-4">{property.description || 'Brak opisu'}</p>
-            
-            {property.sourceUrl && (
-              <a 
-                href={property.sourceUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center text-blue-600 hover:text-blue-800 hover:underline mb-4"
-                onClick={(e) => e.stopPropagation()}
-              >
-                Zobacz ogłoszenie →
-              </a>
-            )}
-            {!isShared && (
-              <div className="flex gap-2 justify-end">
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onRefresh(property._id);
-                  }}
-                  className="px-4 py-2 bg-green-100 text-green-600 rounded-lg hover:bg-green-200"
-                  disabled={!property.sourceUrl}
+        {sharedBoards.length > 0 && (
+          <>
+            <h2 className="font-semibold text-lg mt-6 mb-4">Wspólne tablice</h2>
+            <div className="space-y-2">
+              {sharedBoards.map(board => (
+                <div
+                  key={board._id}
+                  onClick={() => onBoardSelect(board)}
+                  className={`p-2 rounded-lg cursor-pointer ${
+                    selectedBoard?._id === board._id ? 'bg-purple-50' : 'hover:bg-gray-50'
+                  }`}
                 >
-                  Odśwież
-                </button>
-              </div>
-            )}
-          </div>
+                  <div className="flex items-center justify-between">
+                    <span>{board.name}</span>
+                    <span className="text-sm text-gray-500">
+                      Udostępnione przez: {board.owner.name || board.owner.email}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
         )}
       </div>
-    </div>
-  );
-};
+    );
+  };
   // === GŁÓWNY RENDER APLIKACJI ===
   if (!isAuthenticated) {
     return (
