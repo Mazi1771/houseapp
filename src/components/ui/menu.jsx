@@ -1,74 +1,63 @@
-import * as React from "react"
-import * as MenuPrimitive from "@radix-ui/react-dropdown-menu"
-import { cn } from "./lib/utils"
+import React, { useState, useRef, useEffect } from 'react';
 
-const Menu = MenuPrimitive.Root
-const MenuTrigger = MenuPrimitive.Trigger
-const MenuGroup = MenuPrimitive.Group
-const MenuPortal = MenuPrimitive.Portal
-const MenuSub = MenuPrimitive.Sub
-const MenuRadioGroup = MenuPrimitive.RadioGroup
+export const Menu = ({ children }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const menuRef = useRef();
 
-const MenuSubTrigger = React.forwardRef(({ className, inset, children, ...props }, ref) => (
-  <MenuPrimitive.SubTrigger
-    ref={ref}
-    className={cn(
-      "flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none focus:bg-accent focus:text-accent-foreground data-[state=open]:bg-accent data-[state=open]:text-accent-foreground",
-      inset && "pl-8",
-      className
-    )}
-    {...props}>
-    {children}
-  </MenuPrimitive.SubTrigger>
-))
-MenuSubTrigger.displayName = MenuPrimitive.SubTrigger.displayName
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
+        setIsOpen(false);
+      }
+    };
 
-const MenuSubContent = React.forwardRef(({ className, ...props }, ref) => (
-  <MenuPrimitive.SubContent
-    ref={ref}
-    className={cn(
-      "z-50 min-w-[8rem] overflow-hidden rounded-md border bg-popover p-1 text-popover-foreground shadow-lg data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2",
-      className
-    )}
-    {...props} />
-))
-MenuSubContent.displayName = MenuPrimitive.SubContent.displayName
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
-const MenuContent = React.forwardRef(({ className, sideOffset = 4, ...props }, ref) => (
-  <MenuPrimitive.Portal>
-    <MenuPrimitive.Content
-      ref={ref}
-      sideOffset={sideOffset}
-      className={cn(
-        "z-50 min-w-[8rem] overflow-hidden rounded-md border bg-popover p-1 text-popover-foreground shadow-md data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2",
-        className
-      )}
-      {...props} />
-  </MenuPrimitive.Portal>
-))
-MenuContent.displayName = MenuPrimitive.Content.displayName
+  return (
+    <div className="relative inline-block text-left" ref={menuRef}>
+      {React.Children.map(children, child => {
+        if (child.type === MenuTrigger) {
+          return React.cloneElement(child, {
+            onClick: () => setIsOpen(!isOpen),
+          });
+        }
+        if (child.type === MenuContent) {
+          return isOpen ? child : null;
+        }
+        return child;
+      })}
+    </div>
+  );
+};
 
-const MenuItem = React.forwardRef(({ className, inset, ...props }, ref) => (
-  <MenuPrimitive.Item
-    ref={ref}
-    className={cn(
-      "relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
-      inset && "pl-8",
-      className
-    )}
-    {...props} />
-))
-MenuItem.displayName = MenuPrimitive.Item.displayName
+export const MenuTrigger = ({ children, onClick }) => {
+  return React.cloneElement(children, {
+    onClick,
+  });
+};
 
-export {
-  Menu,
-  MenuTrigger,
-  MenuContent,
-  MenuItem,
-  MenuGroup,
-  MenuPortal,
-  MenuSub,
-  MenuSubContent,
-  MenuSubTrigger,
-  MenuRadioGroup,
-}
+export const MenuContent = ({ children }) => {
+  return (
+    <div className="absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-50">
+      <div className="py-1">
+        {children}
+      </div>
+    </div>
+  );
+};
+
+export const MenuItem = ({ onClick, children, className = '' }) => {
+  return (
+    <button
+      className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 ${className}`}
+      onClick={(e) => {
+        e.stopPropagation();
+        onClick(e);
+      }}
+    >
+      {children}
+    </button>
+  );
+};
