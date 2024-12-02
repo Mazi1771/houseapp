@@ -102,6 +102,34 @@ function App() {
   }, [isAuthenticated, selectedBoard]);
 
   // === FUNKCJE OBSŁUGI TABLIC ===
+  const handleLogout = () => {
+  localStorage.removeItem('token');
+  localStorage.removeItem('user');
+  setIsAuthenticated(false);
+  setUser(null);
+  setProperties([]);
+  setBoards([]);           // Dodane
+  setSharedBoards([]);     // Dodane
+  setSelectedBoard(null);
+  setExpandedProperty(null);
+};
+  const BoardSidebar = ({ isOpen }) => (
+  <div className={`fixed left-0 top-16 h-full bg-white shadow-lg transition-all duration-300 z-20 
+    ${isOpen ? 'w-64' : 'w-0'} overflow-hidden`}>
+    <div className="p-4">
+      <BoardNavigation
+        boards={boards}
+        sharedBoards={sharedBoards}
+        selectedBoard={selectedBoard}
+        onBoardSelect={handleBoardSelect}
+        onShareClick={(board) => {
+          setShareModalOpen(true);
+          setSelectedBoard(board);
+        }}
+      />
+    </div>
+  </div>
+);
   const handleLogin = (data) => {
   localStorage.setItem('token', data.token);
   localStorage.setItem('user', JSON.stringify(data.user));
@@ -928,7 +956,7 @@ const handleRegister = (data) => {
 
       {/* Przycisk udostępniania */}
       <button
-        onClick={() => setIsShareBoardVisible(true)}
+        onClick={() => setShareModalOpen(true)}
         className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
       >
         <Share className="h-4 w-4" />
