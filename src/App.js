@@ -13,13 +13,6 @@ import {
   MoreVertical,
 } from 'lucide-react';
 
-// Import komponentów menu z naszego UI
-import {
-  Menu,
-  MenuTrigger,
-  MenuContent,
-  MenuItem,
-} from '@/components/ui/menu';
 import PropertyForm from './components/PropertyForm';
 import PropertyEditForm from './components/PropertyEditForm';
 import Login from './components/Login';
@@ -28,7 +21,7 @@ import PriceHistoryChart from './components/PriceHistoryChart';
 import InvitationsView from './components/InvitationsView';
 import BoardSharing from './components/BoardSharing';
 import MapView from './components/MapView';
-import { Menu, MenuButton, MenuItem, MenuList } from '@/components/ui/menu';
+import { Menu, MenuButton, MenuItem, MenuList, MenuTrigger, MenuContent } from '@/components/ui/menu';
 
 function App() {
   // === PODSTAWOWE STANY ===
@@ -250,64 +243,47 @@ function App() {
   );
   // === KOMPONENT KARTY NIERUCHOMOŚCI ===
   const PropertyCard = ({ 
-    property, 
-    isShared, 
-    onMove, 
-    onCopy, 
-    onEdit, 
-    onDelete, 
-    onRate,
-    onRefresh,
-    isExpanded,
-    onExpandToggle
-  }) => {
-    return (
-      <div 
-        className={`bg-white rounded-xl shadow-sm border-l-4 ${
-          isShared ? 'border-l-purple-500' : 'border-l-blue-500'
-        } transition-all duration-300 relative`}
-        onClick={onExpandToggle}
-      >
-        <div className="p-4">
-          {/* Nagłówek z menu */}
-          <div className="flex justify-between items-start mb-3">
-            <div>
-              <h3 className="font-semibold text-gray-900">{property.title}</h3>
-              <p className="text-sm text-gray-500">{property.location || 'Brak lokalizacji'}</p>
-              {isShared && (
-                <p className="text-xs text-purple-600 mt-1">
-                  Udostępnione przez: {property.owner?.name || 'Inny użytkownik'}
-                </p>
-              )}
-            </div>
-            <Menu>
-              <MenuButton
-                onClick={e => e.stopPropagation()}
-                className="p-1 hover:bg-gray-100 rounded-full"
-              >
-                <MoreVertical className="w-5 h-5 text-gray-400" />
-              </MenuButton>
-              <MenuList>
-                {!isShared && (
-                  <MenuItem onClick={() => onMove(property)}>
-                    Przenieś do innej tablicy
-                  </MenuItem>
-                )}
-                <MenuItem onClick={() => onCopy(property._id)}>
-                  Kopiuj do wspólnej tablicy
-                </MenuItem>
-                <MenuItem onClick={() => onEdit(property)}>
-                  Edytuj
-                </MenuItem>
-                {!isShared && (
-                  <MenuItem onClick={() => onDelete(property._id)} className="text-red-600">
-                    Usuń
-                  </MenuItem>
-                )}
-              </MenuList>
-            </Menu>
-          </div>
-
+  property, 
+  isShared, 
+  onMove, 
+  onCopy, 
+  onEdit, 
+  onDelete, 
+  onRate,
+  onRefresh,
+  isExpanded,
+  onExpandToggle
+}) => {
+  return (
+    <div className={`bg-white rounded-xl shadow-sm border-l-4 ${
+      isShared ? 'border-l-purple-500' : 'border-l-blue-500'
+    } relative`}>
+      {/* Menu w prawym górnym rogu */}
+      <div className="absolute top-2 right-2 z-10">
+        <Menu>
+          <MenuTrigger className="p-1 hover:bg-gray-100 rounded-full">
+            <MoreVertical className="w-5 h-5 text-gray-400" />
+          </MenuTrigger>
+          <MenuContent>
+            {!isShared && (
+              <MenuItem onClick={() => onMove(property)}>
+                Przenieś do innej tablicy
+              </MenuItem>
+            )}
+            <MenuItem onClick={() => onCopy(property._id)}>
+              Kopiuj do wspólnej tablicy
+            </MenuItem>
+            <MenuItem onClick={() => onEdit(property)}>
+              Edytuj
+            </MenuItem>
+            {!isShared && (
+              <MenuItem onClick={() => onDelete(property._id)} className="text-red-600">
+                Usuń
+              </MenuItem>
+            )}
+          </MenuContent>
+        </Menu>
+      </div>
           {/* Status aktywności */}
           <div className="absolute top-4 right-12">
             {property.isActive === false ? (
@@ -463,11 +439,11 @@ function App() {
         <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <button
-              onClick={() => setIsBoardSidebarOpen(!isBoardSidebarOpen)}
-              className="p-2 hover:bg-gray-100 rounded-lg"
-            >
-              <MenuIcon className="h-5 w-5" />
-            </button>
+  onClick={() => setIsBoardSidebarOpen(!isBoardSidebarOpen)}
+  className="p-2 hover:bg-gray-100 rounded-lg"
+>
+  <MenuIcon className="h-5 w-5" /> {/* Zmieniona nazwa z Menu na MenuIcon */}
+</button>
             <Home className="h-8 w-8 text-blue-600" />
             <span className="text-xl font-bold bg-gradient-to-r from-blue-600 to-blue-400 bg-clip-text text-transparent">
               HouseApp
