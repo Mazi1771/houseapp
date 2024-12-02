@@ -11,6 +11,9 @@ import {
   Mail,
   Share,
   MoreVertical,
+  Plus,
+  Trash2,
+  Edit2
 } from 'lucide-react';
 import { Menu, MenuTrigger, MenuContent, MenuItem } from './components/ui/menu';
 import PropertyForm from './components/PropertyForm';
@@ -35,7 +38,6 @@ function App() {
   const [refreshProgress, setRefreshProgress] = useState(null);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [viewMode, setViewMode] = useState('grid');
-  const [boardViewType, setBoardViewType] = useState('own');
   const [filters, setFilters] = useState({
     priceMin: '',
     priceMax: '',
@@ -58,85 +60,25 @@ function App() {
   const [propertyToMove, setPropertyToMove] = useState(null);
   const [shareModalOpen, setShareModalOpen] = useState(false);
   const [isBoardSidebarOpen, setIsBoardSidebarOpen] = useState(true);
+  const [isNewBoardModalOpen, setIsNewBoardModalOpen] = useState(false);
+  const [newBoardName, setNewBoardName] = useState('');
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const editFormRef = useRef(null);
+
   // === EFEKTY ===
   useEffect(() => {
-  const fetchBoards = async () => {
-    const token = localStorage.getItem('token');
-    try {
-      const response = await fetch('https://houseapp-backend.onrender.com/api/boards', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
-      if (response.ok) {
-        const data = await response.json();
-        setBoards(data.boards);
-        if (!selectedBoard && data.boards.length > 0) {
-          setSelectedBoard(data.boards[0]); // Automatyczne ustawienie pierwszej tablicy
-        }
-      }
-    } catch (error) {
-      console.error('Błąd podczas pobierania tablic:', error);
-    }
-  };
-
-  if (isAuthenticated) {
-    fetchBoards();
-  }
-}, [isAuthenticated, selectedBoard]);
-  useEffect(() => {
-  const createDefaultBoard = async () => {
-    const token = localStorage.getItem('token');
-    try {
-      const response = await fetch('https://houseapp-backend.onrender.com/api/boards', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ name: 'Moja pierwsza tablica' }),
-      });
-
-      if (response.ok) {
-        const newBoard = await response.json();
-        setBoards([...boards, newBoard]);
-        setSelectedBoard(newBoard);
-      }
-    } catch (error) {
-      console.error('Błąd podczas tworzenia domyślnej tablicy:', error);
-    }
-  };
-
-  if (isAuthenticated && boards.length === 0) {
-    createDefaultBoard();
-  }
-}, [isAuthenticated, boards]);
-  useEffect(() => {
-    const fetchBoards = async () => {
-      const token = localStorage.getItem('token');
-      try {
-        const response = await fetch('https://houseapp-backend.onrender.com/api/boards', {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-        });
-        if (response.ok) {
-          const data = await response.json();
-          setBoards(data.boards);
-          setSharedBoards(data.sharedBoards);
-          // Ustaw domyślnie pierwszą tablicę jako wybraną
-          if (data.boards.length && !selectedBoard) {
-            setSelectedBoard(data.boards[0]);
-          }
-        }
-      } catch (error) {
-        console.error('Błąd podczas pobierania tablic:', error);
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768);
+      if (window.innerWidth <= 768) {
+        setIsBoardSidebarOpen(false);
       }
     };
-    
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  useEffect(() => {
     if (isAuthenticated) {
       fetchBoards();
     }
@@ -159,28 +101,82 @@ function App() {
     }
   }, [isAuthenticated, selectedBoard]);
 
-  useEffect(() => {
-    const queryParams = new URLSearchParams(window.location.search);
-    const urlParam = queryParams.get('url');
-    
-    if (urlParam && isAuthenticated) {
-      setUrl(urlParam);
-      setIsFormVisible(true);
-      window.scrollTo(0, 0);
+  // === FUNKCJE OBSŁUGI TABLIC ===
+  const fetchBoards = async () => {
+    const token = localStorage.getItem('token');
+    try {
+      const response = await fetch('https://houseapp-backend.onrender.com/api/boards', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setBoards(data.boards);
+        setSharedBoards(data.sharedBoards);
+        if (!selectedBoard && data.boards.length > 0) {
+          setSelectedBoard(data.boards[0]);
+        }
+      }
+    } catch (error) {
+      console.error('Błąd podczas pobierania tablic:', error);
     }
-  }, [isAuthenticated]);
-
-  // === POMOCNICZE FUNKCJE ===
-  const isPropertyShared = (property) => {
-    const board = [...boards, ...sharedBoards].find(b => b._id === property.board);
-    return board?.owner !== user?._id;
   };
 
-  const getCurrentBoard = () => {
-    return selectedBoard || boards[0];
+  const handleCreateBoard = async () => {
+    if (!newBoardName.trim()) return;
+
+    const token = localStorage.getItem('token');
+    try {
+      const response = await fetch('https://houseapp-backend.onrender.com/api/boards', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ name: newBoardName }),
+      });
+
+      if (response.ok) {
+        const newBoard = await response.json();
+        setBoards([...boards, newBoard]);
+        setNewBoardName('');
+        setIsNewBoardModalOpen(false);
+        await fetchBoards();
+      }
+    } catch (error) {
+      console.error('Błąd podczas tworzenia tablicy:', error);
+    }
   };
 
-  // === FUNKCJE FETCHOWANIA DANYCH ===
+  const handleDeleteBoard = async (boardId) => {
+    if (!window.confirm('Czy na pewno chcesz usunąć tę tablicę? Wszystkie nieruchomości zostaną usunięte.')) {
+      return;
+    }
+
+    const token = localStorage.getItem('token');
+    try {
+      const response = await fetch(`https://houseapp-backend.onrender.com/api/boards/${boardId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (response.ok) {
+        setBoards(boards.filter(board => board._id !== boardId));
+        if (selectedBoard?._id === boardId) {
+          setSelectedBoard(boards[0]);
+        }
+      }
+    } catch (error) {
+      console.error('Błąd podczas usuwania tablicy:', error);
+    }
+  };
+
+  // === FUNKCJE OBSŁUGI NIERUCHOMOŚCI ===
   const fetchBoardProperties = async (boardId) => {
     try {
       setIsLoadingProperties(true);
@@ -205,79 +201,47 @@ function App() {
     }
   };
 
-  // === FUNKCJE AUTORYZACJI ===
-  const handleLogin = (data) => {
-    localStorage.setItem('token', data.token);
-    localStorage.setItem('user', JSON.stringify(data.user));
-    setIsAuthenticated(true);
-    setUser(data.user);
-    fetchBoardProperties(data.defaultBoardId);
-  };
-
-  const handleRegister = (data) => {
-    setIsAuthenticated(true);
-    setUser(data.user);
-    fetchBoardProperties(data.defaultBoardId);
-  };
-
-  const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    setIsAuthenticated(false);
-    setUser(null);
-    setProperties([]);
-    setExpandedProperty(null);
-    setSelectedBoard(null);
-  };
-  // === OBSŁUGA NIERUCHOMOŚCI ===
   const handleAddProperty = async () => {
-  if (!selectedBoard) {
-    alert('Najpierw wybierz lub utwórz tablicę, aby dodać nieruchomość.');
-    return;
-  }
-
-  if (!url) {
-    alert('Wprowadź adres URL nieruchomości.');
-    return;
-  }
-
-  setIsLoading(true);
-  try {
-    const token = localStorage.getItem('token');
-    const response = await fetch('https://houseapp-backend.onrender.com/api/scrape', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`,
-      },
-      body: JSON.stringify({ 
-        url, 
-        boardId: selectedBoard._id, // Użycie ID wybranej tablicy
-      }),
-    });
-
-    if (!response.ok) {
-      const error = await response.json();
-      if (response.status === 400 && error.error.includes('nieaktywna')) {
-        alert('Ta oferta jest już nieaktywna lub została usunięta. Spróbuj dodać inną ofertę.');
-      } else {
-        alert(error.error || 'Wystąpił błąd podczas pobierania danych.');
-      }
+    if (!selectedBoard) {
+      alert('Najpierw wybierz lub utwórz tablicę, aby dodać nieruchomość.');
       return;
     }
 
-    const data = await response.json();
-    await fetchBoardProperties(selectedBoard._id); // Odśwież nieruchomości dla bieżącej tablicy
-    setUrl('');
-    setIsFormVisible(false);
-    alert('Nieruchomość została dodana pomyślnie!');
-  } catch (error) {
-    console.error('Błąd podczas dodawania nieruchomości:', error);
-    alert('Wystąpił problem z połączeniem z serwerem. Spróbuj ponownie później.');
-  } finally {
-    setIsLoading(false);
-  }
-};
+    if (!url) {
+      alert('Wprowadź adres URL nieruchomości.');
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch('https://houseapp-backend.onrender.com/api/scrape', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ 
+          url, 
+          boardId: selectedBoard._id,
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Wystąpił błąd podczas pobierania danych.');
+      }
+
+      await fetchBoardProperties(selectedBoard._id);
+      setUrl('');
+      setIsFormVisible(false);
+      alert('Nieruchomość została dodana pomyślnie!');
+    } catch (error) {
+      alert(error.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleEditClick = (property) => {
     setEditingProperty(property);
@@ -509,27 +473,46 @@ function App() {
   const BoardNavigation = ({ boards, sharedBoards, selectedBoard, onBoardSelect, onShareClick }) => {
     return (
       <div className="bg-white p-4 rounded-lg shadow">
-        <h2 className="font-semibold text-lg mb-4">Moje tablice</h2>
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="font-semibold text-lg">Moje tablice</h2>
+          <button
+            onClick={() => setIsNewBoardModalOpen(true)}
+            className="p-2 text-blue-600 hover:bg-blue-50 rounded-full"
+          >
+            <Plus className="w-5 h-5" />
+          </button>
+        </div>
+        
         <div className="space-y-2">
           {boards.map(board => (
             <div 
               key={board._id}
-              className={`flex items-center justify-between p-2 rounded-lg cursor-pointer ${
+              className={`flex items-center justify-between p-2 rounded-lg ${
                 selectedBoard?._id === board._id ? 'bg-blue-50' : 'hover:bg-gray-50'
               }`}
             >
               <span 
                 onClick={() => onBoardSelect(board)}
-                className="flex-grow"
+                className="flex-grow cursor-pointer"
               >
                 {board.name}
               </span>
-              <button
-                onClick={() => onShareClick(board)}
-                className="p-2 text-gray-400 hover:text-blue-600 rounded-full hover:bg-blue-50"
-              >
-                <Share className="w-4 h-4" />
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => onShareClick(board)}
+                  className="p-1.5 text-gray-400 hover:text-blue-600 rounded-full hover:bg-blue-50"
+                >
+                  <Share className="w-4 h-4" />
+                </button>
+                {boards.length > 1 && (
+                  <button
+                    onClick={() => handleDeleteBoard(board._id)}
+                    className="p-1.5 text-gray-400 hover:text-red-600 rounded-full hover:bg-red-50"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
             </div>
           ))}
         </div>
@@ -548,8 +531,8 @@ function App() {
                 >
                   <div className="flex items-center justify-between">
                     <span>{board.name}</span>
-                    <span className="text-sm text-gray-500">
-                      Udostępnione przez: {board.owner.name || board.owner.email}
+                    <span className="text-sm text-purple-600">
+                      {board.owner.name || board.owner.email}
                     </span>
                   </div>
                 </div>
@@ -561,48 +544,8 @@ function App() {
     );
   };
 
-  const BoardSidebar = ({ isOpen }) => (
-    <div
-      className={`fixed left-0 top-16 h-full bg-white shadow-lg transition-all duration-300 z-20
-        ${isOpen ? 'w-64' : 'w-0'} overflow-hidden`}
-    >
-      <div className="p-4">
-        <BoardNavigation
-          boards={boards}
-          sharedBoards={sharedBoards}
-          selectedBoard={selectedBoard}
-          onBoardSelect={handleBoardSelect}
-          onShareClick={(board) => {
-            setShareModalOpen(true);
-            setSelectedBoard(board);
-          }}
-        />
-      </div>
-    </div>
-  );
-
-  const PropertyList = () => (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-      {getFilteredAndSortedProperties().map((property) => (
-        <PropertyCard
-          key={property._id}
-          property={property}
-          isShared={isPropertyShared(property)}
-          onMove={setPropertyToMove}
-          onCopy={handlePropertyCopy}
-          onEdit={handleEditClick}
-          onDelete={handleDelete}
-          onRate={handleRating}
-          onRefresh={handleRefreshProperty}
-          isExpanded={expandedProperty === property._id}
-          onExpandToggle={() => setExpandedProperty(
-            expandedProperty === property._id ? null : property._id
-          )}
-        />
-      ))}
-    </div>
-  );
-const PropertyCard = ({ 
+  // Zmodyfikowany PropertyCard z lepszym wsparciem dla wersji mobilnej
+  const PropertyCard = ({ 
     property, 
     isShared, 
     onMove, 
@@ -618,7 +561,7 @@ const PropertyCard = ({
       <div 
         className={`bg-white rounded-xl shadow-sm border-l-4 ${
           isShared ? 'border-l-purple-500' : 'border-l-blue-500'
-        } relative`}
+        } relative transition-all duration-300`}
         onClick={onExpandToggle}
       >
         <div className="p-4">
@@ -626,7 +569,10 @@ const PropertyCard = ({
           <div className="absolute top-2 right-2 z-10">
             <Menu>
               <MenuTrigger>
-                <button className="p-1 hover:bg-gray-100 rounded-full">
+                <button 
+                  className="p-1.5 hover:bg-gray-100 rounded-full transition-colors"
+                  onClick={e => e.stopPropagation()}
+                >
                   <MoreVertical className="w-5 h-5 text-gray-400" />
                 </button>
               </MenuTrigger>
@@ -637,7 +583,7 @@ const PropertyCard = ({
                   </MenuItem>
                 )}
                 <MenuItem onClick={() => onCopy(property._id)}>
-                  Kopiuj do wspólnej tablicy
+                  Kopiuj do tablicy
                 </MenuItem>
                 <MenuItem onClick={() => onEdit(property)}>
                   Edytuj
@@ -652,9 +598,9 @@ const PropertyCard = ({
           </div>
 
           {/* Podstawowe informacje */}
-          <div className="flex justify-between items-start mb-3">
-            <div>
-              <h3 className="font-semibold text-gray-900">{property.title}</h3>
+          <div className="flex flex-col md:flex-row justify-between items-start gap-2 mb-3">
+            <div className="flex-grow">
+              <h3 className="font-semibold text-gray-900 pr-8">{property.title}</h3>
               <p className="text-sm text-gray-500">{property.location || 'Brak lokalizacji'}</p>
               {isShared && (
                 <p className="text-xs text-purple-600 mt-1">
@@ -662,16 +608,12 @@ const PropertyCard = ({
                 </p>
               )}
             </div>
-            <div className="mr-10">
-              {property.isActive === false ? (
-                <span className="px-2 py-1 bg-red-100 text-red-800 text-xs font-medium rounded-full">
-                  Nieaktywne
-                </span>
-              ) : (
-                <span className="px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded-full">
-                  Aktywne
-                </span>
-              )}
+            <div className="self-start">
+              <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                property.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+              }`}>
+{property.isActive ? 'Aktywne' : 'Nieaktywne'}
+              </span>
             </div>
           </div>
 
@@ -691,7 +633,7 @@ const PropertyCard = ({
             </div>
           </div>
 
-          {/* Przyciski oceny */}
+          {/* Przyciski oceny - responsywne */}
           <div className="flex justify-end gap-2">
             {!isShared && (
               <>
@@ -701,7 +643,9 @@ const PropertyCard = ({
                     onRate(property._id, 'favorite');
                   }}
                   className={`p-2 rounded-lg transition-colors ${
-                    property.rating === 'favorite' ? 'bg-yellow-100' : 'bg-gray-100'
+                    property.rating === 'favorite' 
+                      ? 'bg-yellow-100 hover:bg-yellow-200' 
+                      : 'bg-gray-100 hover:bg-gray-200'
                   }`}
                 >
                   ⭐
@@ -712,7 +656,9 @@ const PropertyCard = ({
                     onRate(property._id, 'interested');
                   }}
                   className={`p-2 rounded-lg transition-colors ${
-                    property.rating === 'interested' ? 'bg-green-100' : 'bg-gray-100'
+                    property.rating === 'interested' 
+                      ? 'bg-green-100 hover:bg-green-200' 
+                      : 'bg-gray-100 hover:bg-gray-200'
                   }`}
                 >
                   👍
@@ -723,7 +669,9 @@ const PropertyCard = ({
                     onRate(property._id, 'not_interested');
                   }}
                   className={`p-2 rounded-lg transition-colors ${
-                    property.rating === 'not_interested' ? 'bg-red-100' : 'bg-gray-100'
+                    property.rating === 'not_interested' 
+                      ? 'bg-red-100 hover:bg-red-200' 
+                      : 'bg-gray-100 hover:bg-gray-200'
                   }`}
                 >
                   👎
@@ -735,7 +683,9 @@ const PropertyCard = ({
           {/* Rozszerzone informacje */}
           {isExpanded && (
             <div className="mt-4 pt-4 border-t border-gray-200">
-              <p className="text-gray-700 mb-4">{property.description || 'Brak opisu'}</p>
+              <p className="text-gray-700 mb-4 whitespace-pre-wrap">
+                {property.description || 'Brak opisu'}
+              </p>
               
               {property.sourceUrl && (
                 <a 
@@ -748,6 +698,7 @@ const PropertyCard = ({
                   Zobacz ogłoszenie →
                 </a>
               )}
+              
               {!isShared && (
                 <div className="flex gap-2 justify-end">
                   <button
@@ -755,7 +706,7 @@ const PropertyCard = ({
                       e.stopPropagation();
                       onRefresh(property._id);
                     }}
-                    className="px-4 py-2 bg-green-100 text-green-600 rounded-lg hover:bg-green-200"
+                    className="px-4 py-2 bg-green-100 text-green-600 rounded-lg hover:bg-green-200 transition-colors"
                     disabled={!property.sourceUrl}
                   >
                     Odśwież
@@ -769,6 +720,36 @@ const PropertyCard = ({
     );
   };
 
+  // Modal dodawania nowej tablicy
+  const NewBoardModal = () => (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+      <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full mx-4">
+        <h2 className="text-lg font-bold mb-4">Nowa tablica</h2>
+        <input
+          type="text"
+          value={newBoardName}
+          onChange={(e) => setNewBoardName(e.target.value)}
+          placeholder="Nazwa tablicy"
+          className="w-full p-2 border rounded-lg mb-4"
+        />
+        <div className="flex justify-end gap-2">
+          <button
+            onClick={() => setIsNewBoardModalOpen(false)}
+            className="px-4 py-2 text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200"
+          >
+            Anuluj
+          </button>
+          <button
+            onClick={handleCreateBoard}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            disabled={!newBoardName.trim()}
+          >
+            Utwórz
+          </button>
+        </div>
+      </div>
+    </div>
+  );
   // === GŁÓWNY RENDER APLIKACJI ===
   if (!isAuthenticated) {
     return (
@@ -809,15 +790,15 @@ const PropertyCard = ({
     );
   }
 
-  return (
+   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Top navbar */}
+      {/* Navbar */}
       <nav className="bg-white border-b border-gray-200 fixed w-full top-0 z-30">
         <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <button
               onClick={() => setIsBoardSidebarOpen(!isBoardSidebarOpen)}
-              className="p-2 hover:bg-gray-100 rounded-lg"
+              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
             >
               <MenuIcon className="h-5 w-5" />
             </button>
@@ -827,29 +808,33 @@ const PropertyCard = ({
             </span>
           </div>
 
-          <div className="flex items-center gap-4">
-            <button
-              onClick={handleRefreshAll}
-              disabled={isRefreshing}
-              className="hidden md:flex items-center gap-2 px-4 py-2 text-sm bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors"
-            >
-              <RefreshCw className="h-4 w-4" />
-              {isRefreshing ? 'Aktualizacja...' : 'Aktualizuj wszystkie'}
-            </button>
+          <div className="flex items-center gap-2 md:gap-4">
+            {!isMobile && (
+              <button
+                onClick={handleRefreshAll}
+                disabled={isRefreshing}
+                className="hidden md:flex items-center gap-2 px-4 py-2 text-sm bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors"
+              >
+                <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+                {isRefreshing ? 'Aktualizacja...' : 'Aktualizuj wszystkie'}
+              </button>
+            )}
 
             <button
               onClick={() => setShowInvitations(!showInvitations)}
               className="flex items-center gap-2 px-4 py-2 text-sm bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 transition-colors"
             >
               <Mail className="h-4 w-4" />
-              <span>Zaproszenia</span>
+              {!isMobile && <span>Zaproszenia</span>}
             </button>
 
             <div className="flex items-center gap-2">
-              <span className="text-gray-600">{user?.name || user?.email}</span>
+              {!isMobile && (
+                <span className="text-gray-600">{user?.name || user?.email}</span>
+              )}
               <button
                 onClick={handleLogout}
-                className="text-red-600 hover:text-red-700"
+                className="text-red-600 hover:text-red-700 p-2 rounded-lg hover:bg-red-50 transition-colors"
               >
                 <LogOut className="h-5 w-5" />
               </button>
@@ -857,6 +842,7 @@ const PropertyCard = ({
           </div>
         </div>
       </nav>
+
 
       {/* Sidebar */}
       <BoardSidebar isOpen={isBoardSidebarOpen} />
@@ -1093,7 +1079,7 @@ const PropertyCard = ({
 </main>
 
 {/* Modale */}
-{shareModalOpen && selectedBoard && (
+      {isNewBoardModalOpen && <NewBoardModal />}
   <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
     <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full">
       <div className="flex justify-between items-center mb-4">
