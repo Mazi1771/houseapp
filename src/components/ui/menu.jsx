@@ -33,9 +33,7 @@ export const Menu = ({ children }) => {
 };
 
 export const MenuTrigger = ({ children, onClick }) => {
-  return React.cloneElement(children, {
-    onClick,
-  });
+  return React.cloneElement(children, { onClick });
 };
 
 export const MenuContent = ({ children }) => {
