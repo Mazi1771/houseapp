@@ -12,7 +12,7 @@ import {
   Share,
   MoreVertical,
 } from 'lucide-react';
-import { Menu, MenuTrigger, MenuContent, MenuItem } from './components/ui/Menu';
+import { Menu, MenuTrigger, MenuContent, MenuItem } from './components/ui/menu';
 import PropertyForm from './components/PropertyForm';
 import PropertyEditForm from './components/PropertyEditForm';
 import Login from './components/Login';
