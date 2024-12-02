@@ -102,6 +102,26 @@ function App() {
   }, [isAuthenticated, selectedBoard]);
 
   // === FUNKCJE OBSŁUGI TABLIC ===
+  const handleLogin = (data) => {
+  localStorage.setItem('token', data.token);
+  localStorage.setItem('user', JSON.stringify(data.user));
+  setIsAuthenticated(true);
+  setUser(data.user);
+  fetchBoards(); // To automatycznie ustawi pierwszą tablicę jako wybraną
+};
+
+const handleRegister = (data) => {
+  localStorage.setItem('token', data.token);
+  localStorage.setItem('user', JSON.stringify(data.user));
+  setIsAuthenticated(true);
+  setUser(data.user);
+  fetchBoards(); // To automatycznie ustawi pierwszą tablicę jako wybraną
+};
+  const isPropertyShared = (property) => {
+  if (!property || !property.board) return false;
+  const board = boards.find(b => b._id === property.board);
+  return board?.owner !== user?._id;
+};
   const fetchBoards = async () => {
     const token = localStorage.getItem('token');
     try {
@@ -719,7 +739,27 @@ function App() {
       </div>
     );
   };
-
+  const PropertyList = () => (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      {getFilteredAndSortedProperties().map((property) => (
+        <PropertyCard
+          key={property._id}
+          property={property}
+          isShared={isPropertyShared(property)}
+          onMove={setPropertyToMove}
+          onCopy={handlePropertyCopy}
+          onEdit={handleEditClick}
+          onDelete={handleDelete}
+          onRate={handleRating}
+          onRefresh={handleRefreshProperty}
+          isExpanded={expandedProperty === property._id}
+          onExpandToggle={() => setExpandedProperty(
+            expandedProperty === property._id ? null : property._id
+          )}
+        />
+      ))}
+    </div>
+  );
   // Modal dodawania nowej tablicy
   const NewBoardModal = () => (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
@@ -1080,6 +1120,7 @@ function App() {
 
 {/* Modale */}
       {isNewBoardModalOpen && <NewBoardModal />}
+{shareModalOpen && selectedBoard && (
   <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
     <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full">
       <div className="flex justify-between items-center mb-4">
