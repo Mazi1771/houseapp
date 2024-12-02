@@ -1038,56 +1038,57 @@ const PropertyCard = ({
     </div>
   </div>
 )}
-              {/* Lista nieruchomości */}
-              {viewMode === 'map' ? (
-                <MapView 
-                  properties={getFilteredAndSortedProperties()} 
-                  setExpandedProperty={setExpandedProperty}
-                />
-              ) : (
-                <PropertyList />
-              )}
+             {/* Lista nieruchomości */}
+{viewMode === 'map' ? (
+  <MapView 
+    properties={getFilteredAndSortedProperties()} 
+    setExpandedProperty={setExpandedProperty}
+  />
+) : (
+  <PropertyList />
+)}
 
-              {/* Formularz edycji */}
-              {editingProperty && (
-                <div ref={editFormRef}>
-                  <PropertyEditForm
-                    property={editingProperty}
-                    onSave={handleSaveEdit}
-                    onCancel={() => setEditingProperty(null)}
-                  />
-                </div>
-              )}
-            </>
-          ) : (
-              {/* Renderowanie formularza dodawania nieruchomości */}
-            {isFormVisible && (
-              <div className="bg-white p-4 rounded-lg shadow mb-6">
-                <h3 className="text-lg font-semibold">Dodaj nową nieruchomość</h3>
-                <input
-                  type="text"
-                  placeholder="URL nieruchomości"
-                  value={url}
-                  onChange={(e) => setUrl(e.target.value)}
-                  className="w-full px-4 py-2 border rounded-lg mb-4"
-                />
-                <button
-                  onClick={handleAddProperty}
-                  className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
-                  disabled={!url}
-                >
-                  Dodaj nieruchomość
-                </button>
-              </div>
-            )}
-          </>
-        ) : (
-          <div className="text-center py-12 bg-white rounded-lg shadow">
-            <h2 className="text-xl font-medium text-gray-600">
-              Wybierz tablicę z menu po lewej stronie
-            </h2>
-          </div>
-        )}
+{/* Formularz edycji */}
+{editingProperty && (
+  <div ref={editFormRef}>
+    <PropertyEditForm
+      property={editingProperty}
+      onSave={handleSaveEdit}
+      onCancel={() => setEditingProperty(null)}
+    />
+  </div>
+)}
+
+{/* Warunkowe renderowanie formularza dodawania nieruchomości */}
+{isFormVisible && (
+  <div className="bg-white p-4 rounded-lg shadow mb-6">
+    <h3 className="text-lg font-semibold">Dodaj nową nieruchomość</h3>
+    <input
+      type="text"
+      placeholder="URL nieruchomości"
+      value={url}
+      onChange={(e) => setUrl(e.target.value)}
+      className="w-full px-4 py-2 border rounded-lg mb-4"
+    />
+    <button
+      onClick={handleAddProperty}
+      className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+      disabled={!url}
+    >
+      Dodaj nieruchomość
+    </button>
+  </div>
+)}
+
+{/* Warunkowe renderowanie komunikatu o wyborze tablicy */}
+{!selectedBoard && (
+  <div className="text-center py-12 bg-white rounded-lg shadow">
+    <h2 className="text-xl font-medium text-gray-600">
+      Wybierz tablicę z menu po lewej stronie
+    </h2>
+  </div>
+)}
+
         </div>
       </main>
 
