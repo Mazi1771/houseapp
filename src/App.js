@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { 
-  Menu as MenuIcon, 
+  Menu, 
   Search, 
   Home, 
   RefreshCw, 
@@ -8,9 +8,12 @@ import {
   LogOut, 
   Map, 
   Grid, 
-  Mail, 
+  Mail,
   Share,
   MoreVertical,
+  X, // ikona zamykania
+  ChevronRight, // ikona rozwijania
+  ChevronLeft, // ikona zwijania
 } from 'lucide-react';
 import PropertyForm from './components/PropertyForm';
 import PropertyEditForm from './components/PropertyEditForm';
