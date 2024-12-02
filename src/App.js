@@ -1092,47 +1092,47 @@ const handleRegister = (data) => {
     </div>
   </div>
 )}
-             {/* Lista nieruchomości */}
-            {viewMode === 'map' ? (
-              <MapView 
-                properties={getFilteredAndSortedProperties()} 
-                setExpandedProperty={setExpandedProperty}
-              />
-            ) : (
-              <PropertyList />
-            )}
+            {/* Lista nieruchomości */}
+{viewMode === 'map' ? (
+  <MapView 
+    properties={getFilteredAndSortedProperties()} 
+    setExpandedProperty={setExpandedProperty}
+  />
+) : (
+  <PropertyList />
+)}
 
-            {/* Formularz edycji */}
-            {editingProperty && (
-              <div ref={editFormRef}>
-                <PropertyEditForm
-                  property={editingProperty}
-                  onSave={handleSaveEdit}
-                  onCancel={() => setEditingProperty(null)}
-                />
-              </div>
-            )}
+{/* Formularz edycji */}
+{editingProperty && (
+  <div ref={editFormRef}>
+    <PropertyEditForm
+      property={editingProperty}
+      onSave={handleSaveEdit}
+      onCancel={() => setEditingProperty(null)}
+    />
+  </div>
+)}
 
-            {/* Formularz dodawania nieruchomości */}
-            {isFormVisible && (
-              <div className="bg-white p-4 rounded-lg shadow mb-6">
-                <h3 className="text-lg font-semibold">Dodaj nową nieruchomość</h3>
-                <input
-                  type="text"
-                  placeholder="URL nieruchomości"
-                  value={url}
-                  onChange={(e) => setUrl(e.target.value)}
-                  className="w-full px-4 py-2 border rounded-lg mb-4"
-                />
-                <button
-                  onClick={handleAddProperty}
-                  className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
-                  disabled={!url}
-                >
-                  Dodaj nieruchomość
-                </button>
-              </div>
-            )}
+{/* Formularz dodawania nieruchomości */}
+{isFormVisible && (
+  <div className="bg-white p-4 rounded-lg shadow mb-6">
+    <h3 className="text-lg font-semibold">Dodaj nową nieruchomość</h3>
+    <input
+      type="text"
+      placeholder="URL nieruchomości"
+      value={url}
+      onChange={(e) => setUrl(e.target.value)}
+      className="w-full px-4 py-2 border rounded-lg mb-4"
+    />
+    <button
+      onClick={handleAddProperty}
+      className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+      disabled={!url}
+    >
+      Dodaj nieruchomość
+    </button>
+  </div>
+)}
           </>
         ) : (
           <div className="text-center py-12 bg-white rounded-lg shadow">
@@ -1144,78 +1144,77 @@ const handleRegister = (data) => {
       </div>
     </main>
 
-
- {/* Modale */}
-      {isNewBoardModalOpen && <NewBoardModal />}
-      {shareModalOpen && selectedBoard && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-lg font-bold">Udostępnij tablicę</h2>
-              <button 
-                onClick={() => setShareModalOpen(false)}
-                className="text-gray-400 hover:text-gray-600"
-              >
-                ×
-              </button>
-            </div>
-            <BoardSharing
-              boardId={selectedBoard._id}
-              onClose={() => setShareModalOpen(false)}
-            />
-          </div>
-        </div>
-      )}
-      
-      {propertyToMove && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full">
-            <h2 className="text-lg font-bold mb-4">Przenieś nieruchomość</h2>
-            <div className="space-y-4">
-              {boards.map(board => (
-                <button
-                  key={board._id}
-                  onClick={() => {
-                    handlePropertyMove(propertyToMove._id, board._id);
-                    setPropertyToMove(null);
-                  }}
-                  className="w-full text-left p-4 rounded-lg hover:bg-gray-50"
-                >
-                  <p className="font-medium">{board.name}</p>
-                  <p className="text-sm text-gray-500">
-                    {board._id === selectedBoard?._id ? 'Obecna tablica' : 'Inna tablica'}
-                  </p>
-                </button>
-              ))}
-            </div>
+    {/* Modale */}
+    {isNewBoardModalOpen && <NewBoardModal />}
+    {shareModalOpen && selectedBoard && (
+      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+        <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-lg font-bold">Udostępnij tablicę</h2>
             <button 
-              onClick={() => setPropertyToMove(null)}
-              className="mt-4 w-full p-2 bg-gray-100 rounded-lg"
+              onClick={() => setShareModalOpen(false)}
+              className="text-gray-400 hover:text-gray-600"
             >
-              Anuluj
+              ×
             </button>
           </div>
+          <BoardSharing
+            boardId={selectedBoard._id}
+            onClose={() => setShareModalOpen(false)}
+          />
         </div>
-      )}
-      
-      {showInvitations && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-lg font-bold">Zaproszenia do tablic</h2>
-              <button 
-                onClick={() => setShowInvitations(false)}
-                className="text-gray-400 hover:text-gray-600"
+      </div>
+    )}
+    
+    {propertyToMove && (
+      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+        <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full">
+          <h2 className="text-lg font-bold mb-4">Przenieś nieruchomość</h2>
+          <div className="space-y-4">
+            {boards.map(board => (
+              <button
+                key={board._id}
+                onClick={() => {
+                  handlePropertyMove(propertyToMove._id, board._id);
+                  setPropertyToMove(null);
+                }}
+                className="w-full text-left p-4 rounded-lg hover:bg-gray-50"
               >
-                ×
+                <p className="font-medium">{board.name}</p>
+                <p className="text-sm text-gray-500">
+                  {board._id === selectedBoard?._id ? 'Obecna tablica' : 'Inna tablica'}
+                </p>
               </button>
-            </div>
-            <InvitationsView onClose={() => setShowInvitations(false)} />
+            ))}
           </div>
+          <button 
+            onClick={() => setPropertyToMove(null)}
+            className="mt-4 w-full p-2 bg-gray-100 rounded-lg"
+          >
+            Anuluj
+          </button>
         </div>
-      )}
-    </div>
-  );
+      </div>
+    )}
+    
+    {showInvitations && (
+      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+        <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-lg font-bold">Zaproszenia do tablic</h2>
+            <button 
+              onClick={() => setShowInvitations(false)}
+              className="text-gray-400 hover:text-gray-600"
+            >
+              ×
+            </button>
+          </div>
+          <InvitationsView onClose={() => setShowInvitations(false)} />
+        </div>
+      </div>
+    )}
+  </div>
+);
 }
 
 export default App;
