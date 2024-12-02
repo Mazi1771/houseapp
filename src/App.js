@@ -61,6 +61,33 @@ function App() {
   const editFormRef = useRef(null);
   // === EFEKTY ===
   useEffect(() => {
+  const createDefaultBoard = async () => {
+    const token = localStorage.getItem('token');
+    try {
+      const response = await fetch('https://houseapp-backend.onrender.com/api/boards', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ name: 'Moja pierwsza tablica' }),
+      });
+
+      if (response.ok) {
+        const newBoard = await response.json();
+        setBoards([...boards, newBoard]);
+        setSelectedBoard(newBoard);
+      }
+    } catch (error) {
+      console.error('Błąd podczas tworzenia domyślnej tablicy:', error);
+    }
+  };
+
+  if (isAuthenticated && boards.length === 0) {
+    createDefaultBoard();
+  }
+}, [isAuthenticated, boards]);
+  useEffect(() => {
     const fetchBoards = async () => {
       const token = localStorage.getItem('token');
       try {
