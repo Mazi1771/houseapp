@@ -395,6 +395,128 @@ function App() {
       </div>
     );
   };
+// === FUNKCJE OBSŁUGI PRZENOSZENIA ===
+const handlePropertyMove = async (propertyId, targetBoardId) => {
+  const token = localStorage.getItem('token');
+  try {
+    const response = await fetch(`https://houseapp-backend.onrender.com/api/properties/${propertyId}/move`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ targetBoardId }),
+    });
+
+    if (response.ok) {
+      await fetchBoardProperties(selectedBoard._id);
+      setPropertyToMove(null);
+    } else {
+      const data = await response.json();
+      alert(data.error || 'Nie udało się przenieść nieruchomości');
+    }
+  } catch (error) {
+    console.error('Błąd podczas przenoszenia nieruchomości:', error);
+  }
+};
+
+// === KOMPONENTY UI ===
+const BoardSidebar = ({ isOpen }) => (
+  <div
+    className={`fixed left-0 top-16 h-full bg-white shadow-lg transition-all duration-300 z-20
+      ${isOpen ? 'w-64' : 'w-0'} overflow-hidden`}
+  >
+    <div className="p-4">
+      <BoardNavigation
+        boards={boards}
+        sharedBoards={sharedBoards}
+        selectedBoard={selectedBoard}
+        onBoardSelect={handleBoardSelect}
+        onShareClick={(board) => {
+          setShareModalOpen(true);
+          setSelectedBoard(board);
+        }}
+      />
+    </div>
+  </div>
+);
+
+const PropertyList = () => (
+  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    {getFilteredAndSortedProperties().map((property) => (
+      <PropertyCard
+        key={property._id}
+        property={property}
+        isShared={isPropertyShared(property)}
+        onMove={setPropertyToMove}
+        onCopy={handlePropertyCopy}
+        onEdit={handleEditClick}
+        onDelete={handleDelete}
+        onRate={handleRating}
+        onRefresh={handleRefreshProperty}
+        isExpanded={expandedProperty === property._id}
+        onExpandToggle={() => setExpandedProperty(
+          expandedProperty === property._id ? null : property._id
+        )}
+      />
+    ))}
+  </div>
+);
+
+const BoardNavigation = ({ boards, sharedBoards, selectedBoard, onBoardSelect, onShareClick }) => {
+  return (
+    <div className="bg-white p-4 rounded-lg shadow">
+      <h2 className="font-semibold text-lg mb-4">Moje tablice</h2>
+      <div className="space-y-2">
+        {boards.map(board => (
+          <div 
+            key={board._id}
+            className={`flex items-center justify-between p-2 rounded-lg cursor-pointer ${
+              selectedBoard?._id === board._id ? 'bg-blue-50' : 'hover:bg-gray-50'
+            }`}
+          >
+            <span 
+              onClick={() => onBoardSelect(board)}
+              className="flex-grow"
+            >
+              {board.name}
+            </span>
+            <button
+              onClick={() => onShareClick(board)}
+              className="p-2 text-gray-400 hover:text-blue-600 rounded-full hover:bg-blue-50"
+            >
+              <Share className="w-4 h-4" />
+            </button>
+          </div>
+        ))}
+      </div>
+
+      {sharedBoards.length > 0 && (
+        <>
+          <h2 className="font-semibold text-lg mt-6 mb-4">Wspólne tablice</h2>
+          <div className="space-y-2">
+            {sharedBoards.map(board => (
+              <div
+                key={board._id}
+                onClick={() => onBoardSelect(board)}
+                className={`p-2 rounded-lg cursor-pointer ${
+                  selectedBoard?._id === board._id ? 'bg-purple-50' : 'hover:bg-gray-50'
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <span>{board.name}</span>
+                  <span className="text-sm text-gray-500">
+                    Udostępnione przez: {board.owner.name || board.owner.email}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  );
+};
   // === GŁÓWNY RENDER APLIKACJI ===
   if (!isAuthenticated) {
     return (
