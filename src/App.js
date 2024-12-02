@@ -263,32 +263,33 @@ function App() {
     >
       <div className="p-4">
         {/* Menu w prawym górnym rogu */}
-        <div className="absolute top-2 right-2 z-10">
-          <Menu>
-            <MenuTrigger className="p-1 hover:bg-gray-100 rounded-full">
-              <MoreVertical className="w-5 h-5 text-gray-400" />
-            </MenuTrigger>
-            <MenuContent>
-              {!isShared && (
-                <MenuItem onClick={() => onMove(property)}>
-                  Przenieś do innej tablicy
-                </MenuItem>
-              )}
-              <MenuItem onClick={() => onCopy(property._id)}>
-                Kopiuj do wspólnej tablicy
-              </MenuItem>
-              <MenuItem onClick={() => onEdit(property)}>
-                Edytuj
-              </MenuItem>
-              {!isShared && (
-                <MenuItem onClick={() => onDelete(property._id)} className="text-red-600">
-                  Usuń
-                </MenuItem>
-              )}
-            </MenuContent>
-          </Menu>
-        </div>
-
+       <div className="absolute top-2 right-2 z-10">
+  <Menu>
+    <MenuTrigger>
+      <button className="p-1 hover:bg-gray-100 rounded-full">
+        <MoreVertical className="w-5 h-5 text-gray-400" />
+      </button>
+    </MenuTrigger>
+    <MenuContent>
+      {!isShared && (
+        <MenuItem onClick={() => onMove(property)}>
+          Przenieś do innej tablicy
+        </MenuItem>
+      )}
+      <MenuItem onClick={() => onCopy(property._id)}>
+        Kopiuj do wspólnej tablicy
+      </MenuItem>
+      <MenuItem onClick={() => onEdit(property)}>
+        Edytuj
+      </MenuItem>
+      {!isShared && (
+        <MenuItem onClick={() => onDelete(property._id)} className="text-red-600">
+          Usuń
+        </MenuItem>
+      )}
+    </MenuContent>
+  </Menu>
+</div>
         {/* Podstawowe informacje */}
         <div className="flex justify-between items-start mb-3">
           <div>
