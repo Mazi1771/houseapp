@@ -433,51 +433,39 @@ const handleManualAdd = async (e) => {
   }
 };
 const fetchBoardProperties = async (boardId) => {
-  if (!boardId) {
-    console.error('Brak ID tablicy');
-    return;
-  }
-
-  try {
-    setIsLoadingProperties(true);
-    const token = localStorage.getItem('token');
-    console.log('Pobieranie właściwości dla tablicy:', boardId);
-
-    const response = await fetch(`https://houseapp-backend.onrender.com/api/boards/${boardId}/properties`, {
-      method: 'GET', // Jawnie określamy metodę
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
-       
-      },
-    });
-      
-    if (!response.ok) {
-      console.error('Błąd odpowiedzi:', response.status, response.statusText);
-      const errorData = await response.json().catch(() => ({}));
-      console.error('Szczegóły błędu:', errorData);
-      throw new Error(`Błąd pobierania właściwości: ${response.status}`);
-    }
-
-    const data = await response.json();
-    console.log('Surowe dane właściwości:', data); // Dodajemy surowe dane
+    if (!boardId) return;
     
-    if (Array.isArray(data)) {
-      console.log('Ustawianie właściwości:', data.length, 'elementów');
-      setProperties(data);
-    } else if (data.properties && Array.isArray(data.properties)) {
-      console.log('Ustawianie właściwości z obiektu:', data.properties.length, 'elementów');
-      setProperties(data.properties);
-    } else {
-      console.error('Nieprawidłowy format danych:', data);
-      setProperties([]); // Resetujemy stan w przypadku błędu
+    try {
+        setIsLoadingProperties(true);
+        const token = localStorage.getItem('token');
+        
+        if (!token) {
+            throw new Error('Brak tokenu autoryzacji');
+        }
+
+        const response = await fetch(`https://houseapp-backend.onrender.com/api/boards/${boardId}/properties`, {
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json',
+            },
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        setProperties(Array.isArray(data) ? data : []);
+        
+    } catch (error) {
+        console.error('Błąd podczas pobierania właściwości:', error);
+        if (error.message.includes('token') || error.response?.status === 401) {
+            handleLogout();
+        }
+        setProperties([]);
+    } finally {
+        setIsLoadingProperties(false);
     }
-  } catch (error) {
-    console.error('Szczegółowy błąd pobierania właściwości:', error);
-    setProperties([]); // Resetujemy stan w przypadku błędu
-  } finally {
-    setIsLoadingProperties(false);
-  }
 };
 const handleAddProperty = async () => {
   // Sprawdzenie czy tablica jest wybrana i istnieje
