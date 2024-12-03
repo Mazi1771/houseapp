@@ -177,18 +177,21 @@ useEffect(() => {
   }, [isAuthenticated, selectedBoard]);
 
   // === FUNKCJE OBSŁUGI TABLIC ===
-   const handleLogout = () => {
+  const handleLogout = () => {
+    // Usuwamy TYLKO token uwierzytelniający
     localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    localStorage.removeItem('selectedBoardId');
+
+    // Zmieniamy stan uwierzytelnienia
     setIsAuthenticated(false);
     setUser(null);
+
+    // Czyścimy aktualny widok (ale dane pozostają w bazie)
     setProperties([]);
     setBoards([]);
     setSharedBoards([]);
     setSelectedBoard(null);
     setExpandedProperty(null);
-  };
+};
   const BoardSidebar = ({ isOpen }) => (
   <div className={`fixed left-0 top-16 h-full bg-white shadow-lg transition-all duration-300 z-20 
     ${isOpen ? 'w-64' : 'w-0'} overflow-hidden`}>
@@ -207,35 +210,63 @@ useEffect(() => {
   </div>
 );
  const handleLogin = async (data) => {
-    localStorage.setItem('token', data.token);
-    localStorage.setItem('user', JSON.stringify(data.user));
-    setIsAuthenticated(true);
-    setUser(data.user);
-    
     try {
-      const response = await fetch('https://houseapp-backend.onrender.com/api/boards', {
-        headers: {
-          'Authorization': `Bearer ${data.token}`,
-          'Content-Type': 'application/json',
-        },
-      });
-      
-      if (response.ok) {
-        const boardsData = await response.json();
-        setBoards(boardsData.boards);
-        setSharedBoards(boardsData.sharedBoards);
+        // Zapisujemy podstawowe dane logowania
+        localStorage.setItem('token', data.token);
+        setIsAuthenticated(true);
+        setUser(data.user);
         
-        if (boardsData.boards.length > 0) {
-          const firstBoard = boardsData.boards[0];
-          setSelectedBoard(firstBoard);
-          localStorage.setItem('selectedBoardId', firstBoard._id);
-          await fetchBoardProperties(firstBoard._id);
+        // Pobieramy tablice użytkownika
+        const response = await fetch('https://houseapp-backend.onrender.com/api/boards', {
+            headers: {
+                'Authorization': `Bearer ${data.token}`,
+                'Content-Type': 'application/json',
+            },
+        });
+        
+        if (response.ok) {
+            const boardsData = await response.json();
+            
+            // Ustawiamy tablice w stanie aplikacji
+            setBoards(boardsData.boards);
+            setSharedBoards(boardsData.sharedBoards);
+            
+            // Jeśli użytkownik ma jakieś tablice, wybieramy pierwszą jako aktywną
+            if (boardsData.boards.length > 0) {
+                const firstBoard = boardsData.boards[0];
+                setSelectedBoard(firstBoard);
+                
+                // Pobieramy nieruchomości dla pierwszej tablicy
+                const propertiesResponse = await fetch(
+                    `https://houseapp-backend.onrender.com/api/boards/${firstBoard._id}/properties`,
+                    {
+                        headers: {
+                            'Authorization': `Bearer ${data.token}`,
+                            'Content-Type': 'application/json',
+                        },
+                    }
+                );
+                
+                if (propertiesResponse.ok) {
+                    const propertiesData = await propertiesResponse.json();
+                    setProperties(propertiesData);
+                } else {
+                    console.error('Błąd podczas pobierania nieruchomości:', propertiesResponse.status);
+                    setProperties([]);
+                }
+            }
+        } else {
+            console.error('Błąd podczas pobierania tablic:', response.status);
+            setBoards([]);
+            setSharedBoards([]);
         }
-      }
     } catch (error) {
-      console.error('Błąd podczas pobierania tablic po logowaniu:', error);
+        console.error('Błąd podczas procesu logowania:', error);
+        // Możemy tu dodać jakieś powiadomienie dla użytkownika o błędzie
+    } finally {
+        setIsLoadingProperties(false);
     }
-  };
+};
 
 const handleRegister = (data) => {
   localStorage.setItem('token', data.token);
