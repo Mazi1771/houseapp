@@ -155,27 +155,34 @@ const handleRegister = (data) => {
   const board = boards.find(b => b._id === property.board);
   return board?.owner !== user?._id;
 };
-  const fetchBoards = async () => {
-    const token = localStorage.getItem('token');
-    try {
-      const response = await fetch('https://houseapp-backend.onrender.com/api/boards', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
-      if (response.ok) {
-        const data = await response.json();
-        setBoards(data.boards);
-        setSharedBoards(data.sharedBoards);
-        if (!selectedBoard && data.boards.length > 0) {
-          setSelectedBoard(data.boards[0]);
-        }
+ const fetchBoards = async () => {
+  const token = localStorage.getItem('token');
+  try {
+    const response = await fetch('https://houseapp-backend.onrender.com/api/boards', {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+    if (response.ok) {
+      const data = await response.json();
+      console.log('Pobrane tablice:', data); // Dodajemy log
+      setBoards(data.boards);
+      setSharedBoards(data.sharedBoards);
+      if (!selectedBoard && data.boards.length > 0) {
+        setSelectedBoard(data.boards[0]);
       }
-    } catch (error) {
-      console.error('Błąd podczas pobierania tablic:', error);
+    } else {
+      console.error('Błąd pobierania tablic:', response.status);
+      // Jeśli token wygasł, wyloguj użytkownika
+      if (response.status === 401) {
+        handleLogout();
+      }
     }
-  };
+  } catch (error) {
+    console.error('Błąd podczas pobierania tablic:', error);
+  }
+};
 
   const handleCreateBoard = async () => {
   if (!newBoardName.trim()) return;
@@ -242,31 +249,36 @@ const handleRegister = (data) => {
   };
 
   // === FUNKCJE OBSŁUGI NIERUCHOMOŚCI ===
-  const fetchBoardProperties = async (boardId) => {
-    try {
-      setIsLoadingProperties(true);
-      const token = localStorage.getItem('token');
-      const response = await fetch(`https://houseapp-backend.onrender.com/api/boards/${boardId}/properties`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-      });
-        
-      if (response.ok) {
-        const data = await response.json();
-        setProperties(data);
-      } else if (response.status === 401) {
-        handleLogout();
-      }
-    } catch (error) {
-      console.error('Błąd podczas pobierania nieruchomości:', error);
-    } finally {
-      setIsLoadingProperties(false);
-    }
-  };
+ const fetchBoardProperties = async (boardId) => {
+  try {
+    setIsLoadingProperties(true);
+    const token = localStorage.getItem('token');
+    console.log('Pobieranie właściwości dla tablicy:', boardId); // Dodajemy log
 
- const handleAddProperty = async () => {
+    const response = await fetch(`https://houseapp-backend.onrender.com/api/boards/${boardId}/properties`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+    });
+      
+    if (response.ok) {
+      const data = await response.json();
+      console.log('Pobrane właściwości:', data); // Dodajemy log
+      setProperties(data);
+    } else if (response.status === 401) {
+      handleLogout();
+    } else {
+      console.error('Błąd pobierania właściwości:', response.status);
+    }
+  } catch (error) {
+    console.error('Błąd podczas pobierania właściwości:', error);
+  } finally {
+    setIsLoadingProperties(false);
+  }
+};
+
+const handleAddProperty = async () => {
   if (!selectedBoard) {
     alert('Najpierw wybierz lub utwórz tablicę, aby dodać nieruchomość.');
     return;
@@ -280,6 +292,8 @@ const handleRegister = (data) => {
   setIsLoading(true);
   try {
     const token = localStorage.getItem('token');
+    console.log('Dodawanie nieruchomości do tablicy:', selectedBoard._id);
+    
     const response = await fetch('https://houseapp-backend.onrender.com/api/scrape', {
       method: 'POST',
       headers: {
@@ -292,20 +306,24 @@ const handleRegister = (data) => {
       }),
     });
 
+    const data = await response.json();
+    console.log('Odpowiedź z serwera:', data);
+
     if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error || 'Wystąpił błąd podczas pobierania danych.');
+      throw new Error(data.error || 'Wystąpił błąd podczas pobierania danych.');
     }
 
-    const data = await response.json(); // Dodajemy tę linię
-    console.log('Odpowiedź z serwera:', data); // Dodajemy log
-
+    // Po dodaniu nieruchomości odświeżamy listę
     await fetchBoardProperties(selectedBoard._id);
     setUrl('');
     setIsFormVisible(false);
+    
+    // Przewijamy do góry strony
+    window.scrollTo(0, 0);
+    
     alert('Nieruchomość została dodana pomyślnie!');
   } catch (error) {
-    console.error('Błąd podczas dodawania:', error); // Dodajemy szczegółowy log błędu
+    console.error('Błąd podczas dodawania:', error);
     alert(error.message);
   } finally {
     setIsLoading(false);
