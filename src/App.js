@@ -109,66 +109,93 @@ useEffect(() => {
 // Zmodyfikuj efekt inicjalizacji
 useEffect(() => {
     const initializeApp = async () => {
-      const token = localStorage.getItem('token');
-      const savedUser = localStorage.getItem('user');
-      
-      if (token && savedUser) {
-        setIsAuthenticated(true);
-        setUser(JSON.parse(savedUser));
-        setIsLoadingProperties(true);
-        
-        try {
-          // Pobierz tablice
-          const response = await fetch('https://houseapp-backend.onrender.com/api/boards', {
-            headers: {
-              'Authorization': `Bearer ${token}`,
-              'Content-Type': 'application/json',
-            },
-          });
-          
-          if (response.ok) {
-            const data = await response.json();
-            setBoards(data.boards);
-            setSharedBoards(data.sharedBoards);
-            
-            // Próba przywrócenia wybranej tablicy z localStorage
-            const savedBoardId = localStorage.getItem('selectedBoardId');
-            if (savedBoardId) {
-              const savedBoard = [...data.boards, ...data.sharedBoards].find(
-                board => board._id === savedBoardId
-              );
-              if (savedBoard) {
-                setSelectedBoard(savedBoard);
-                // Pobierz nieruchomości dla wybranej tablicy
-                fetchBoardProperties(savedBoard._id);
-              } else if (data.boards.length > 0) {
-                // Jeśli nie znaleziono zapisanej tablicy, użyj pierwszej dostępnej
-                setSelectedBoard(data.boards[0]);
-                localStorage.setItem('selectedBoardId', data.boards[0]._id);
-                fetchBoardProperties(data.boards[0]._id);
-              }
-            } else if (data.boards.length > 0) {
-              // Jeśli nie ma zapisanej tablicy, użyj pierwszej dostępnej
-              setSelectedBoard(data.boards[0]);
-              localStorage.setItem('selectedBoardId', data.boards[0]._id);
-              fetchBoardProperties(data.boards[0]._id);
+        console.log('Inicjalizacja aplikacji...');
+        const token = localStorage.getItem('token');
+        const savedUser = localStorage.getItem('user');
+
+        console.log('Stan początkowy:', { token: !!token, savedUser });
+
+        if (token && savedUser) {
+            try {
+                // Ustawiamy stan autentykacji
+                setIsAuthenticated(true);
+                setUser(JSON.parse(savedUser));
+                setIsLoadingProperties(true);
+
+                // Pobieramy tablice
+                const boardsResponse = await fetch('https://houseapp-backend.onrender.com/api/boards', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json',
+                    },
+                });
+
+                if (boardsResponse.ok) {
+                    const boardsData = await boardsResponse.json();
+                    console.log('Pobrane tablice:', boardsData);
+
+                    setBoards(boardsData.boards);
+                    setSharedBoards(boardsData.sharedBoards);
+
+                    // Sprawdzamy czy jest zapisana aktywna tablica
+                    const savedBoardId = localStorage.getItem('selectedBoardId');
+                    const allBoards = [...boardsData.boards, ...boardsData.sharedBoards];
+                    
+                    let boardToSelect;
+                    
+                    if (savedBoardId) {
+                        // Próbujemy znaleźć zapisaną tablicę
+                        boardToSelect = allBoards.find(board => board._id === savedBoardId);
+                    }
+                    
+                    // Jeśli nie znaleźliśmy zapisanej tablicy, bierzemy pierwszą dostępną
+                    if (!boardToSelect && allBoards.length > 0) {
+                        boardToSelect = allBoards[0];
+                    }
+
+                    if (boardToSelect) {
+                        console.log('Wybrana tablica:', boardToSelect);
+                        setSelectedBoard(boardToSelect);
+                        localStorage.setItem('selectedBoardId', boardToSelect._id);
+
+                        // Pobieramy nieruchomości dla wybranej tablicy
+                        const propertiesResponse = await fetch(
+                            `https://houseapp-backend.onrender.com/api/boards/${boardToSelect._id}/properties`,
+                            {
+                                headers: {
+                                    'Authorization': `Bearer ${token}`,
+                                    'Content-Type': 'application/json',
+                                },
+                            }
+                        );
+
+                        if (propertiesResponse.ok) {
+                            const propertiesData = await propertiesResponse.json();
+                            console.log('Pobrane nieruchomości:', propertiesData);
+                            setProperties(propertiesData);
+                        } else {
+                            console.error('Błąd podczas pobierania nieruchomości:', propertiesResponse.status);
+                            setProperties([]);
+                        }
+                    }
+                } else if (boardsResponse.status === 401) {
+                    // Token wygasł
+                    console.log('Token wygasł - wylogowuję...');
+                    handleLogout();
+                }
+            } catch (error) {
+                console.error('Błąd podczas inicjalizacji:', error);
+            } finally {
+                setIsLoadingProperties(false);
             }
-          } else if (response.status === 401) {
-            // Token wygasł
-            handleLogout();
-          }
-        } catch (error) {
-          console.error('Błąd podczas inicjalizacji:', error);
-        } finally {
-          setIsLoadingProperties(false);
+        } else {
+            console.log('Brak danych autoryzacji');
+            setIsLoadingProperties(false);
         }
-      } else {
-        setIsLoadingProperties(false);
-      }
     };
 
     initializeApp();
-  }, []);
+}, []);
 
   useEffect(() => {
     if (isAuthenticated && selectedBoard) {
