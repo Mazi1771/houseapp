@@ -261,26 +261,37 @@ const fetchBoardProperties = async (boardId) => {
     console.log('Pobieranie właściwości dla tablicy:', boardId);
 
     const response = await fetch(`https://houseapp-backend.onrender.com/api/boards/${boardId}/properties`, {
+      method: 'GET', // Jawnie określamy metodę
       headers: {
         'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'Cache-Control': 'no-cache' // Dodajemy nagłówek cache
       },
     });
       
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      console.error('Błąd odpowiedzi:', response.status, response.statusText);
+      const errorData = await response.json().catch(() => ({}));
+      console.error('Szczegóły błędu:', errorData);
+      throw new Error(`Błąd pobierania właściwości: ${response.status}`);
     }
 
     const data = await response.json();
-    console.log('Pobrane właściwości:', data);
+    console.log('Surowe dane właściwości:', data); // Dodajemy surowe dane
     
     if (Array.isArray(data)) {
+      console.log('Ustawianie właściwości:', data.length, 'elementów');
       setProperties(data);
+    } else if (data.properties && Array.isArray(data.properties)) {
+      console.log('Ustawianie właściwości z obiektu:', data.properties.length, 'elementów');
+      setProperties(data.properties);
     } else {
       console.error('Nieprawidłowy format danych:', data);
+      setProperties([]); // Resetujemy stan w przypadku błędu
     }
   } catch (error) {
-    console.error('Błąd podczas pobierania właściwości:', error);
+    console.error('Szczegółowy błąd pobierania właściwości:', error);
+    setProperties([]); // Resetujemy stan w przypadku błędu
   } finally {
     setIsLoadingProperties(false);
   }
@@ -301,35 +312,41 @@ const handleAddProperty = async () => {
     const token = localStorage.getItem('token');
     console.log('Próba dodania nieruchomości do tablicy:', selectedBoard._id);
     
+    const requestData = {
+      url,
+      boardId: selectedBoard._id
+    };
+    console.log('Wysyłane dane:', requestData);
+
     const response = await fetch('https://houseapp-backend.onrender.com/api/scrape', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`,
       },
-      body: JSON.stringify({ 
-        url, 
-        boardId: selectedBoard._id,
-      }),
+      body: JSON.stringify(requestData),
     });
 
+    const data = await response.json();
+    console.log('Odpowiedź z serwera:', data);
+
     if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || 'Wystąpił błąd podczas dodawania nieruchomości');
+      throw new Error(data.error || 'Wystąpił błąd podczas dodawania nieruchomości');
     }
 
-    const data = await response.json();
     console.log('Nieruchomość została dodana:', data);
 
-    // Od razu po dodaniu odświeżamy właściwości
-    await fetchBoardProperties(selectedBoard._id);
+    // Dodajemy małe opóźnienie przed odświeżeniem
+    setTimeout(async () => {
+      await fetchBoardProperties(selectedBoard._id);
+    }, 1000);
     
     setUrl('');
     setIsFormVisible(false);
     alert('Nieruchomość została dodana pomyślnie!');
   } catch (error) {
-    console.error('Błąd podczas dodawania:', error);
-    alert(error.message);
+    console.error('Szczegółowy błąd podczas dodawania:', error);
+    alert(`Błąd: ${error.message}`);
   } finally {
     setIsLoading(false);
   }
