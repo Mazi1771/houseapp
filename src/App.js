@@ -189,15 +189,13 @@ const handleRegister = (data) => {
 
   try {
     const token = localStorage.getItem('token');
-    console.log('Tworzenie nowej tablicy:', newBoardName); // Dodane dla debugowania
-
     const response = await fetch('https://houseapp-backend.onrender.com/api/boards', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ name: newBoardName.trim() }),
+      body: JSON.stringify({ name: newBoardName }),
     });
 
     if (!response.ok) {
@@ -205,20 +203,22 @@ const handleRegister = (data) => {
     }
 
     const newBoard = await response.json();
-    console.log('Nowa tablica utworzona:', newBoard); // Dodane dla debugowania
+    console.log('Nowa tablica utworzona:', newBoard);
 
+    // Najpierw aktualizujemy tablice
     setBoards(prevBoards => [...prevBoards, newBoard]);
-    setNewBoardName('');
-    setIsNewBoardModalOpen(false);
     
-    // Opcjonalnie możemy od razu ustawić nową tablicę jako wybraną
+    // Potem ustawiamy nową tablicę jako wybraną
     setSelectedBoard(newBoard);
     
-    // Odświeżamy listę tablic
-    await fetchBoards();
+    // Czyścimy stan
+    setNewBoardName('');
+    setIsNewBoardModalOpen(false);
+
+    return newBoard; // Zwracamy nową tablicę
   } catch (error) {
     console.error('Błąd podczas tworzenia tablicy:', error);
-    alert('Nie udało się utworzyć tablicy. Spróbuj ponownie.');
+    alert('Nie udało się utworzyć tablicy');
   }
 };
 
@@ -249,11 +249,16 @@ const handleRegister = (data) => {
   };
 
   // === FUNKCJE OBSŁUGI NIERUCHOMOŚCI ===
- const fetchBoardProperties = async (boardId) => {
+const fetchBoardProperties = async (boardId) => {
+  if (!boardId) {
+    console.error('Brak ID tablicy');
+    return;
+  }
+
   try {
     setIsLoadingProperties(true);
     const token = localStorage.getItem('token');
-    console.log('Pobieranie właściwości dla tablicy:', boardId); // Dodajemy log
+    console.log('Pobieranie właściwości dla tablicy:', boardId);
 
     const response = await fetch(`https://houseapp-backend.onrender.com/api/boards/${boardId}/properties`, {
       headers: {
@@ -262,14 +267,17 @@ const handleRegister = (data) => {
       },
     });
       
-    if (response.ok) {
-      const data = await response.json();
-      console.log('Pobrane właściwości:', data); // Dodajemy log
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    console.log('Pobrane właściwości:', data);
+    
+    if (Array.isArray(data)) {
       setProperties(data);
-    } else if (response.status === 401) {
-      handleLogout();
     } else {
-      console.error('Błąd pobierania właściwości:', response.status);
+      console.error('Nieprawidłowy format danych:', data);
     }
   } catch (error) {
     console.error('Błąd podczas pobierania właściwości:', error);
@@ -277,7 +285,6 @@ const handleRegister = (data) => {
     setIsLoadingProperties(false);
   }
 };
-
 const handleAddProperty = async () => {
   if (!selectedBoard) {
     alert('Najpierw wybierz lub utwórz tablicę, aby dodać nieruchomość.');
@@ -292,7 +299,7 @@ const handleAddProperty = async () => {
   setIsLoading(true);
   try {
     const token = localStorage.getItem('token');
-    console.log('Dodawanie nieruchomości do tablicy:', selectedBoard._id);
+    console.log('Próba dodania nieruchomości do tablicy:', selectedBoard._id);
     
     const response = await fetch('https://houseapp-backend.onrender.com/api/scrape', {
       method: 'POST',
@@ -306,21 +313,19 @@ const handleAddProperty = async () => {
       }),
     });
 
-    const data = await response.json();
-    console.log('Odpowiedź z serwera:', data);
-
     if (!response.ok) {
-      throw new Error(data.error || 'Wystąpił błąd podczas pobierania danych.');
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Wystąpił błąd podczas dodawania nieruchomości');
     }
 
-    // Po dodaniu nieruchomości odświeżamy listę
+    const data = await response.json();
+    console.log('Nieruchomość została dodana:', data);
+
+    // Od razu po dodaniu odświeżamy właściwości
     await fetchBoardProperties(selectedBoard._id);
+    
     setUrl('');
     setIsFormVisible(false);
-    
-    // Przewijamy do góry strony
-    window.scrollTo(0, 0);
-    
     alert('Nieruchomość została dodana pomyślnie!');
   } catch (error) {
     console.error('Błąd podczas dodawania:', error);
