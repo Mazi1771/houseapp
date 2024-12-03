@@ -173,30 +173,42 @@ const handleRegister = (data) => {
   };
 
   const handleCreateBoard = async () => {
-    if (!newBoardName.trim()) return;
+  if (!newBoardName.trim()) return;
 
+  try {
     const token = localStorage.getItem('token');
-    try {
-      const response = await fetch('https://houseapp-backend.onrender.com/api/boards', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ name: newBoardName }),
-      });
+    console.log('Tworzenie nowej tablicy:', newBoardName); // Dodane dla debugowania
 
-      if (response.ok) {
-        const newBoard = await response.json();
-        setBoards([...boards, newBoard]);
-        setNewBoardName('');
-        setIsNewBoardModalOpen(false);
-        await fetchBoards();
-      }
-    } catch (error) {
-      console.error('Błąd podczas tworzenia tablicy:', error);
+    const response = await fetch('https://houseapp-backend.onrender.com/api/boards', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ name: newBoardName.trim() }),
+    });
+
+    if (!response.ok) {
+      throw new Error('Błąd podczas tworzenia tablicy');
     }
-  };
+
+    const newBoard = await response.json();
+    console.log('Nowa tablica utworzona:', newBoard); // Dodane dla debugowania
+
+    setBoards(prevBoards => [...prevBoards, newBoard]);
+    setNewBoardName('');
+    setIsNewBoardModalOpen(false);
+    
+    // Opcjonalnie możemy od razu ustawić nową tablicę jako wybraną
+    setSelectedBoard(newBoard);
+    
+    // Odświeżamy listę tablic
+    await fetchBoards();
+  } catch (error) {
+    console.error('Błąd podczas tworzenia tablicy:', error);
+    alert('Nie udało się utworzyć tablicy. Spróbuj ponownie.');
+  }
+};
 
   const handleDeleteBoard = async (boardId) => {
     if (!window.confirm('Czy na pewno chcesz usunąć tę tablicę? Wszystkie nieruchomości zostaną usunięte.')) {
@@ -790,34 +802,45 @@ const handleRegister = (data) => {
   );
   // Modal dodawania nowej tablicy
   const NewBoardModal = () => (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full mx-4">
-        <h2 className="text-lg font-bold mb-4">Nowa tablica</h2>
-        <input
-          type="text"
-          value={newBoardName}
-          onChange={(e) => setNewBoardName(e.target.value)}
-          placeholder="Nazwa tablicy"
-          className="w-full p-2 border rounded-lg mb-4"
-        />
-        <div className="flex justify-end gap-2">
-          <button
-            onClick={() => setIsNewBoardModalOpen(false)}
-            className="px-4 py-2 text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200"
-          >
-            Anuluj
-          </button>
-          <button
-            onClick={handleCreateBoard}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-            disabled={!newBoardName.trim()}
-          >
-            Utwórz
-          </button>
-        </div>
+  <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+    <div 
+      className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full mx-4"
+      onClick={(e) => e.stopPropagation()} // Dodane, żeby zapobiec zamykaniu przy kliknięciu w modal
+    >
+      <h2 className="text-lg font-bold mb-4">Nowa tablica</h2>
+     <input
+  type="text"
+  value={newBoardName}
+  onChange={(e) => setNewBoardName(e.target.value)}
+  onKeyPress={handleKeyPress}
+  placeholder="Nazwa tablicy"
+  className="w-full p-2 border rounded-lg mb-4"
+  autoFocus
+/>
+      <div className="flex justify-end gap-2">
+        <button
+          onClick={() => {
+            setIsNewBoardModalOpen(false);
+            setNewBoardName(''); // Dodane czyszczenie nazwy przy anulowaniu
+          }}
+          className="px-4 py-2 text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200"
+        >
+          Anuluj
+        </button>
+        <button
+          onClick={async () => {
+            await handleCreateBoard();
+            setIsNewBoardModalOpen(false);
+          }}
+          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+          disabled={!newBoardName.trim()}
+        >
+          Utwórz
+        </button>
       </div>
     </div>
-  );
+  </div>
+);
   // === GŁÓWNY RENDER APLIKACJI ===
   if (!isAuthenticated) {
     return (
