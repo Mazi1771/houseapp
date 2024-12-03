@@ -63,6 +63,16 @@ function App() {
   const [isNewBoardModalOpen, setIsNewBoardModalOpen] = useState(false);
   const [newBoardName, setNewBoardName] = useState('');
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+  const [addMethod, setAddMethod] = useState('url');
+const [manualForm, setManualForm] = useState({
+  title: '',
+  price: '',
+  area: '',
+  location: '',
+  status: '',
+  description: '',
+});
+  
   const editFormRef = useRef(null);
   const handleKeyPress = (e) => {
     if (e.key === 'Enter' && newBoardName.trim()) {
@@ -263,6 +273,51 @@ const handleRegister = (data) => {
   };
 
   // === FUNKCJE OBSŁUGI NIERUCHOMOŚCI ===
+const handleManualAdd = async (e) => {
+  e.preventDefault();
+  
+  if (!selectedBoard) {
+    alert('Najpierw wybierz lub utwórz tablicę, aby dodać nieruchomość.');
+    return;
+  }
+
+  try {
+    const token = localStorage.getItem('token');
+    const response = await fetch('https://houseapp-backend.onrender.com/api/properties', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        ...manualForm,
+        board: selectedBoard._id,
+        isActive: true,
+        source: 'manual',
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error('Błąd podczas dodawania nieruchomości');
+    }
+
+    const newProperty = await response.json();
+    setProperties(prev => [...prev, newProperty]);
+    setManualForm({
+      title: '',
+      price: '',
+      area: '',
+      location: '',
+      status: '',
+      description: '',
+    });
+    setIsFormVisible(false);
+    alert('Nieruchomość została dodana pomyślnie!');
+  } catch (error) {
+    console.error('Błąd:', error);
+    alert('Wystąpił błąd podczas dodawania nieruchomości');
+  }
+};
 const fetchBoardProperties = async (boardId) => {
   if (!boardId) {
     console.error('Brak ID tablicy');
@@ -1262,20 +1317,140 @@ const handleAddProperty = async () => {
 {isFormVisible && (
   <div className="bg-white p-4 rounded-lg shadow mb-6">
     <h3 className="text-lg font-semibold">Dodaj nową nieruchomość</h3>
-    <input
-      type="text"
-      placeholder="URL nieruchomości"
-      value={url}
-      onChange={(e) => setUrl(e.target.value)}
-      className="w-full px-4 py-2 border rounded-lg mb-4"
-    />
-    <button
-      onClick={handleAddProperty}
-      className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
-      disabled={!url}
-    >
-      Dodaj nieruchomość
-    </button>
+    <div className="flex gap-4 mb-4">
+      <button
+        onClick={() => setAddMethod('url')}
+        className={`flex-1 p-2 rounded-lg ${addMethod === 'url' ? 'bg-blue-100 text-blue-600' : 'bg-gray-100'}`}
+      >
+        Z linku Otodom
+      </button>
+      <button
+        onClick={() => setAddMethod('manual')}
+        className={`flex-1 p-2 rounded-lg ${addMethod === 'manual' ? 'bg-blue-100 text-blue-600' : 'bg-gray-100'}`}
+      >
+        Ręcznie
+      </button>
+    </div>
+
+    {addMethod === 'url' ? (
+      <>
+        <input
+          type="text"
+          placeholder="URL nieruchomości"
+          value={url}
+          onChange={(e) => setUrl(e.target.value)}
+          className="w-full px-4 py-2 border rounded-lg mb-4"
+        />
+        <button
+          onClick={handleAddProperty}
+          className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+          disabled={!url}
+        >
+          Dodaj z linku
+        </button>
+      </>
+    ) : (
+      <form onSubmit={handleManualAdd} className="space-y-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Tytuł
+          </label>
+          <input
+            type="text"
+            value={manualForm.title}
+            onChange={(e) => setManualForm({...manualForm, title: e.target.value})}
+            className="w-full px-4 py-2 border rounded-lg"
+            required
+          />
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Cena (PLN)
+            </label>
+            <input
+              type="number"
+              value={manualForm.price}
+              onChange={(e) => setManualForm({...manualForm, price: e.target.value})}
+              className="w-full px-4 py-2 border rounded-lg"
+              required
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Powierzchnia (m²)
+            </label>
+            <input
+              type="number"
+              value={manualForm.area}
+              onChange={(e) => setManualForm({...manualForm, area: e.target.value})}
+              className="w-full px-4 py-2 border rounded-lg"
+              required
+            />
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Lokalizacja
+          </label>
+          <input
+            type="text"
+            value={manualForm.location}
+            onChange={(e) => setManualForm({...manualForm, location: e.target.value})}
+            className="w-full px-4 py-2 border rounded-lg"
+            required
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Stan
+          </label>
+          <select
+            value={manualForm.status}
+            onChange={(e) => setManualForm({...manualForm, status: e.target.value})}
+            className="w-full px-4 py-2 border rounded-lg"
+            required
+          >
+            <option value="">Wybierz stan</option>
+            <option value="do zamieszkania">Do zamieszkania</option>
+            <option value="do remontu">Do remontu</option>
+            <option value="w budowie">W budowie</option>
+            <option value="stan deweloperski">Stan deweloperski</option>
+          </select>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Opis
+          </label>
+          <textarea
+            value={manualForm.description}
+            onChange={(e) => setManualForm({...manualForm, description: e.target.value})}
+            className="w-full px-4 py-2 border rounded-lg"
+            rows="4"
+          />
+        </div>
+
+        <div className="flex justify-end gap-2">
+          <button
+            type="button"
+            onClick={() => setIsFormVisible(false)}
+            className="px-4 py-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200"
+          >
+            Anuluj
+          </button>
+          <button
+            type="submit"
+            className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+          >
+            Dodaj nieruchomość
+          </button>
+        </div>
+      </form>
+    )}
   </div>
 )}
           </>
