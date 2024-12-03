@@ -266,47 +266,51 @@ const handleRegister = (data) => {
     }
   };
 
-  const handleAddProperty = async () => {
-    if (!selectedBoard) {
-      alert('Najpierw wybierz lub utwórz tablicę, aby dodać nieruchomość.');
-      return;
+ const handleAddProperty = async () => {
+  if (!selectedBoard) {
+    alert('Najpierw wybierz lub utwórz tablicę, aby dodać nieruchomość.');
+    return;
+  }
+
+  if (!url) {
+    alert('Wprowadź adres URL nieruchomości.');
+    return;
+  }
+
+  setIsLoading(true);
+  try {
+    const token = localStorage.getItem('token');
+    const response = await fetch('https://houseapp-backend.onrender.com/api/scrape', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify({ 
+        url, 
+        boardId: selectedBoard._id,
+      }),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Wystąpił błąd podczas pobierania danych.');
     }
 
-    if (!url) {
-      alert('Wprowadź adres URL nieruchomości.');
-      return;
-    }
+    const data = await response.json(); // Dodajemy tę linię
+    console.log('Odpowiedź z serwera:', data); // Dodajemy log
 
-    setIsLoading(true);
-    try {
-      const token = localStorage.getItem('token');
-      const response = await fetch('https://houseapp-backend.onrender.com/api/scrape', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify({ 
-          url, 
-          boardId: selectedBoard._id,
-        }),
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Wystąpił błąd podczas pobierania danych.');
-      }
-
-      await fetchBoardProperties(selectedBoard._id);
-      setUrl('');
-      setIsFormVisible(false);
-      alert('Nieruchomość została dodana pomyślnie!');
-    } catch (error) {
-      alert(error.message);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    await fetchBoardProperties(selectedBoard._id);
+    setUrl('');
+    setIsFormVisible(false);
+    alert('Nieruchomość została dodana pomyślnie!');
+  } catch (error) {
+    console.error('Błąd podczas dodawania:', error); // Dodajemy szczegółowy log błędu
+    alert(error.message);
+  } finally {
+    setIsLoading(false);
+  }
+};
 
   const handleEditClick = (property) => {
     setEditingProperty(property);
