@@ -926,7 +926,7 @@ const initializeUserSession = async () => {
   };
 
   // Zmodyfikowany PropertyCard z lepszym wsparciem dla wersji mobilnej
-  const PropertyCard = ({ 
+ const PropertyCard = ({ 
     property, 
     isShared, 
     onMove, 
@@ -936,170 +936,182 @@ const initializeUserSession = async () => {
     onRate,
     onRefresh,
     isExpanded,
-    onExpandToggle
-  }) => {
+    onExpandToggle,
+    user  // Dodany prop user
+}) => {
+    const addedByCurrentUser = property.addedBy === user?._id;
+    
     return (
-      <div 
-        className={`bg-white rounded-xl shadow-sm border-l-4 ${
-          isShared ? 'border-l-purple-500' : 'border-l-blue-500'
-        } relative transition-all duration-300`}
-        onClick={onExpandToggle}
-      >
-        <div className="p-4">
-          {/* Menu w prawym górnym rogu */}
-          <div className="absolute top-2 right-2 z-10">
-            <Menu>
-              <MenuTrigger>
-                <button 
-                  className="p-1.5 hover:bg-gray-100 rounded-full transition-colors"
-                  onClick={e => e.stopPropagation()}
-                >
-                  <MoreVertical className="w-5 h-5 text-gray-400" />
-                </button>
-              </MenuTrigger>
-              <MenuContent>
-                {!isShared && (
-                  <MenuItem onClick={() => onMove(property)}>
-                    Przenieś do innej tablicy
-                  </MenuItem>
-                )}
-                <MenuItem onClick={() => onCopy(property._id)}>
-                  Kopiuj do tablicy
-                </MenuItem>
-                <MenuItem onClick={() => onEdit(property)}>
-                  Edytuj
-                </MenuItem>
-                {!isShared && (
-                  <MenuItem onClick={() => onDelete(property._id)} className="text-red-600">
-                    Usuń
-                  </MenuItem>
-                )}
-              </MenuContent>
-            </Menu>
-          </div>
-
-          {/* Podstawowe informacje */}
-          <div className="flex flex-col md:flex-row justify-between items-start gap-2 mb-3">
-            <div className="flex-grow">
-              <h3 className="font-semibold text-gray-900 pr-8">{property.title}</h3>
-              <p className="text-sm text-gray-500">{property.location || 'Brak lokalizacji'}</p>
-              {isShared && (
-                <p className="text-xs text-purple-600 mt-1">
-                  Udostępnione przez: {property.owner?.name || 'Inny użytkownik'}
-                </p>
-              )}
-            </div>
-            <div className="self-start">
-              <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                property.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-              }`}>
-{property.isActive ? 'Aktywne' : 'Nieaktywne'}
-              </span>
-            </div>
-          </div>
-
-          {/* Grid z ceną i powierzchnią */}
-          <div className="grid grid-cols-2 gap-3 mb-4">
-            <div className="bg-gray-50 p-3 rounded-lg">
-              <p className="text-sm text-gray-500 mb-1">Cena</p>
-              <p className="font-semibold text-gray-900">
-                {property.price ? `${property.price.toLocaleString()} PLN` : 'Brak danych'}
-              </p>
-            </div>
-            <div className="bg-gray-50 p-3 rounded-lg">
-              <p className="text-sm text-gray-500 mb-1">Powierzchnia</p>
-              <p className="font-semibold text-gray-900">
-                {property.area ? `${property.area} m²` : 'Brak danych'}
-              </p>
-            </div>
-          </div>
-
-          {/* Przyciski oceny - responsywne */}
-          <div className="flex justify-end gap-2">
-            {!isShared && (
-              <>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onRate(property._id, 'favorite');
-                  }}
-                  className={`p-2 rounded-lg transition-colors ${
-                    property.rating === 'favorite' 
-                      ? 'bg-yellow-100 hover:bg-yellow-200' 
-                      : 'bg-gray-100 hover:bg-gray-200'
-                  }`}
-                >
-                  ⭐
-                </button>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onRate(property._id, 'interested');
-                  }}
-                  className={`p-2 rounded-lg transition-colors ${
-                    property.rating === 'interested' 
-                      ? 'bg-green-100 hover:bg-green-200' 
-                      : 'bg-gray-100 hover:bg-gray-200'
-                  }`}
-                >
-                  👍
-                </button>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onRate(property._id, 'not_interested');
-                  }}
-                  className={`p-2 rounded-lg transition-colors ${
-                    property.rating === 'not_interested' 
-                      ? 'bg-red-100 hover:bg-red-200' 
-                      : 'bg-gray-100 hover:bg-gray-200'
-                  }`}
-                >
-                  👎
-                </button>
-              </>
-            )}
-          </div>
-
-          {/* Rozszerzone informacje */}
-          {isExpanded && (
-            <div className="mt-4 pt-4 border-t border-gray-200">
-              <p className="text-gray-700 mb-4 whitespace-pre-wrap">
-                {property.description || 'Brak opisu'}
-              </p>
-              
-              {property.sourceUrl && (
-                <a 
-                  href={property.sourceUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center text-blue-600 hover:text-blue-800 hover:underline mb-4"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  Zobacz ogłoszenie →
-                </a>
-              )}
-              
-              {!isShared && (
-                <div className="flex gap-2 justify-end">
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onRefresh(property._id);
-                    }}
-                    className="px-4 py-2 bg-green-100 text-green-600 rounded-lg hover:bg-green-200 transition-colors"
-                    disabled={!property.sourceUrl}
-                  >
-                    Odśwież
-                  </button>
+        <div 
+            className={`bg-white rounded-xl shadow-sm border-l-4 ${
+                isShared 
+                    ? addedByCurrentUser 
+                        ? 'border-l-blue-500'    // Własna nieruchomość w współdzielonej tablicy
+                        : 'border-l-purple-500'  // Cudza nieruchomość w współdzielonej tablicy
+                    : 'border-l-blue-500'        // Nieruchomość w własnej tablicy
+            } relative transition-all duration-300`}
+            onClick={onExpandToggle}
+        >
+            <div className="p-4">
+                {/* Menu w prawym górnym rogu */}
+                <div className="absolute top-2 right-2 z-10">
+                    <Menu>
+                        <MenuTrigger>
+                            <button 
+                                className="p-1.5 hover:bg-gray-100 rounded-full transition-colors"
+                                onClick={e => e.stopPropagation()}
+                            >
+                                <MoreVertical className="w-5 h-5 text-gray-400" />
+                            </button>
+                        </MenuTrigger>
+                        <MenuContent>
+                            {!isShared && (
+                                <MenuItem onClick={() => onMove(property)}>
+                                    Przenieś do innej tablicy
+                                </MenuItem>
+                            )}
+                            <MenuItem onClick={() => onCopy(property._id)}>
+                                Kopiuj do tablicy
+                            </MenuItem>
+                            <MenuItem onClick={() => onEdit(property)}>
+                                Edytuj
+                            </MenuItem>
+                            {!isShared && (
+                                <MenuItem onClick={() => onDelete(property._id)} className="text-red-600">
+                                    Usuń
+                                </MenuItem>
+                            )}
+                        </MenuContent>
+                    </Menu>
                 </div>
-              )}
+
+                {/* Podstawowe informacje */}
+                <div className="flex flex-col md:flex-row justify-between items-start gap-2 mb-3">
+                    <div className="flex-grow">
+                        <h3 className="font-semibold text-gray-900 pr-8">{property.title}</h3>
+                        <p className="text-sm text-gray-500">{property.location || 'Brak lokalizacji'}</p>
+                        
+                        {/* Informacja o osobie, która dodała nieruchomość */}
+                        {isShared && (
+                            <p className="text-xs text-purple-600 mt-1">
+                                Dodane przez: {
+                                    property.addedBy === user?._id 
+                                        ? 'Ciebie' 
+                                        : property.addedByUser?.name || 'Innego użytkownika'
+                                }
+                            </p>
+                        )}
+                    </div>
+                    <div className="self-start">
+                        <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                            property.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                        }`}>
+                            {property.isActive ? 'Aktywne' : 'Nieaktywne'}
+                        </span>
+                    </div>
+                </div>
+
+                {/* Grid z ceną i powierzchnią */}
+                <div className="grid grid-cols-2 gap-3 mb-4">
+                    <div className="bg-gray-50 p-3 rounded-lg">
+                        <p className="text-sm text-gray-500 mb-1">Cena</p>
+                        <p className="font-semibold text-gray-900">
+                            {property.price ? `${property.price.toLocaleString()} PLN` : 'Brak danych'}
+                        </p>
+                    </div>
+                    <div className="bg-gray-50 p-3 rounded-lg">
+                        <p className="text-sm text-gray-500 mb-1">Powierzchnia</p>
+                        <p className="font-semibold text-gray-900">
+                            {property.area ? `${property.area} m²` : 'Brak danych'}
+                        </p>
+                    </div>
+                </div>
+
+                {/* Przyciski oceny */}
+                <div className="flex justify-end gap-2">
+                    {!isShared && (
+                        <>
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    onRate(property._id, 'favorite');
+                                }}
+                                className={`p-2 rounded-lg transition-colors ${
+                                    property.rating === 'favorite' 
+                                        ? 'bg-yellow-100 hover:bg-yellow-200' 
+                                        : 'bg-gray-100 hover:bg-gray-200'
+                                }`}
+                            >
+                                ⭐
+                            </button>
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    onRate(property._id, 'interested');
+                                }}
+                                className={`p-2 rounded-lg transition-colors ${
+                                    property.rating === 'interested' 
+                                        ? 'bg-green-100 hover:bg-green-200' 
+                                        : 'bg-gray-100 hover:bg-gray-200'
+                                }`}
+                            >
+                                👍
+                            </button>
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    onRate(property._id, 'not_interested');
+                                }}
+                                className={`p-2 rounded-lg transition-colors ${
+                                    property.rating === 'not_interested' 
+                                        ? 'bg-red-100 hover:bg-red-200' 
+                                        : 'bg-gray-100 hover:bg-gray-200'
+                                }`}
+                            >
+                                👎
+                            </button>
+                        </>
+                    )}
+                </div>
+
+                {/* Rozszerzone informacje */}
+                {isExpanded && (
+                    <div className="mt-4 pt-4 border-t border-gray-200">
+                        <p className="text-gray-700 mb-4 whitespace-pre-wrap">
+                            {property.description || 'Brak opisu'}
+                        </p>
+                        
+                        {property.sourceUrl && (
+                            <a 
+                                href={property.sourceUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center text-blue-600 hover:text-blue-800 hover:underline mb-4"
+                                onClick={(e) => e.stopPropagation()}
+                            >
+                                Zobacz ogłoszenie →
+                            </a>
+                        )}
+                        
+                        {/* Przycisk odświeżania dostępny dla wszystkich użytkowników współdzielonej tablicy */}
+                        <div className="flex gap-2 justify-end">
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    onRefresh(property._id);
+                                }}
+                                className="px-4 py-2 bg-green-100 text-green-600 rounded-lg hover:bg-green-200 transition-colors"
+                                disabled={!property.sourceUrl}
+                            >
+                                Odśwież
+                            </button>
+                        </div>
+                    </div>
+                )}
             </div>
-          )}
         </div>
-      </div>
     );
-  };
+};
  const PropertyList = () => {
     const filteredProperties = getFilteredAndSortedProperties();
     console.log('Wyświetlane nieruchomości:', filteredProperties);
@@ -1118,20 +1130,21 @@ const initializeUserSession = async () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {filteredProperties.map((property) => (
           <PropertyCard
-            key={property._id}
-            property={property}
-            isShared={isPropertyShared(property)}
-            onMove={setPropertyToMove}
-            onCopy={handlePropertyCopy}
-            onEdit={handleEditClick}
-            onDelete={handleDelete}
-            onRate={handleRating}
-            onRefresh={handleRefreshProperty}
-            isExpanded={expandedProperty === property._id}
-            onExpandToggle={() => setExpandedProperty(
-              expandedProperty === property._id ? null : property._id
-            )}
-          />
+    key={property._id}
+    property={property}
+    isShared={isPropertyShared(property)}
+    onMove={setPropertyToMove}
+    onCopy={handlePropertyCopy}
+    onEdit={handleEditClick}
+    onDelete={handleDelete}
+    onRate={handleRating}
+    onRefresh={handleRefreshProperty}
+    isExpanded={expandedProperty === property._id}
+    onExpandToggle={() => setExpandedProperty(
+        expandedProperty === property._id ? null : property._id
+    )}
+    user={user}  // Dodajemy przekazanie użytkownika
+/>
         ))}
       </div>
     );
