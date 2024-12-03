@@ -649,27 +649,32 @@ const initializeUserSession = async () => {
             setIsAuthenticated(true);
             setUser(JSON.parse(savedUser));
 
-            // Pobierz tablice
-            const boardsResponse = await fetch('https://houseapp-backend.onrender.com/api/boards', {
+            const response = await fetch('https://houseapp-backend.onrender.com/api/boards', {
                 headers: {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json',
-                },
+                }
             });
 
-            if (boardsResponse.ok) {
-                const boardsData = await boardsResponse.json();
-                setBoards(boardsData.boards);
-                setSharedBoards(boardsData.sharedBoards);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            console.log('Pobrane dane:', data);
+
+            if (data.boards) {
+                setBoards(data.boards);
+                setSharedBoards(data.sharedBoards || []);
 
                 // Znajdź zapisaną tablicę lub użyj pierwszej dostępnej
                 let boardToSelect = null;
                 if (savedBoardId) {
-                    boardToSelect = [...boardsData.boards, ...boardsData.sharedBoards]
+                    boardToSelect = [...data.boards, ...(data.sharedBoards || [])]
                         .find(board => board._id === savedBoardId);
                 }
-                if (!boardToSelect && boardsData.boards.length > 0) {
-                    boardToSelect = boardsData.boards[0];
+                if (!boardToSelect && data.boards.length > 0) {
+                    boardToSelect = data.boards[0];
                 }
 
                 if (boardToSelect) {
@@ -680,7 +685,9 @@ const initializeUserSession = async () => {
             }
         } catch (error) {
             console.error('Błąd podczas inicjalizacji sesji:', error);
-            handleLogout(); // Wyloguj w przypadku błędu
+            if (error.message.includes('401')) {
+                handleLogout();
+            }
         } finally {
             setIsLoadingProperties(false);
         }
