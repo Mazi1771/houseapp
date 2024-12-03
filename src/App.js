@@ -208,7 +208,6 @@ useEffect(() => {
 
   // === FUNKCJE OBSŁUGI TABLIC ===
   const handleLogout = () => {
-  const handleLogout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     localStorage.removeItem('selectedBoardId');
@@ -233,7 +232,6 @@ useEffect(() => {
     </div>
   </div>
 );
- const handleLogin = async (data) => {
  const handleLogin = async (data) => {
     try {
         localStorage.setItem('token', data.token);
