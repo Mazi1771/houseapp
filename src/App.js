@@ -283,7 +283,8 @@ const handleManualAdd = async (e) => {
 
   try {
     const token = localStorage.getItem('token');
-    const response = await fetch('https://houseapp-backend.onrender.com/api/properties', {
+    // Zmieniamy endpoint na endpoint tablicy
+    const response = await fetch(`https://houseapp-backend.onrender.com/api/boards/${selectedBoard._id}/properties`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -291,18 +292,29 @@ const handleManualAdd = async (e) => {
       },
       body: JSON.stringify({
         ...manualForm,
-        board: selectedBoard._id,
+        price: parseInt(manualForm.price, 10),
+        area: parseFloat(manualForm.area),
         isActive: true,
         source: 'manual',
+        lastChecked: new Date().toISOString(),
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
       }),
     });
 
     if (!response.ok) {
-      throw new Error('Błąd podczas dodawania nieruchomości');
+      const errorData = await response.json().catch(() => ({}));
+      console.error('Szczegóły błędu:', errorData);
+      throw new Error(errorData.error || 'Błąd podczas dodawania nieruchomości');
     }
 
     const newProperty = await response.json();
-    setProperties(prev => [...prev, newProperty]);
+    console.log('Dodano nową nieruchomość:', newProperty);
+
+    // Odświeżamy listę nieruchomości
+    await fetchBoardProperties(selectedBoard._id);
+
+    // Resetujemy formularz
     setManualForm({
       title: '',
       price: '',
@@ -315,7 +327,7 @@ const handleManualAdd = async (e) => {
     alert('Nieruchomość została dodana pomyślnie!');
   } catch (error) {
     console.error('Błąd:', error);
-    alert('Wystąpił błąd podczas dodawania nieruchomości');
+    alert(`Wystąpił błąd: ${error.message}`);
   }
 };
 const fetchBoardProperties = async (boardId) => {
