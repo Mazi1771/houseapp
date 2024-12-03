@@ -886,43 +886,42 @@ const handleAddProperty = async () => {
       </div>
     );
   };
-  javascriptCopyconst PropertyList = () => {
-  const filteredProperties = getFilteredAndSortedProperties();
-  console.log('Wyświetlane nieruchomości:', filteredProperties);
+ const PropertyList = () => {
+    const filteredProperties = getFilteredAndSortedProperties();
+    console.log('Wyświetlane nieruchomości:', filteredProperties);
 
-  if (filteredProperties.length === 0) {
+    if (filteredProperties.length === 0) {
+      return (
+        <div className="text-center py-12 bg-white rounded-lg shadow">
+          <h2 className="text-xl font-medium text-gray-600">
+            Brak nieruchomości na tej tablicy
+          </h2>
+        </div>
+      );
+    }
+
     return (
-      <div className="text-center py-12 bg-white rounded-lg shadow">
-        <h2 className="text-xl font-medium text-gray-600">
-          Brak nieruchomości na tej tablicy
-        </h2>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {filteredProperties.map((property) => (
+          <PropertyCard
+            key={property._id}
+            property={property}
+            isShared={isPropertyShared(property)}
+            onMove={setPropertyToMove}
+            onCopy={handlePropertyCopy}
+            onEdit={handleEditClick}
+            onDelete={handleDelete}
+            onRate={handleRating}
+            onRefresh={handleRefreshProperty}
+            isExpanded={expandedProperty === property._id}
+            onExpandToggle={() => setExpandedProperty(
+              expandedProperty === property._id ? null : property._id
+            )}
+          />
+        ))}
       </div>
     );
   };
-
-  return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-      {filteredProperties.map((property) => (
-        <PropertyCard
-          key={property._id}
-          property={property}
-          isShared={isPropertyShared(property)}
-          onMove={setPropertyToMove}
-          onCopy={handlePropertyCopy}
-          onEdit={handleEditClick}
-          onDelete={handleDelete}
-          onRate={handleRating}
-          onRefresh={handleRefreshProperty}
-          isExpanded={expandedProperty === property._id}
-          onExpandToggle={() => setExpandedProperty(
-            expandedProperty === property._id ? null : property._id
-          )}
-        />
-      ))}
-    </div>
-  );
-};
-  );
   // Modal dodawania nowej tablicy
   const NewBoardModal = () => (
   <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
