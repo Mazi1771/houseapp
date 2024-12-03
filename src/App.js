@@ -89,16 +89,29 @@ function App() {
     }
   }, [isAuthenticated]);
 
-  useEffect(() => {
-    const token = localStorage.getItem('token');
-    const savedUser = localStorage.getItem('user');
-    if (token && savedUser) {
-      setIsAuthenticated(true);
-      setUser(JSON.parse(savedUser));
-    } else {
-      setIsLoadingProperties(false);
+ // Dodaj nowy efekt do zapamiętywania wybranej tablicy
+useEffect(() => {
+  if (selectedBoard) {
+    localStorage.setItem('selectedBoard', JSON.stringify(selectedBoard));
+  }
+}, [selectedBoard]);
+
+// Zmodyfikuj efekt inicjalizacji
+useEffect(() => {
+  const token = localStorage.getItem('token');
+  const savedUser = localStorage.getItem('user');
+  const savedBoard = localStorage.getItem('selectedBoard');
+  
+  if (token && savedUser) {
+    setIsAuthenticated(true);
+    setUser(JSON.parse(savedUser));
+    if (savedBoard) {
+      setSelectedBoard(JSON.parse(savedBoard));
     }
-  }, []);
+  } else {
+    setIsLoadingProperties(false);
+  }
+}, []);
 
   useEffect(() => {
     if (isAuthenticated && selectedBoard) {
@@ -110,6 +123,7 @@ function App() {
   const handleLogout = () => {
   localStorage.removeItem('token');
   localStorage.removeItem('user');
+  localStorage.removeItem('selectedBoard');  // Dodane
   setIsAuthenticated(false);
   setUser(null);
   setProperties([]);
@@ -265,7 +279,7 @@ const fetchBoardProperties = async (boardId) => {
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
-        'Cache-Control': 'no-cache' // Dodajemy nagłówek cache
+       
       },
     });
       
@@ -297,8 +311,16 @@ const fetchBoardProperties = async (boardId) => {
   }
 };
 const handleAddProperty = async () => {
-  if (!selectedBoard) {
+  // Sprawdzenie czy tablica jest wybrana i istnieje
+  if (!selectedBoard?._id) {
     alert('Najpierw wybierz lub utwórz tablicę, aby dodać nieruchomość.');
+    return;
+  }
+
+  // Sprawdzenie czy tablica istnieje w liście tablic
+  const boardExists = boards.some(board => board._id === selectedBoard._id);
+  if (!boardExists) {
+    alert('Wybrana tablica nie istnieje. Odśwież stronę lub wybierz inną tablicę.');
     return;
   }
 
@@ -312,6 +334,7 @@ const handleAddProperty = async () => {
     const token = localStorage.getItem('token');
     console.log('Próba dodania nieruchomości do tablicy:', selectedBoard._id);
     
+    // Przygotowanie danych do wysłania
     const requestData = {
       url,
       boardId: selectedBoard._id
@@ -336,14 +359,36 @@ const handleAddProperty = async () => {
 
     console.log('Nieruchomość została dodana:', data);
 
-    // Dodajemy małe opóźnienie przed odświeżeniem
-    setTimeout(async () => {
-      await fetchBoardProperties(selectedBoard._id);
-    }, 1000);
-    
+    // Bezpośrednie dodanie nowej nieruchomości do stanu
+    setProperties(prevProperties => [...prevProperties, data]);
+
+    // Resetowanie filtrów dla pewności, że nowa nieruchomość będzie widoczna
+    setFilters({
+      priceMin: '',
+      priceMax: '',
+      areaMin: '',
+      areaMax: '',
+      status: '',
+      rating: '',
+    });
+
+    // Czyszczenie formularza i zamknięcie
     setUrl('');
     setIsFormVisible(false);
+
+    // Odświeżenie listy nieruchomości po małym opóźnieniu
+    setTimeout(async () => {
+      try {
+        await fetchBoardProperties(selectedBoard._id);
+        console.log('Lista nieruchomości została odświeżona');
+      } catch (refreshError) {
+        console.error('Błąd podczas odświeżania listy:', refreshError);
+      }
+    }, 1000);
+
+    // Powiadomienie użytkownika
     alert('Nieruchomość została dodana pomyślnie!');
+
   } catch (error) {
     console.error('Szczegółowy błąd podczas dodawania:', error);
     alert(`Błąd: ${error.message}`);
@@ -491,35 +536,44 @@ const handleAddProperty = async () => {
   };
   // === FUNKCJE FILTROWANIA I SORTOWANIA ===
   const getFilteredAndSortedProperties = () => {
-    let filtered = properties.filter(property => {
-      const matchesPrice = (!filters.priceMin || property.price >= Number(filters.priceMin)) &&
-                          (!filters.priceMax || property.price <= Number(filters.priceMax));
-                          
-      const matchesArea = (!filters.areaMin || property.area >= Number(filters.areaMin)) &&
-                         (!filters.areaMax || property.area <= Number(filters.areaMax));
-                         
-      const matchesStatus = !filters.status || property.status === filters.status;
-      const matchesRating = !filters.rating || property.rating === filters.rating;
+  console.log('Wszystkie nieruchomości:', properties);
+  console.log('Aktualne filtry:', filters);
 
-      return matchesPrice && matchesArea && matchesStatus && matchesRating;
+  let filtered = properties.filter(property => {
+    console.log('Sprawdzanie nieruchomości:', property);
+
+    const matchesPrice = (!filters.priceMin || property.price >= Number(filters.priceMin)) &&
+                        (!filters.priceMax || property.price <= Number(filters.priceMax));
+                        
+    const matchesArea = (!filters.areaMin || property.area >= Number(filters.areaMin)) &&
+                       (!filters.areaMax || property.area <= Number(filters.areaMax));
+                       
+    const matchesStatus = !filters.status || property.status === filters.status;
+    const matchesRating = !filters.rating || property.rating === filters.rating;
+
+    const matches = matchesPrice && matchesArea && matchesStatus && matchesRating;
+    console.log('Czy pasuje do filtrów:', matches);
+
+    return matches;
+  });
+
+  if (sortBy) {
+    filtered.sort((a, b) => {
+      switch (sortBy) {
+        case 'price-asc': return (a.price || 0) - (b.price || 0);
+        case 'price-desc': return (b.price || 0) - (a.price || 0);
+        case 'area-asc': return (a.area || 0) - (b.area || 0);
+        case 'area-desc': return (b.area || 0) - (a.area || 0);
+        case 'date-asc': return new Date(a.createdAt) - new Date(b.createdAt);
+        case 'date-desc': return new Date(b.createdAt) - new Date(a.createdAt);
+        default: return 0;
+      }
     });
+  }
 
-    if (sortBy) {
-      filtered.sort((a, b) => {
-        switch (sortBy) {
-          case 'price-asc': return (a.price || 0) - (b.price || 0);
-          case 'price-desc': return (b.price || 0) - (a.price || 0);
-          case 'area-asc': return (a.area || 0) - (b.area || 0);
-          case 'area-desc': return (b.area || 0) - (a.area || 0);
-          case 'date-asc': return new Date(a.createdAt) - new Date(b.createdAt);
-          case 'date-desc': return new Date(b.createdAt) - new Date(a.createdAt);
-          default: return 0;
-        }
-      });
-    }
-
-    return filtered;
-  };
+  console.log('Przefiltrowane i posortowane nieruchomości:', filtered);
+  return filtered;
+};
 
   // === FUNKCJE ODŚWIEŻANIA ===
   const handleRefreshProperty = async (propertyId) => {
@@ -832,9 +886,23 @@ const handleAddProperty = async () => {
       </div>
     );
   };
-  const PropertyList = () => (
+  javascriptCopyconst PropertyList = () => {
+  const filteredProperties = getFilteredAndSortedProperties();
+  console.log('Wyświetlane nieruchomości:', filteredProperties);
+
+  if (filteredProperties.length === 0) {
+    return (
+      <div className="text-center py-12 bg-white rounded-lg shadow">
+        <h2 className="text-xl font-medium text-gray-600">
+          Brak nieruchomości na tej tablicy
+        </h2>
+      </div>
+    );
+  }
+
+  return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-      {getFilteredAndSortedProperties().map((property) => (
+      {filteredProperties.map((property) => (
         <PropertyCard
           key={property._id}
           property={property}
@@ -852,6 +920,8 @@ const handleAddProperty = async () => {
         />
       ))}
     </div>
+  );
+};
   );
   // Modal dodawania nowej tablicy
   const NewBoardModal = () => (
