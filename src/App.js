@@ -108,20 +108,67 @@ useEffect(() => {
 
 // Zmodyfikuj efekt inicjalizacji
 useEffect(() => {
-  const token = localStorage.getItem('token');
-  const savedUser = localStorage.getItem('user');
-  const savedBoard = localStorage.getItem('selectedBoard');
-  
-  if (token && savedUser) {
-    setIsAuthenticated(true);
-    setUser(JSON.parse(savedUser));
-    if (savedBoard) {
-      setSelectedBoard(JSON.parse(savedBoard));
-    }
-  } else {
-    setIsLoadingProperties(false);
-  }
-}, []);
+    const initializeApp = async () => {
+      const token = localStorage.getItem('token');
+      const savedUser = localStorage.getItem('user');
+      
+      if (token && savedUser) {
+        setIsAuthenticated(true);
+        setUser(JSON.parse(savedUser));
+        setIsLoadingProperties(true);
+        
+        try {
+          // Pobierz tablice
+          const response = await fetch('https://houseapp-backend.onrender.com/api/boards', {
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json',
+            },
+          });
+          
+          if (response.ok) {
+            const data = await response.json();
+            setBoards(data.boards);
+            setSharedBoards(data.sharedBoards);
+            
+            // Próba przywrócenia wybranej tablicy z localStorage
+            const savedBoardId = localStorage.getItem('selectedBoardId');
+            if (savedBoardId) {
+              const savedBoard = [...data.boards, ...data.sharedBoards].find(
+                board => board._id === savedBoardId
+              );
+              if (savedBoard) {
+                setSelectedBoard(savedBoard);
+                // Pobierz nieruchomości dla wybranej tablicy
+                fetchBoardProperties(savedBoard._id);
+              } else if (data.boards.length > 0) {
+                // Jeśli nie znaleziono zapisanej tablicy, użyj pierwszej dostępnej
+                setSelectedBoard(data.boards[0]);
+                localStorage.setItem('selectedBoardId', data.boards[0]._id);
+                fetchBoardProperties(data.boards[0]._id);
+              }
+            } else if (data.boards.length > 0) {
+              // Jeśli nie ma zapisanej tablicy, użyj pierwszej dostępnej
+              setSelectedBoard(data.boards[0]);
+              localStorage.setItem('selectedBoardId', data.boards[0]._id);
+              fetchBoardProperties(data.boards[0]._id);
+            }
+          } else if (response.status === 401) {
+            // Token wygasł
+            handleLogout();
+          }
+        } catch (error) {
+          console.error('Błąd podczas inicjalizacji:', error);
+        } finally {
+          setIsLoadingProperties(false);
+        }
+      } else {
+        setIsLoadingProperties(false);
+      }
+    };
+
+    initializeApp();
+  }, []);
 
   useEffect(() => {
     if (isAuthenticated && selectedBoard) {
@@ -130,18 +177,18 @@ useEffect(() => {
   }, [isAuthenticated, selectedBoard]);
 
   // === FUNKCJE OBSŁUGI TABLIC ===
-  const handleLogout = () => {
-  localStorage.removeItem('token');
-  localStorage.removeItem('user');
-  localStorage.removeItem('selectedBoard');  // Dodane
-  setIsAuthenticated(false);
-  setUser(null);
-  setProperties([]);
-  setBoards([]);           // Dodane
-  setSharedBoards([]);     // Dodane
-  setSelectedBoard(null);
-  setExpandedProperty(null);
-};
+   const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    localStorage.removeItem('selectedBoardId');
+    setIsAuthenticated(false);
+    setUser(null);
+    setProperties([]);
+    setBoards([]);
+    setSharedBoards([]);
+    setSelectedBoard(null);
+    setExpandedProperty(null);
+  };
   const BoardSidebar = ({ isOpen }) => (
   <div className={`fixed left-0 top-16 h-full bg-white shadow-lg transition-all duration-300 z-20 
     ${isOpen ? 'w-64' : 'w-0'} overflow-hidden`}>
@@ -159,13 +206,36 @@ useEffect(() => {
     </div>
   </div>
 );
-  const handleLogin = (data) => {
-  localStorage.setItem('token', data.token);
-  localStorage.setItem('user', JSON.stringify(data.user));
-  setIsAuthenticated(true);
-  setUser(data.user);
-  fetchBoards(); // To automatycznie ustawi pierwszą tablicę jako wybraną
-};
+ const handleLogin = async (data) => {
+    localStorage.setItem('token', data.token);
+    localStorage.setItem('user', JSON.stringify(data.user));
+    setIsAuthenticated(true);
+    setUser(data.user);
+    
+    try {
+      const response = await fetch('https://houseapp-backend.onrender.com/api/boards', {
+        headers: {
+          'Authorization': `Bearer ${data.token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      if (response.ok) {
+        const boardsData = await response.json();
+        setBoards(boardsData.boards);
+        setSharedBoards(boardsData.sharedBoards);
+        
+        if (boardsData.boards.length > 0) {
+          const firstBoard = boardsData.boards[0];
+          setSelectedBoard(firstBoard);
+          localStorage.setItem('selectedBoardId', firstBoard._id);
+          await fetchBoardProperties(firstBoard._id);
+        }
+      }
+    } catch (error) {
+      console.error('Błąd podczas pobierania tablic po logowaniu:', error);
+    }
+  };
 
 const handleRegister = (data) => {
   localStorage.setItem('token', data.token);
@@ -549,9 +619,10 @@ const handleAddProperty = async () => {
   };
 
   // === OBSŁUGA TABLIC I UDOSTĘPNIANIA ===
-  const handleBoardSelect = (board) => {
+  const handleBoardSelect = async (board) => {
     setSelectedBoard(board);
-    setPropertyToMove(null);
+    localStorage.setItem('selectedBoardId', board._id);
+    await fetchBoardProperties(board._id);
   };
 
   const handlePropertyMove = async (propertyId, targetBoardId) => {
