@@ -64,6 +64,11 @@ function App() {
   const [newBoardName, setNewBoardName] = useState('');
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const editFormRef = useRef(null);
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter' && newBoardName.trim()) {
+      handleCreateBoard();
+    }
+  };
 
   // === EFEKTY ===
   useEffect(() => {
@@ -536,8 +541,12 @@ const handleRegister = (data) => {
         <div className="flex justify-between items-center mb-4">
           <h2 className="font-semibold text-lg">Moje tablice</h2>
           <button
-            onClick={() => setIsNewBoardModalOpen(true)}
-            className="p-2 text-blue-600 hover:bg-blue-50 rounded-full"
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsNewBoardModalOpen(true);
+            }}
+            className="p-2 text-blue-600 hover:bg-blue-50 rounded-full flex items-center justify-center"
+            aria-label="Dodaj nową tablicę"
           >
             <Plus className="w-5 h-5" />
           </button>
