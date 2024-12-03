@@ -82,6 +82,9 @@ const [manualForm, setManualForm] = useState({
 
   // === EFEKTY ===
   useEffect(() => {
+    initializeUserSession();
+}, []); 
+  useEffect(() => {
     const handleResize = () => {
       setIsMobile(window.innerWidth <= 768);
       if (window.innerWidth <= 768) {
@@ -205,19 +208,13 @@ useEffect(() => {
 
   // === FUNKCJE OBSŁUGI TABLIC ===
   const handleLogout = () => {
-    // Usuwamy TYLKO token uwierzytelniający
+  const handleLogout = () => {
     localStorage.removeItem('token');
-
-    // Zmieniamy stan uwierzytelnienia
+    localStorage.removeItem('user');
+    localStorage.removeItem('selectedBoardId');
     setIsAuthenticated(false);
     setUser(null);
-
-    // Czyścimy aktualny widok (ale dane pozostają w bazie)
-    setProperties([]);
-    setBoards([]);
-    setSharedBoards([]);
-    setSelectedBoard(null);
-    setExpandedProperty(null);
+    // Nie czyścimy tablic i nieruchomości - zostaną zaktualizowane przy następnym logowaniu
 };
   const BoardSidebar = ({ isOpen }) => (
   <div className={`fixed left-0 top-16 h-full bg-white shadow-lg transition-all duration-300 z-20 
@@ -237,13 +234,14 @@ useEffect(() => {
   </div>
 );
  const handleLogin = async (data) => {
+ const handleLogin = async (data) => {
     try {
-        // Zapisujemy podstawowe dane logowania
         localStorage.setItem('token', data.token);
+        localStorage.setItem('user', JSON.stringify(data.user));
         setIsAuthenticated(true);
         setUser(data.user);
         
-        // Pobieramy tablice użytkownika
+        // Pobierz tablice użytkownika
         const response = await fetch('https://houseapp-backend.onrender.com/api/boards', {
             headers: {
                 'Authorization': `Bearer ${data.token}`,
@@ -253,45 +251,21 @@ useEffect(() => {
         
         if (response.ok) {
             const boardsData = await response.json();
-            
-            // Ustawiamy tablice w stanie aplikacji
             setBoards(boardsData.boards);
             setSharedBoards(boardsData.sharedBoards);
             
-            // Jeśli użytkownik ma jakieś tablice, wybieramy pierwszą jako aktywną
+            // Jeśli są tablice, wybierz pierwszą
             if (boardsData.boards.length > 0) {
                 const firstBoard = boardsData.boards[0];
                 setSelectedBoard(firstBoard);
+                localStorage.setItem('selectedBoardId', firstBoard._id);
                 
-                // Pobieramy nieruchomości dla pierwszej tablicy
-                const propertiesResponse = await fetch(
-                    `https://houseapp-backend.onrender.com/api/boards/${firstBoard._id}/properties`,
-                    {
-                        headers: {
-                            'Authorization': `Bearer ${data.token}`,
-                            'Content-Type': 'application/json',
-                        },
-                    }
-                );
-                
-                if (propertiesResponse.ok) {
-                    const propertiesData = await propertiesResponse.json();
-                    setProperties(propertiesData);
-                } else {
-                    console.error('Błąd podczas pobierania nieruchomości:', propertiesResponse.status);
-                    setProperties([]);
-                }
+                // Pobierz nieruchomości dla pierwszej tablicy
+                await fetchBoardProperties(firstBoard._id);
             }
-        } else {
-            console.error('Błąd podczas pobierania tablic:', response.status);
-            setBoards([]);
-            setSharedBoards([]);
         }
     } catch (error) {
-        console.error('Błąd podczas procesu logowania:', error);
-        // Możemy tu dodać jakieś powiadomienie dla użytkownika o błędzie
-    } finally {
-        setIsLoadingProperties(false);
+        console.error('Błąd podczas logowania:', error);
     }
 };
 
@@ -677,6 +651,57 @@ const handleAddProperty = async () => {
   };
 
   // === OBSŁUGA TABLIC I UDOSTĘPNIANIA ===
+   // Dodaj nową funkcję inicjalizacji
+const initializeUserSession = async () => {
+    const token = localStorage.getItem('token');
+    const savedUser = localStorage.getItem('user');
+    const savedBoardId = localStorage.getItem('selectedBoardId');
+
+    if (token && savedUser) {
+        setIsLoadingProperties(true);
+        try {
+            setIsAuthenticated(true);
+            setUser(JSON.parse(savedUser));
+
+            // Pobierz tablice
+            const boardsResponse = await fetch('https://houseapp-backend.onrender.com/api/boards', {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                },
+            });
+
+            if (boardsResponse.ok) {
+                const boardsData = await boardsResponse.json();
+                setBoards(boardsData.boards);
+                setSharedBoards(boardsData.sharedBoards);
+
+                // Znajdź zapisaną tablicę lub użyj pierwszej dostępnej
+                let boardToSelect = null;
+                if (savedBoardId) {
+                    boardToSelect = [...boardsData.boards, ...boardsData.sharedBoards]
+                        .find(board => board._id === savedBoardId);
+                }
+                if (!boardToSelect && boardsData.boards.length > 0) {
+                    boardToSelect = boardsData.boards[0];
+                }
+
+                if (boardToSelect) {
+                    setSelectedBoard(boardToSelect);
+                    localStorage.setItem('selectedBoardId', boardToSelect._id);
+                    await fetchBoardProperties(boardToSelect._id);
+                }
+            }
+        } catch (error) {
+            console.error('Błąd podczas inicjalizacji sesji:', error);
+            handleLogout(); // Wyloguj w przypadku błędu
+        } finally {
+            setIsLoadingProperties(false);
+        }
+    } else {
+        setIsLoadingProperties(false);
+    }
+};
   const handleBoardSelect = async (board) => {
     setSelectedBoard(board);
     localStorage.setItem('selectedBoardId', board._id);
