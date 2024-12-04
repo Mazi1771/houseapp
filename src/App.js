@@ -1074,47 +1074,45 @@ const initializeUserSession = async () => {
                     )}
                 </div>
 
-                {/* Rozszerzone informacje */}
-                {isExpanded && (
-                    <div className="mt-4 pt-4 border-t border-gray-200">
-                        <p className="text-gray-700 mb-4 whitespace-pre-wrap">
-                            {property.description || 'Brak opisu'}
-                        </p>
-                         {/* Dodajemy historię cen */}
+               {/* Rozszerzone informacje */}
+{isExpanded && (
+    <div className="mt-4 pt-4 border-t border-gray-200">
+        <p className="text-gray-700 mb-4 whitespace-pre-wrap">
+            {property.description || 'Brak opisu'}
+        </p>
+        
+        {/* Dodajemy historię cen */}
         <div className="mb-4">
             <PriceHistoryChart propertyId={property._id} />
         </div>
 
         {property.sourceUrl && (
-            <a href={property.sourceUrl}.../>
+            <a 
+                href={property.sourceUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center text-blue-600 hover:text-blue-800 hover:underline mb-4"
+                onClick={(e) => e.stopPropagation()}
+            >
+                Zobacz ogłoszenie →
+            </a>
         )}
-                        {property.sourceUrl && (
-                            <a 
-                                href={property.sourceUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="inline-flex items-center text-blue-600 hover:text-blue-800 hover:underline mb-4"
-                                onClick={(e) => e.stopPropagation()}
-                            >
-                                Zobacz ogłoszenie →
-                            </a>
-                        )}
-                        
-                        {/* Przycisk odświeżania dostępny dla wszystkich użytkowników współdzielonej tablicy */}
-                        <div className="flex gap-2 justify-end">
-                            <button
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    onRefresh(property._id);
-                                }}
-                                className="px-4 py-2 bg-green-100 text-green-600 rounded-lg hover:bg-green-200 transition-colors"
-                                disabled={!property.sourceUrl}
-                            >
-                                Odśwież
-                            </button>
-                        </div>
-                    </div>
-                )}
+        
+        {/* Przycisk odświeżania */}
+        <div className="flex gap-2 justify-end">
+            <button
+                onClick={(e) => {
+                    e.stopPropagation();
+                    onRefresh(property._id);
+                }}
+                className="px-4 py-2 bg-green-100 text-green-600 rounded-lg hover:bg-green-200 transition-colors"
+                disabled={!property.sourceUrl}
+            >
+                Odśwież
+            </button>
+        </div>
+    </div>
+)}
             </div>
         </div>
     );
