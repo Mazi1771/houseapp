@@ -1080,7 +1080,14 @@ const initializeUserSession = async () => {
                         <p className="text-gray-700 mb-4 whitespace-pre-wrap">
                             {property.description || 'Brak opisu'}
                         </p>
-                        
+                         {/* Dodajemy historię cen */}
+        <div className="mb-4">
+            <PriceHistoryChart propertyId={property._id} />
+        </div>
+
+        {property.sourceUrl && (
+            <a href={property.sourceUrl}.../>
+        )}
                         {property.sourceUrl && (
                             <a 
                                 href={property.sourceUrl}
