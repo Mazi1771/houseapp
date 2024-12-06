@@ -1255,7 +1255,7 @@ const PropertyList = () => {
       <div className="min-h-screen bg-gray-50">
         <div className="max-w-7xl mx-auto py-6 px-4">
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-gray-900">HouseApp</h1>
+            <h1 className="text-3xl font-bold text-gray-900">Home-Hub</h1>
           </div>
           {authMode === 'login' ? (
             <div>
@@ -1313,7 +1313,7 @@ const PropertyList = () => {
             </button>
             <Home className="h-8 w-8 text-blue-600" />
             <span className="text-xl font-bold bg-gradient-to-r from-blue-600 to-blue-400 bg-clip-text text-transparent">
-              HouseApp
+              Home-Hub
             </span>
           </div>
 
