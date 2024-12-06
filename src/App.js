@@ -639,26 +639,41 @@ const handleSaveEdit = async (updatedData) => {
 
   const handleRating = async (propertyId, rating) => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`https://houseapp-backend.onrender.com/api/properties/${propertyId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ rating })
-      });
+        const token = localStorage.getItem('token');
+        console.log('Wysyłanie oceny:', { propertyId, rating });
 
-      if (response.ok) {
+        const response = await fetch(`https://houseapp-backend.onrender.com/api/properties/${propertyId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ 
+                rating,
+                addedBy: editingProperty?.addedBy // Dodajemy to pole
+            })
+        });
+
+        if (!response.ok) {
+            throw new Error('Błąd podczas aktualizacji oceny');
+        }
+
         const updatedProperty = await response.json();
-        setProperties(properties.map(p => 
-          p._id === propertyId ? updatedProperty : p
+        console.log('Odpowiedź serwera:', updatedProperty);
+
+        // Aktualizuj stan lokalnie
+        setProperties(prev => prev.map(p => 
+            p._id === propertyId ? updatedProperty : p
         ));
-      }
+
+        // Odśwież właściwości dla aktualnej tablicy
+        if (selectedBoard) {
+            await fetchBoardProperties(selectedBoard._id);
+        }
     } catch (error) {
-      console.error('Błąd podczas aktualizacji oceny:', error);
+        console.error('Błąd podczas aktualizacji oceny:', error);
     }
-  };
+};
 
   // === OBSŁUGA TABLIC I UDOSTĘPNIANIA ===
    // Dodaj nową funkcję inicjalizacji
