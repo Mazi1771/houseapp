@@ -12,8 +12,9 @@ function PropertyEditForm({ property, onSave, onCancel }) {
     description: property?.description || '',
     status: property?.status || 'stan deweloperski',
     coordinates: property?.coordinates || null,
-    priceHistory: property?.priceHistory || []
-  });
+    priceHistory: property?.priceHistory || [],
+    addedBy: property?.addedBy // Dodajemy to pole
+});
 
   const [isGeocoding, setIsGeocoding] = useState(false);
   const [geocodeError, setGeocodeError] = useState(null);
@@ -151,13 +152,14 @@ function PropertyEditForm({ property, onSave, onCancel }) {
       price: Number(formData.price),
       area: Number(formData.area),
       rooms: Number(formData.rooms || 0),
+      addedBy: property.addedBy, // Dodajemy pole addedBy z oryginalnej nieruchomości
       priceHistory: property.price !== Number(formData.price) ? 
         [{ price: property.price, date: new Date() }, ...formData.priceHistory] :
         formData.priceHistory
     };
 
     onSave(updatedData);
-  };
+};
 
   return (
     <div className="bg-white p-6 rounded-lg shadow max-w-4xl mx-auto">
