@@ -1097,52 +1097,54 @@ const PropertyCard = ({
           {/* Przyciski oceny i akcji */}
           <div className="flex justify-between items-center mt-4">
             {/* Przyciski oceny */}
-            <div className="flex gap-2">
-              {!isShared && (
-                <>
-                  <button
-    onClick={(e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        onRate(property._id, rating);
-    }}
-    className={`p-2 rounded-lg transition-colors ${
-        property.rating === rating 
-            ? 'bg-yellow-100 hover:bg-yellow-200' 
-            : 'bg-gray-100 hover:bg-gray-200'
-    }`}
-                  >
-                    ⭐
-                  </button>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onRate(property._id, 'interested');
-                    }}
-                    className={`p-2 rounded-lg transition-colors ${
-                      property.rating === 'interested' 
+<div className="flex gap-2">
+    {!isShared && (
+        <>
+            <button
+                onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    onRate(property._id, 'favorite');
+                }}
+                className={`p-2 rounded-lg transition-colors ${
+                    property.rating === 'favorite' 
+                        ? 'bg-yellow-100 hover:bg-yellow-200' 
+                        : 'bg-gray-100 hover:bg-gray-200'
+                }`}
+            >
+                ⭐
+            </button>
+            <button
+                onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    onRate(property._id, 'interested');
+                }}
+                className={`p-2 rounded-lg transition-colors ${
+                    property.rating === 'interested' 
                         ? 'bg-green-100 hover:bg-green-200' 
                         : 'bg-gray-100 hover:bg-gray-200'
-                    }`}
-                  >
-                    👍
-                  </button>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onRate(property._id, 'not_interested');
-                    }}
-                    className={`p-2 rounded-lg transition-colors ${
-                      property.rating === 'not_interested' 
+                }`}
+            >
+                👍
+            </button>
+            <button
+                onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    onRate(property._id, 'not_interested');
+                }}
+                className={`p-2 rounded-lg transition-colors ${
+                    property.rating === 'not_interested' 
                         ? 'bg-red-100 hover:bg-red-200' 
                         : 'bg-gray-100 hover:bg-gray-200'
-                    }`}
-                  >
-                    👎
-                  </button>
-                </>
-              )}
-            </div>
+                }`}
+            >
+                👎
+            </button>
+        </>
+    )}
+</div>
 
             {/* Przyciski akcji */}
             <div className="flex gap-2">
