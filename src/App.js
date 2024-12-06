@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { 
   Menu as MenuIcon, 
-  MapPin
+  MapPin,
   Search, 
   Home, 
   RefreshCw, 
