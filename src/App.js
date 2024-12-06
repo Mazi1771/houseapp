@@ -566,6 +566,8 @@ const handleAddProperty = async () => {
  const handleSaveEdit = async (updatedData) => {
     try {
         const token = localStorage.getItem('token');
+        console.log('Wysyłane dane:', updatedData); // Debugging
+        
         const response = await fetch(`https://houseapp-backend.onrender.com/api/properties/${editingProperty._id}`, {
             method: 'PUT',
             headers: {
@@ -575,22 +577,31 @@ const handleAddProperty = async () => {
             body: JSON.stringify(updatedData)
         });
 
-        if (response.ok) {
-            const updatedProperty = await response.json();
-            setProperties(properties.map(p => 
-                p._id === editingProperty._id ? updatedProperty : p
-            ));
-            setEditingProperty(null);
-            // Opcjonalnie - odśwież widok
-            if (selectedBoard) {
-                await fetchBoardProperties(selectedBoard._id);
-            }
-        } else {
-            throw new Error('Błąd podczas aktualizacji');
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Błąd podczas aktualizacji');
         }
+
+        const updatedProperty = await response.json();
+        
+        // Aktualizuj stan lokalnie
+        setProperties(properties.map(p => 
+            p._id === editingProperty._id ? updatedProperty : p
+        ));
+        
+        // Zamknij formularz edycji
+        setEditingProperty(null);
+        
+        // Odśwież listę nieruchomości
+        if (selectedBoard) {
+            await fetchBoardProperties(selectedBoard._id);
+        }
+
+        // Pokaż potwierdzenie
+        alert('Zmiany zostały zapisane pomyślnie!');
     } catch (error) {
         console.error('Błąd podczas edycji:', error);
-        alert('Wystąpił błąd podczas aktualizacji nieruchomości');
+        alert(`Wystąpił błąd podczas aktualizacji: ${error.message}`);
     }
 };
 
@@ -993,31 +1004,32 @@ const initializeUserSession = async () => {
                 </div>
 
                 {/* Podstawowe informacje */}
-                <div className="flex flex-col md:flex-row justify-between items-start gap-2 mb-3">
-                    <div className="flex-grow">
-                        <h3 className="font-semibold text-gray-900 pr-8">{property.title}</h3>
-                        <p className="text-sm text-gray-500">{property.location || 'Brak lokalizacji'}</p>
-                        
-                        {/* Informacja o osobie, która dodała nieruchomość */}
-                        {isShared && (
-                            <p className="text-xs text-purple-600 mt-1">
-                                Dodane przez: {
-                                    property.addedBy === user?._id 
-                                        ? 'Ciebie' 
-                                        : property.addedByUser?.name || 'Innego użytkownika'
-                                }
-                            </p>
-                        )}
-                    </div>
-                    <div className="self-start">
-                        <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                            property.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                        }`}>
-                            {property.isActive ? 'Aktywne' : 'Nieaktywne'}
-                        </span>
-                    </div>
-                </div>
-
+<div className="flex flex-col md:flex-row justify-between items-start gap-2 mb-3">
+    <div className="flex-grow">
+        <h3 className="font-semibold text-gray-900 pr-8">{property.title}</h3>
+        <p className="text-sm text-gray-500">{property.location || 'Brak lokalizacji'}</p>
+        <p className="text-sm text-gray-600 mt-1">
+            Status: <span className="font-medium">{property.status}</span>
+        </p>
+        
+        {isShared && (
+            <p className="text-xs text-purple-600 mt-1">
+                Dodane przez: {
+                    property.addedBy === user?._id 
+                        ? 'Ciebie' 
+                        : property.addedByUser?.name || 'Innego użytkownika'
+                }
+            </p>
+        )}
+    </div>
+    <div className="self-start flex flex-col items-end gap-1">
+        <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+            property.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+        }`}>
+            {property.isActive ? 'Aktywne' : 'Nieaktywne'}
+        </span>
+    </div>
+</div>
                 {/* Grid z ceną i powierzchnią */}
                 <div className="grid grid-cols-2 gap-3 mb-4">
                     <div className="bg-gray-50 p-3 rounded-lg">
