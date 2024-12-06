@@ -83,6 +83,11 @@ const [manualForm, setManualForm] = useState({
   };
 
   // === EFEKTY ===
+useEffect(() => {
+    // Ustaw menu jako domyślnie schowane na mobile
+    const isMobile = window.innerWidth <= 768;
+    setIsBoardSidebarOpen(!isMobile);
+}, []);
   useEffect(() => {
     initializeUserSession();
 }, []); 
@@ -234,12 +239,18 @@ useEffect(() => {
     </div>
   </div>
 );
- const handleLogin = async (data) => {
+const handleLogin = async (data) => {
     try {
+        // Zapisz dane autentykacji
         localStorage.setItem('token', data.token);
         localStorage.setItem('user', JSON.stringify(data.user));
         setIsAuthenticated(true);
         setUser(data.user);
+
+        // Ustaw menu jako schowane na urządzeniach mobilnych
+        if (window.innerWidth <= 768) {
+            setIsBoardSidebarOpen(false);
+        }
         
         // Pobierz tablice użytkownika
         const response = await fetch('https://houseapp-backend.onrender.com/api/boards', {
@@ -251,21 +262,35 @@ useEffect(() => {
         
         if (response.ok) {
             const boardsData = await response.json();
+            console.log('Pobrane tablice:', boardsData);
+            
             setBoards(boardsData.boards);
-            setSharedBoards(boardsData.sharedBoards);
+            setSharedBoards(boardsData.sharedBoards || []);
             
             // Jeśli są tablice, wybierz pierwszą
-            if (boardsData.boards.length > 0) {
+            if (boardsData.boards && boardsData.boards.length > 0) {
                 const firstBoard = boardsData.boards[0];
                 setSelectedBoard(firstBoard);
                 localStorage.setItem('selectedBoardId', firstBoard._id);
                 
                 // Pobierz nieruchomości dla pierwszej tablicy
-                await fetchBoardProperties(firstBoard._id);
+                try {
+                    await fetchBoardProperties(firstBoard._id);
+                } catch (error) {
+                    console.error('Błąd podczas pobierania nieruchomości:', error);
+                }
             }
+
+            // Schowaj loader
+            setIsLoadingProperties(false);
+        } else {
+            throw new Error('Błąd podczas pobierania tablic');
         }
     } catch (error) {
         console.error('Błąd podczas logowania:', error);
+        setIsLoadingProperties(false);
+        // Możesz dodać obsługę błędów dla użytkownika, np.:
+        alert('Wystąpił błąd podczas logowania. Spróbuj ponownie.');
     }
 };
 
@@ -737,8 +762,12 @@ const initializeUserSession = async () => {
   const handleBoardSelect = async (board) => {
     setSelectedBoard(board);
     localStorage.setItem('selectedBoardId', board._id);
+    // Schowaj menu po wyborze tablicy na mobile
+    if (window.innerWidth <= 768) {
+        setIsBoardSidebarOpen(false);
+    }
     await fetchBoardProperties(board._id);
-  };
+};
 
   const handlePropertyMove = async (propertyId, targetBoardId) => {
     const token = localStorage.getItem('token');
