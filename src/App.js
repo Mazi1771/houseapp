@@ -1081,7 +1081,7 @@ const initializeUserSession = async () => {
                     )}
                 </div>
 
-              {/* Rozszerzone informacje */}
+         {/* Rozszerzone informacje */}
 {isExpanded && (
     <div className="mt-4 pt-4 border-t border-gray-200">
         {/* Istniejące info */}
