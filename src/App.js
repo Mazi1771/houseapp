@@ -567,16 +567,10 @@ const handleSaveEdit = async (updatedData) => {
     try {
         const token = localStorage.getItem('token');
         console.log('Edytowana nieruchomość:', editingProperty);
-        console.log('Aktualny użytkownik:', user);
+        console.log('Dane do aktualizacji:', updatedData);
 
-        // Upewnij się, że addedBy jest zachowane z oryginalnej nieruchomości
-        const dataToSend = {
-            ...editingProperty,  // Najpierw skopiuj wszystkie oryginalne dane
-            ...updatedData,      // Nadpisz zaktualizowanymi danymi
-            addedBy: editingProperty.addedBy  // Jawnie zachowaj addedBy
-        };
-
-        console.log('Dane wysyłane do serwera:', dataToSend);
+        // Usuń addedBy z danych do aktualizacji, ponieważ jest immutable
+        const { addedBy, _id, ...dataToUpdate } = updatedData;
 
         const response = await fetch(`https://houseapp-backend.onrender.com/api/properties/${editingProperty._id}`, {
             method: 'PUT',
@@ -584,36 +578,37 @@ const handleSaveEdit = async (updatedData) => {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${token}`
             },
-            body: JSON.stringify(dataToSend)
+            body: JSON.stringify(dataToUpdate)
         });
 
+        const responseData = await response.json();
+        
         if (!response.ok) {
-            const errorData = await response.json().catch(() => ({}));
-            console.error('Odpowiedź serwera:', errorData);
-            throw new Error(errorData.message || 'Błąd podczas aktualizacji');
+            console.error('Błąd odpowiedzi:', responseData);
+            throw new Error(responseData.error || 'Błąd podczas aktualizacji');
         }
 
-        const updatedProperty = await response.json();
-        console.log('Zaktualizowana nieruchomość:', updatedProperty);
+        console.log('Zaktualizowana nieruchomość:', responseData);
 
+        // Aktualizuj stan lokalnie
         setProperties(prev => prev.map(p => 
-            p._id === editingProperty._id ? updatedProperty : p
+            p._id === editingProperty._id ? responseData : p
         ));
 
         setEditingProperty(null);
 
-        // Odśwież listę nieruchomości
+        // Odśwież widok
         if (selectedBoard) {
             await fetchBoardProperties(selectedBoard._id);
         }
 
         alert('Zmiany zostały zapisane pomyślnie!');
     } catch (error) {
-        console.error('Szczegóły błędu:', error);
-        console.error('Stack trace:', error.stack);
-        alert(`Wystąpił błąd podczas aktualizacji: ${error.message}`);
+        console.error('Błąd podczas aktualizacji:', error);
+        alert(`Wystąpił błąd: ${error.message}`);
     }
 };
+
   const handleDelete = async (propertyId) => {
     if (!window.confirm('Czy na pewno chcesz usunąć to ogłoszenie?')) {
       return;
