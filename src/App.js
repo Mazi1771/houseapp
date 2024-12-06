@@ -1101,15 +1101,16 @@ const PropertyCard = ({
               {!isShared && (
                 <>
                   <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onRate(property._id, 'favorite');
-                    }}
-                    className={`p-2 rounded-lg transition-colors ${
-                      property.rating === 'favorite' 
-                        ? 'bg-yellow-100 hover:bg-yellow-200' 
-                        : 'bg-gray-100 hover:bg-gray-200'
-                    }`}
+    onClick={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        onRate(property._id, rating);
+    }}
+    className={`p-2 rounded-lg transition-colors ${
+        property.rating === rating 
+            ? 'bg-yellow-100 hover:bg-yellow-200' 
+            : 'bg-gray-100 hover:bg-gray-200'
+    }`}
                   >
                     ⭐
                   </button>
