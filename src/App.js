@@ -668,8 +668,17 @@ const handleSaveEdit = async (updatedData) => {
   const handleRating = async (propertyId, rating) => {
     try {
         const token = localStorage.getItem('token');
-        console.log('Wysyłanie oceny:', { propertyId, rating });
+        
+        // Najpierw zaktualizuj stan lokalnie dla natychmiastowej reakcji UI
+        setProperties(prevProperties => 
+            prevProperties.map(prop => 
+                prop._id === propertyId 
+                    ? { ...prop, rating } 
+                    : prop
+            )
+        );
 
+        // Następnie wyślij aktualizację do API
         const response = await fetch(`https://houseapp-backend.onrender.com/api/properties/${propertyId}`, {
             method: 'PUT',
             headers: {
@@ -678,26 +687,33 @@ const handleSaveEdit = async (updatedData) => {
             },
             body: JSON.stringify({ 
                 rating,
-                addedBy: editingProperty?.addedBy // Dodajemy to pole
+                addedBy: properties.find(p => p._id === propertyId)?.addedBy
             })
         });
 
         if (!response.ok) {
+            // Jeśli wystąpi błąd, przywróć poprzedni stan
+            setProperties(prevProperties => 
+                prevProperties.map(prop => 
+                    prop._id === propertyId 
+                        ? { ...prop, rating: prop.rating } 
+                        : prop
+                )
+            );
             throw new Error('Błąd podczas aktualizacji oceny');
         }
 
         const updatedProperty = await response.json();
-        console.log('Odpowiedź serwera:', updatedProperty);
+        
+        // Upewniamy się, że stan jest zgodny z odpowiedzią serwera
+        setProperties(prevProperties => 
+            prevProperties.map(prop => 
+                prop._id === propertyId 
+                    ? updatedProperty 
+                    : prop
+            )
+        );
 
-        // Aktualizuj stan lokalnie
-        setProperties(prev => prev.map(p => 
-            p._id === propertyId ? updatedProperty : p
-        ));
-
-        // Odśwież właściwości dla aktualnej tablicy
-        if (selectedBoard) {
-            await fetchBoardProperties(selectedBoard._id);
-        }
     } catch (error) {
         console.error('Błąd podczas aktualizacji oceny:', error);
     }
