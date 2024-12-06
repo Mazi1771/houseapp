@@ -563,29 +563,36 @@ const handleAddProperty = async () => {
     }, 100);
   };
 
-  const handleSaveEdit = async (updatedData) => {
+ const handleSaveEdit = async (updatedData) => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`https://houseapp-backend.onrender.com/api/properties/${editingProperty._id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(updatedData)
-      });
+        const token = localStorage.getItem('token');
+        const response = await fetch(`https://houseapp-backend.onrender.com/api/properties/${editingProperty._id}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify(updatedData)
+        });
 
-      if (response.ok) {
-        const updatedProperty = await response.json();
-        setProperties(properties.map(p => 
-          p._id === editingProperty._id ? updatedProperty : p
-        ));
-        setEditingProperty(null);
-      }
+        if (response.ok) {
+            const updatedProperty = await response.json();
+            setProperties(properties.map(p => 
+                p._id === editingProperty._id ? updatedProperty : p
+            ));
+            setEditingProperty(null);
+            // Opcjonalnie - odśwież widok
+            if (selectedBoard) {
+                await fetchBoardProperties(selectedBoard._id);
+            }
+        } else {
+            throw new Error('Błąd podczas aktualizacji');
+        }
     } catch (error) {
-      alert('Wystąpił błąd podczas aktualizacji');
+        console.error('Błąd podczas edycji:', error);
+        alert('Wystąpił błąd podczas aktualizacji nieruchomości');
     }
-  };
+};
 
   const handleDelete = async (propertyId) => {
     if (!window.confirm('Czy na pewno chcesz usunąć to ogłoszenie?')) {
@@ -1074,14 +1081,42 @@ const initializeUserSession = async () => {
                     )}
                 </div>
 
-               {/* Rozszerzone informacje */}
+              {/* Rozszerzone informacje */}
 {isExpanded && (
     <div className="mt-4 pt-4 border-t border-gray-200">
+        {/* Istniejące info */}
         <p className="text-gray-700 mb-4 whitespace-pre-wrap">
             {property.description || 'Brak opisu'}
         </p>
         
-        {/* Dodajemy historię cen */}
+        {/* Przyciski akcji */}
+        <div className="flex justify-end gap-2 mb-4">
+            <button
+                onClick={(e) => {
+                    e.stopPropagation();
+                    onEdit(property);
+                }}
+                className="px-4 py-2 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 transition-colors flex items-center gap-2"
+            >
+                <Edit2 className="w-4 h-4" />
+                Edytuj
+            </button>
+            {property.sourceUrl && (
+                <button
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        onRefresh(property._id);
+                    }}
+                    className="px-4 py-2 bg-green-100 text-green-600 rounded-lg hover:bg-green-200 transition-colors flex items-center gap-2"
+                    disabled={!property.sourceUrl}
+                >
+                    <RefreshCw className="w-4 h-4" />
+                    Odśwież
+                </button>
+            )}
+        </div>
+
+        {/* Historia cen */}
         <div className="mb-4">
             <PriceHistoryChart propertyId={property._id} />
         </div>
@@ -1091,12 +1126,14 @@ const initializeUserSession = async () => {
                 href={property.sourceUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center text-blue-600 hover:text-blue-800 hover:underline mb-4"
+                className="inline-flex items-center text-blue-600 hover:text-blue-800 hover:underline"
                 onClick={(e) => e.stopPropagation()}
             >
                 Zobacz ogłoszenie →
             </a>
         )}
+    </div>
+)}
         
         {/* Przycisk odświeżania */}
         <div className="flex gap-2 justify-end">
@@ -1491,13 +1528,17 @@ const initializeUserSession = async () => {
 
 {/* Formularz edycji */}
 {editingProperty && (
-  <div ref={editFormRef}>
-    <PropertyEditForm
-      property={editingProperty}
-      onSave={handleSaveEdit}
-      onCancel={() => setEditingProperty(null)}
-    />
-  </div>
+    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+        <div className="bg-white rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+                <PropertyEditForm
+                    property={editingProperty}
+                    onSave={handleSaveEdit}
+                    onCancel={() => setEditingProperty(null)}
+                />
+            </div>
+        </div>
+    </div>
 )}
 
 {/* Formularz dodawania nieruchomości */}
