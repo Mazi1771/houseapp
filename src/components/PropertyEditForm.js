@@ -3,7 +3,8 @@ import { MapPin, Edit2, RefreshCw } from 'lucide-react';
 import PriceHistoryChart from './PriceHistoryChart';
 
 function PropertyEditForm({ property, onSave, onCancel }) {
-  const [formData, setFormData] = useState({
+ const [formData, setFormData] = useState(() => ({
+    ...property,  // Skopiuj wszystkie właściwości
     title: property?.title || '',
     price: property?.price || '',
     area: property?.area || '',
@@ -13,8 +14,8 @@ function PropertyEditForm({ property, onSave, onCancel }) {
     status: property?.status || 'stan deweloperski',
     coordinates: property?.coordinates || null,
     priceHistory: property?.priceHistory || [],
-    addedBy: property?.addedBy // Dodajemy to pole
-});
+    addedBy: property?.addedBy  // Zachowaj oryginalne addedBy
+}));
 
   const [isGeocoding, setIsGeocoding] = useState(false);
   const [geocodeError, setGeocodeError] = useState(null);
