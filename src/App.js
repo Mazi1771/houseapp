@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { 
   Menu as MenuIcon, 
+  MapPin
   Search, 
   Home, 
   RefreshCw, 
@@ -24,6 +25,7 @@ import PriceHistoryChart from './components/PriceHistoryChart';
 import InvitationsView from './components/InvitationsView';
 import BoardSharing from './components/BoardSharing';
 import MapView from './components/MapView';
+
 
 function App() {
   // === STANY APLIKACJI ===
