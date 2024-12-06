@@ -27,14 +27,14 @@ const PriceHistoryChart = ({ propertyId }) => {
         const data = await response.json();
         console.log('Surowe dane historii:', data);
 
+        // Formatowanie i sortowanie danych
         const formattedData = data
           .map(entry => ({
-            date: new Date(entry.date).toLocaleDateString(),
+            date: new Date(entry.date),
             price: entry.price,
-            fullDate: new Date(entry.date),
-            originalDate: entry.date
+            formattedDate: new Date(entry.date).toLocaleDateString()
           }))
-          .sort((a, b) => b.fullDate - a.fullDate);
+          .sort((a, b) => b.date - a.date); // Sortuj od najnowszych do najstarszych
           
         console.log('Posortowane dane:', formattedData);
         setPriceHistory(formattedData);
@@ -62,43 +62,35 @@ const PriceHistoryChart = ({ propertyId }) => {
     return change.toFixed(1) + '%';
   };
 
-  const handleHistoryToggle = (e) => {
-    e.stopPropagation(); // Zatrzymaj propagację kliknięcia
-    setShowFullHistory(!showFullHistory);
-  };
-
-  if (loading) return <div className="p-4" onClick={e => e.stopPropagation()}>Ładowanie historii cen...</div>;
-  if (error) return <div className="p-4 text-red-600" onClick={e => e.stopPropagation()}>Błąd: {error}</div>;
+  if (loading) return <div className="p-4 text-gray-600">Ładowanie historii cen...</div>;
+  if (error) return <div className="p-4 text-red-600">Błąd: {error}</div>;
   if (priceHistory.length === 0) return null;
 
-  const displayedHistory = showFullHistory ? priceHistory : priceHistory.slice(0, 2);
+  // Przygotuj dane dla wykresu
+  const chartData = [...priceHistory].reverse(); // Odwróć dane dla wykresu (chronologicznie)
 
   return (
-    <div className="space-y-4" onClick={e => e.stopPropagation()}>
-      <h4 className="text-lg font-medium">Historia cen</h4>
-      
+    <div className="space-y-4">
+      {/* Lista zmian cen */}
       <div className="space-y-2">
-        {displayedHistory.map((entry, index) => {
-          const previousEntry = priceHistory[index + 1];
-          const priceChange = previousEntry ? entry.price - previousEntry.price : null;
-          const percentageChange = getPercentageChange(entry.price, previousEntry?.price);
+        {priceHistory.map((entry, index) => {
+          const nextEntry = priceHistory[index + 1];
+          const priceChange = nextEntry ? entry.price - nextEntry.price : null;
+          const percentageChange = nextEntry ? getPercentageChange(entry.price, nextEntry.price) : null;
 
           return (
-            <div key={entry.date} className="flex items-center justify-between p-2 bg-gray-50 rounded">
+            <div key={entry.date.toString()} className="flex items-center justify-between p-2 bg-gray-50 rounded">
               <div className="flex flex-col">
-                <span className="text-sm text-gray-500">{entry.date}</span>
-                <span className={`font-medium ${getPriceChangeColor(entry.price, previousEntry?.price)}`}>
+                <span className="text-sm text-gray-500">{entry.formattedDate}</span>
+                <span className={`font-medium ${getPriceChangeColor(entry.price, nextEntry?.price)}`}>
                   {formatPrice(entry.price)}
                 </span>
               </div>
               {priceChange !== null && (
-                <div className="flex flex-col items-end">
-                  <span className={`font-medium ${getPriceChangeColor(entry.price, previousEntry?.price)}`}>
-                    {priceChange > 0 ? '+' : ''}{formatPrice(priceChange)}
-                  </span>
-                  <span className={`text-sm ${getPriceChangeColor(entry.price, previousEntry?.price)}`}>
-                    {priceChange > 0 ? '↑' : '↓'} {percentageChange}
-                  </span>
+                <div className={`text-sm ${getPriceChangeColor(entry.price, nextEntry.price)}`}>
+                  {priceChange > 0 ? '+' : ''}{formatPrice(priceChange)}
+                  <br />
+                  {priceChange > 0 ? '↑' : '↓'} {percentageChange}
                 </div>
               )}
             </div>
@@ -106,25 +98,14 @@ const PriceHistoryChart = ({ propertyId }) => {
         })}
       </div>
 
-      {priceHistory.length > 2 && (
-        <button
-          onClick={handleHistoryToggle}
-          className="w-full py-2 px-4 text-sm text-blue-600 hover:bg-blue-50 rounded transition-colors"
-        >
-          {showFullHistory ? 'Pokaż mniej' : `Pokaż pełną historię (${priceHistory.length} zmian)`}
-        </button>
-      )}
-
-      {showFullHistory && priceHistory.length > 1 && (
-        <div className="mt-4 h-[300px] w-full">
+      {/* Wykres */}
+      {priceHistory.length > 1 && (
+        <div className="mt-4 h-[300px]">
           <ResponsiveContainer>
-            <LineChart
-              data={[...priceHistory].reverse()}
-              margin={{ top: 10, right: 30, left: 10, bottom: 10 }}
-            >
+            <LineChart data={chartData}>
               <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
               <XAxis 
-                dataKey="date" 
+                dataKey="formattedDate" 
                 tick={{ fill: '#6b7280' }}
                 axisLine={{ stroke: '#d1d5db' }}
               />
@@ -134,7 +115,7 @@ const PriceHistoryChart = ({ propertyId }) => {
                 tickFormatter={(value) => `${(value / 1000).toFixed(0)}k`}
               />
               <Tooltip 
-                formatter={(value) => formatPrice(value)}
+                formatter={(value) => [`${value.toLocaleString()} PLN`, 'Cena']}
                 labelFormatter={(label) => `Data: ${label}`}
                 contentStyle={{
                   backgroundColor: 'rgba(255, 255, 255, 0.95)',
@@ -146,14 +127,13 @@ const PriceHistoryChart = ({ propertyId }) => {
               <Legend 
                 verticalAlign="top" 
                 height={36}
-                formatter={(value) => <span className="text-gray-600">Historia cen</span>}
+                formatter={() => <span className="text-gray-600">Historia cen</span>}
               />
               <Line 
                 type="monotone" 
                 dataKey="price" 
                 stroke="#2563eb"
                 strokeWidth={2}
-                name="Cena"
                 dot={{
                   r: 4,
                   fill: '#2563eb',
