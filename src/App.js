@@ -565,13 +565,18 @@ const handleAddProperty = async () => {
 
 const handleSaveEdit = async (updatedData) => {
     try {
-        console.log('Dane przed wysłaniem:', updatedData); // Debugging
-        
         const token = localStorage.getItem('token');
+        console.log('Edytowana nieruchomość:', editingProperty);
+        console.log('Aktualny użytkownik:', user);
+
+        // Upewnij się, że addedBy jest zachowane z oryginalnej nieruchomości
         const dataToSend = {
-            ...updatedData,
-            addedBy: editingProperty.addedBy || user._id // Dodajemy addedBy
+            ...editingProperty,  // Najpierw skopiuj wszystkie oryginalne dane
+            ...updatedData,      // Nadpisz zaktualizowanymi danymi
+            addedBy: editingProperty.addedBy  // Jawnie zachowaj addedBy
         };
+
+        console.log('Dane wysyłane do serwera:', dataToSend);
 
         const response = await fetch(`https://houseapp-backend.onrender.com/api/properties/${editingProperty._id}`, {
             method: 'PUT',
@@ -583,21 +588,21 @@ const handleSaveEdit = async (updatedData) => {
         });
 
         if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.error || 'Błąd podczas aktualizacji');
+            const errorData = await response.json().catch(() => ({}));
+            console.error('Odpowiedź serwera:', errorData);
+            throw new Error(errorData.message || 'Błąd podczas aktualizacji');
         }
 
         const updatedProperty = await response.json();
-        
-        // Aktualizuj lokalny stan
-        setProperties(properties.map(p => 
+        console.log('Zaktualizowana nieruchomość:', updatedProperty);
+
+        setProperties(prev => prev.map(p => 
             p._id === editingProperty._id ? updatedProperty : p
         ));
-        
-        // Zamknij formularz edycji
+
         setEditingProperty(null);
-        
-        // Odśwież widok
+
+        // Odśwież listę nieruchomości
         if (selectedBoard) {
             await fetchBoardProperties(selectedBoard._id);
         }
@@ -605,6 +610,7 @@ const handleSaveEdit = async (updatedData) => {
         alert('Zmiany zostały zapisane pomyślnie!');
     } catch (error) {
         console.error('Szczegóły błędu:', error);
+        console.error('Stack trace:', error.stack);
         alert(`Wystąpił błąd podczas aktualizacji: ${error.message}`);
     }
 };
