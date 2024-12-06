@@ -948,248 +948,253 @@ const initializeUserSession = async () => {
   };
 
   // Zmodyfikowany PropertyCard z lepszym wsparciem dla wersji mobilnej
- const PropertyCard = ({ 
-    property, 
-    isShared, 
-    onMove, 
-    onCopy, 
-    onEdit, 
-    onDelete, 
-    onRate,
-    onRefresh,
-    isExpanded,
-    onExpandToggle,
-    user  // Dodany prop user
+const PropertyCard = ({ 
+  property, 
+  isShared, 
+  onMove, 
+  onCopy, 
+  onEdit, 
+  onDelete, 
+  onRate,
+  onRefresh,
+  isExpanded,
+  onExpandToggle,
+  user
 }) => {
-    const addedByCurrentUser = property.addedBy === user?._id;
-    
-    return (
-        <div 
-            className={`bg-white rounded-xl shadow-sm border-l-4 ${
-                isShared 
-                    ? addedByCurrentUser 
-                        ? 'border-l-blue-500'    // Własna nieruchomość w współdzielonej tablicy
-                        : 'border-l-purple-500'  // Cudza nieruchomość w współdzielonej tablicy
-                    : 'border-l-blue-500'        // Nieruchomość w własnej tablicy
-            } relative transition-all duration-300`}
-            onClick={onExpandToggle}
-        >
-            <div className="p-4">
-                {/* Menu w prawym górnym rogu */}
-                <div className="absolute top-2 right-2 z-10">
-                    <Menu>
-                        <MenuTrigger>
-                            <button 
-                                className="p-1.5 hover:bg-gray-100 rounded-full transition-colors"
-                                onClick={e => e.stopPropagation()}
-                            >
-                                <MoreVertical className="w-5 h-5 text-gray-400" />
-                            </button>
-                        </MenuTrigger>
-                        <MenuContent>
-                            {!isShared && (
-                                <MenuItem onClick={() => onMove(property)}>
-                                    Przenieś do innej tablicy
-                                </MenuItem>
-                            )}
-                            <MenuItem onClick={() => onCopy(property._id)}>
-                                Kopiuj do tablicy
-                            </MenuItem>
-                            <MenuItem onClick={() => onEdit(property)}>
-                                Edytuj
-                            </MenuItem>
-                            {!isShared && (
-                                <MenuItem onClick={() => onDelete(property._id)} className="text-red-600">
-                                    Usuń
-                                </MenuItem>
-                            )}
-                        </MenuContent>
-                    </Menu>
-                </div>
+  const addedByCurrentUser = property.addedBy === user?._id;
 
-                {/* Podstawowe informacje */}
-<div className="flex flex-col md:flex-row justify-between items-start gap-2 mb-3">
-    <div className="flex-grow">
-        <h3 className="font-semibold text-gray-900 pr-8">{property.title}</h3>
-        <p className="text-sm text-gray-500">{property.location || 'Brak lokalizacji'}</p>
-        <p className="text-sm text-gray-600 mt-1">
-            Status: <span className="font-medium">{property.status}</span>
-        </p>
-        
-        {isShared && (
-            <p className="text-xs text-purple-600 mt-1">
-                Dodane przez: {
-                    property.addedBy === user?._id 
-                        ? 'Ciebie' 
-                        : property.addedByUser?.name || 'Innego użytkownika'
-                }
-            </p>
-        )}
-    </div>
-    <div className="self-start flex flex-col items-end gap-1">
-        <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-            property.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-        }`}>
-            {property.isActive ? 'Aktywne' : 'Nieaktywne'}
-        </span>
-    </div>
-</div>
-                {/* Grid z ceną i powierzchnią */}
-                <div className="grid grid-cols-2 gap-3 mb-4">
-                    <div className="bg-gray-50 p-3 rounded-lg">
-                        <p className="text-sm text-gray-500 mb-1">Cena</p>
-                        <p className="font-semibold text-gray-900">
-                            {property.price ? `${property.price.toLocaleString()} PLN` : 'Brak danych'}
-                        </p>
-                    </div>
-                    <div className="bg-gray-50 p-3 rounded-lg">
-                        <p className="text-sm text-gray-500 mb-1">Powierzchnia</p>
-                        <p className="font-semibold text-gray-900">
-                            {property.area ? `${property.area} m²` : 'Brak danych'}
-                        </p>
-                    </div>
-                </div>
-
-                {/* Przyciski oceny */}
-                <div className="flex justify-end gap-2">
-                    {!isShared && (
-                        <>
-                            <button
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    onRate(property._id, 'favorite');
-                                }}
-                                className={`p-2 rounded-lg transition-colors ${
-                                    property.rating === 'favorite' 
-                                        ? 'bg-yellow-100 hover:bg-yellow-200' 
-                                        : 'bg-gray-100 hover:bg-gray-200'
-                                }`}
-                            >
-                                ⭐
-                            </button>
-                            <button
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    onRate(property._id, 'interested');
-                                }}
-                                className={`p-2 rounded-lg transition-colors ${
-                                    property.rating === 'interested' 
-                                        ? 'bg-green-100 hover:bg-green-200' 
-                                        : 'bg-gray-100 hover:bg-gray-200'
-                                }`}
-                            >
-                                👍
-                            </button>
-                            <button
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    onRate(property._id, 'not_interested');
-                                }}
-                                className={`p-2 rounded-lg transition-colors ${
-                                    property.rating === 'not_interested' 
-                                        ? 'bg-red-100 hover:bg-red-200' 
-                                        : 'bg-gray-100 hover:bg-gray-200'
-                                }`}
-                            >
-                                👎
-                            </button>
-                        </>
-                    )}
-                </div>
-
-      {/* Rozszerzone informacje */}
-{isExpanded && (
-    <div className="mt-4 pt-4 border-t border-gray-200">
-        {/* Istniejące info */}
-        <p className="text-gray-700 mb-4 whitespace-pre-wrap">
-            {property.description || 'Brak opisu'}
-        </p>
-        
-        {/* Przyciski akcji */}
-        <div className="flex justify-end gap-2 mb-4">
-            <button
-                onClick={(e) => {
-                    e.stopPropagation();
-                    onEdit(property);
-                }}
-                className="px-4 py-2 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 transition-colors flex items-center gap-2"
-            >
-                <Edit2 className="w-4 h-4" />
-                Edytuj
-            </button>
-            {property.sourceUrl && (
-                <button
-                    onClick={(e) => {
-                        e.stopPropagation();
-                        onRefresh(property._id);
-                    }}
-                    className="px-4 py-2 bg-green-100 text-green-600 rounded-lg hover:bg-green-200 transition-colors flex items-center gap-2"
-                    disabled={!property.sourceUrl}
-                >
-                    <RefreshCw className="w-4 h-4" />
-                    Odśwież
-                </button>
-            )}
-        </div>
-
-        {/* Historia cen */}
-        <div className="mb-4">
-            <PriceHistoryChart propertyId={property._id} />
-        </div>
-
-        {property.sourceUrl && (
-            <a 
-                href={property.sourceUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center text-blue-600 hover:text-blue-800 hover:underline"
-                onClick={(e) => e.stopPropagation()}
-            >
-                Zobacz ogłoszenie →
-            </a>
-        )}
-    </div>
-)}
+  return (
+    <div 
+      className={`bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 overflow-hidden ${
+        isExpanded ? 'md:col-span-2 lg:col-span-3' : ''
+      }`}
+      onClick={onExpandToggle}
+    >
+      <div className="flex flex-col md:flex-row h-full">
+        {/* Lewa sekcja ze statusem i podstawowymi informacjami */}
+        <div className={`relative ${isExpanded ? 'md:w-1/3' : 'w-full'}`}>
+          <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-blue-500 to-purple-500"></div>
+          <div className="p-4">
+            <div className="flex justify-between items-start">
+              <h3 className="font-semibold text-lg text-gray-900">{property.title}</h3>
+              <Menu>
+                <MenuTrigger>
+                  <button 
+                    className="p-1.5 hover:bg-gray-100 rounded-full"
+                    onClick={e => e.stopPropagation()}
+                  >
+                    <MoreVertical className="w-5 h-5 text-gray-500" />
+                  </button>
+                </MenuTrigger>
+                <MenuContent>
+                  {!isShared && (
+                    <button 
+                      onClick={() => onMove(property)}
+                      className="w-full text-left px-4 py-2 hover:bg-gray-100"
+                    >
+                      Przenieś do innej tablicy
+                    </button>
+                  )}
+                  <button 
+                    onClick={() => onCopy(property._id)}
+                    className="w-full text-left px-4 py-2 hover:bg-gray-100"
+                  >
+                    Kopiuj do tablicy
+                  </button>
+                </MenuContent>
+              </Menu>
             </div>
+            
+            <div className="mt-2 space-y-2">
+              <div className="flex items-center gap-2 text-gray-600">
+                <MapPin className="w-4 h-4" />
+                <span className="text-sm">{property.location || 'Brak lokalizacji'}</span>
+              </div>
+              <div className="flex items-center gap-2 text-gray-600">
+                <Home className="w-4 h-4" />
+                <span className="text-sm">{property.status}</span>
+              </div>
+            </div>
+
+            <div className="mt-4 flex items-center gap-4">
+              <div className="text-blue-600">
+                <span className="text-2xl font-bold">
+                  {property.price?.toLocaleString()}
+                </span>
+                <span className="text-sm ml-1">PLN</span>
+              </div>
+              <div className="text-gray-600">
+                <span className="text-lg font-semibold">{property.area}</span>
+                <span className="text-sm ml-1">m²</span>
+              </div>
+            </div>
+          </div>
         </div>
-    );
+
+        {/* Prawa sekcja z dodatkowymi informacjami (widoczna po rozwinięciu) */}
+        {isExpanded && (
+          <div className="md:w-2/3 border-t md:border-t-0 md:border-l border-gray-200">
+            <div className="p-4">
+              <div className="mb-4">
+                <h4 className="text-sm font-medium text-gray-700 mb-2">Opis</h4>
+                <p className="text-gray-600 whitespace-pre-wrap">
+                  {property.description || 'Brak opisu'}
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <div>
+                  <h4 className="text-sm font-medium text-gray-700 mb-2">Historia cen</h4>
+                  <PriceHistoryChart propertyId={property._id} />
+                </div>
+                
+                <div>
+                  <h4 className="text-sm font-medium text-gray-700 mb-2">Akcje</h4>
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onEdit(property);
+                      }}
+                      className="inline-flex items-center px-3 py-2 text-sm font-medium text-blue-700 bg-blue-50 rounded-lg hover:bg-blue-100"
+                    >
+                      <Edit2 className="w-4 h-4 mr-2" />
+                      Edytuj
+                    </button>
+                    {property.sourceUrl && (
+                      <>
+                        <a
+                          href={property.sourceUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center px-3 py-2 text-sm font-medium text-purple-700 bg-purple-50 rounded-lg hover:bg-purple-100"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          Źródło
+                        </a>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onRefresh(property._id);
+                          }}
+                          className="inline-flex items-center px-3 py-2 text-sm font-medium text-green-700 bg-green-50 rounded-lg hover:bg-green-100"
+                        >
+                          <RefreshCw className="w-4 h-4 mr-2" />
+                          Odśwież
+                        </button>
+                      </>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Stopka z ocenami */}
+      <div className="border-t border-gray-200 bg-gray-50 p-2">
+        <div className="flex justify-between items-center">
+          <div className="flex items-center gap-1">
+            {isShared && (
+              <span className="text-xs text-purple-600">
+                Dodane przez: {addedByCurrentUser ? 'Ciebie' : 'Inny użytkownik'}
+              </span>
+            )}
+          </div>
+          <div className="flex gap-1">
+            {!isShared && (
+              <>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onRate(property._id, 'favorite');
+                  }}
+                  className={`p-1.5 rounded-lg transition-colors ${
+                    property.rating === 'favorite' 
+                      ? 'bg-yellow-100 text-yellow-700' 
+                      : 'hover:bg-gray-200'
+                  }`}
+                >
+                  ⭐
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onRate(property._id, 'interested');
+                  }}
+                  className={`p-1.5 rounded-lg transition-colors ${
+                    property.rating === 'interested'
+                      ? 'bg-green-100 text-green-700'
+                      : 'hover:bg-gray-200'
+                  }`}
+                >
+                  👍
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onRate(property._id, 'not_interested');
+                  }}
+                  className={`p-1.5 rounded-lg transition-colors ${
+                    property.rating === 'not_interested'
+                      ? 'bg-red-100 text-red-700'
+                      : 'hover:bg-gray-200'
+                  }`}
+                >
+                  👎
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 };
 const PropertyList = () => {
-    const filteredProperties = getFilteredAndSortedProperties();
-    console.log('Wyświetlane nieruchomości:', filteredProperties);
+  const filteredProperties = getFilteredAndSortedProperties();
 
-    if (filteredProperties.length === 0) {
-      return (
-        <div className="text-center py-12 bg-white rounded-lg shadow">
+  if (filteredProperties.length === 0) {
+    return (
+      <div className="text-center py-12">
+        <div className="bg-white rounded-xl shadow-sm p-8">
+          <Home className="w-12 h-12 text-gray-400 mx-auto mb-4" />
           <h2 className="text-xl font-medium text-gray-600">
             Brak nieruchomości na tej tablicy
           </h2>
+          <p className="text-gray-500 mt-2">
+            Dodaj pierwszą nieruchomość, aby rozpocząć.
+          </p>
         </div>
-      );
-    }
-
-    return (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {filteredProperties.map((property) => (
-                <PropertyCard
-                    key={property._id}
-                    property={property}
-                    isShared={isPropertyShared(property)}
-                    onMove={setPropertyToMove}
-                    onCopy={handlePropertyCopy}
-                    onEdit={handleEditClick}
-                    onDelete={handleDelete}
-                    onRate={handleRating}
-                    onRefresh={handleRefreshProperty}
-                    isExpanded={expandedProperty === property._id}
-                    onExpandToggle={() => setExpandedProperty(
-                        expandedProperty === property._id ? null : property._id
-                    )}
-                    user={user}
-                />
-            ))}
-        </div>
+      </div>
     );
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {filteredProperties.map((property) => (
+          <PropertyCard
+            key={property._id}
+            property={property}
+            isShared={isPropertyShared(property)}
+            onMove={setPropertyToMove}
+            onCopy={handlePropertyCopy}
+            onEdit={handleEditClick}
+            onDelete={handleDelete}
+            onRate={handleRating}
+            onRefresh={handleRefreshProperty}
+            isExpanded={expandedProperty === property._id}
+            onExpandToggle={() => setExpandedProperty(
+              expandedProperty === property._id ? null : property._id
+            )}
+            user={user}
+          />
+        ))}
+      </div>
+    </div>
+  );
 };
   // Modal dodawania nowej tablicy
   const NewBoardModal = () => (
