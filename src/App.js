@@ -563,18 +563,23 @@ const handleAddProperty = async () => {
     }, 100);
   };
 
- const handleSaveEdit = async (updatedData) => {
+const handleSaveEdit = async (updatedData) => {
     try {
-        const token = localStorage.getItem('token');
-        console.log('Wysyłane dane:', updatedData); // Debugging
+        console.log('Dane przed wysłaniem:', updatedData); // Debugging
         
+        const token = localStorage.getItem('token');
+        const dataToSend = {
+            ...updatedData,
+            addedBy: editingProperty.addedBy || user._id // Dodajemy addedBy
+        };
+
         const response = await fetch(`https://houseapp-backend.onrender.com/api/properties/${editingProperty._id}`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${token}`
             },
-            body: JSON.stringify(updatedData)
+            body: JSON.stringify(dataToSend)
         });
 
         if (!response.ok) {
@@ -584,7 +589,7 @@ const handleAddProperty = async () => {
 
         const updatedProperty = await response.json();
         
-        // Aktualizuj stan lokalnie
+        // Aktualizuj lokalny stan
         setProperties(properties.map(p => 
             p._id === editingProperty._id ? updatedProperty : p
         ));
@@ -592,19 +597,17 @@ const handleAddProperty = async () => {
         // Zamknij formularz edycji
         setEditingProperty(null);
         
-        // Odśwież listę nieruchomości
+        // Odśwież widok
         if (selectedBoard) {
             await fetchBoardProperties(selectedBoard._id);
         }
 
-        // Pokaż potwierdzenie
         alert('Zmiany zostały zapisane pomyślnie!');
     } catch (error) {
-        console.error('Błąd podczas edycji:', error);
+        console.error('Szczegóły błędu:', error);
         alert(`Wystąpił błąd podczas aktualizacji: ${error.message}`);
     }
 };
-
   const handleDelete = async (propertyId) => {
     if (!window.confirm('Czy na pewno chcesz usunąć to ogłoszenie?')) {
       return;
