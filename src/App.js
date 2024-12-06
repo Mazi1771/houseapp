@@ -1081,7 +1081,7 @@ const initializeUserSession = async () => {
                     )}
                 </div>
 
-         {/* Rozszerzone informacje */}
+      {/* Rozszerzone informacje */}
 {isExpanded && (
     <div className="mt-4 pt-4 border-t border-gray-200">
         {/* Istniejące info */}
@@ -1132,22 +1132,6 @@ const initializeUserSession = async () => {
                 Zobacz ogłoszenie →
             </a>
         )}
-    </div>
-)}
-        
-        {/* Przycisk odświeżania */}
-        <div className="flex gap-2 justify-end">
-            <button
-                onClick={(e) => {
-                    e.stopPropagation();
-                    onRefresh(property._id);
-                }}
-                className="px-4 py-2 bg-green-100 text-green-600 rounded-lg hover:bg-green-200 transition-colors"
-                disabled={!property.sourceUrl}
-            >
-                Odśwież
-            </button>
-        </div>
     </div>
 )}
             </div>
