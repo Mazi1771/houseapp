@@ -972,70 +972,143 @@ const PropertyCard = ({
       }`}
       onClick={onExpandToggle}
     >
-      <div className="flex flex-col md:flex-row h-full">
-        {/* Lewa sekcja ze statusem i podstawowymi informacjami */}
-        <div className={`relative ${isExpanded ? 'md:w-1/3' : 'w-full'}`}>
-          <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-blue-500 to-purple-500"></div>
-          <div className="p-4">
-            <div className="flex justify-between items-start">
-              <h3 className="font-semibold text-lg text-gray-900">{property.title}</h3>
-              <Menu>
-                <MenuTrigger>
-                  <button 
-                    className="p-1.5 hover:bg-gray-100 rounded-full"
-                    onClick={e => e.stopPropagation()}
-                  >
-                    <MoreVertical className="w-5 h-5 text-gray-500" />
-                  </button>
-                </MenuTrigger>
-                <MenuContent>
-                  {!isShared && (
-                    <button 
-                      onClick={() => onMove(property)}
-                      className="w-full text-left px-4 py-2 hover:bg-gray-100"
-                    >
-                      Przenieś do innej tablicy
-                    </button>
-                  )}
-                  <button 
-                    onClick={() => onCopy(property._id)}
-                    className="w-full text-left px-4 py-2 hover:bg-gray-100"
-                  >
-                    Kopiuj do tablicy
-                  </button>
-                </MenuContent>
-              </Menu>
+      <div className="flex flex-col h-full">
+        {/* Nagłówek z menu */}
+        <div className="relative p-4">
+          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 to-purple-500"></div>
+          <div className="flex justify-between items-start">
+            <h3 className="font-semibold text-lg text-gray-900 pr-8">{property.title}</h3>
+            <Menu>
+              <MenuTrigger>
+                <button 
+                  className="p-1.5 hover:bg-gray-100 rounded-full"
+                  onClick={e => e.stopPropagation()}
+                >
+                  <MoreVertical className="w-5 h-5 text-gray-500" />
+                </button>
+              </MenuTrigger>
+              <MenuContent>
+                {!isShared && (
+                  <MenuItem onClick={() => onMove(property)}>
+                    Przenieś do innej tablicy
+                  </MenuItem>
+                )}
+                <MenuItem onClick={() => onCopy(property._id)}>
+                  Kopiuj do tablicy
+                </MenuItem>
+                {!isShared && (
+                  <MenuItem onClick={() => onDelete(property._id)} className="text-red-600">
+                    Usuń
+                  </MenuItem>
+                )}
+              </MenuContent>
+            </Menu>
+          </div>
+
+          {/* Status i lokalizacja */}
+          <div className="mt-2 space-y-2">
+            <div className="flex items-center gap-2 text-gray-600">
+              <MapPin className="w-4 h-4" />
+              <span className="text-sm">{property.location || 'Brak lokalizacji'}</span>
             </div>
-            
-            <div className="mt-2 space-y-2">
-              <div className="flex items-center gap-2 text-gray-600">
-                <MapPin className="w-4 h-4" />
-                <span className="text-sm">{property.location || 'Brak lokalizacji'}</span>
-              </div>
-              <div className="flex items-center gap-2 text-gray-600">
-                <Home className="w-4 h-4" />
-                <span className="text-sm">{property.status}</span>
-              </div>
+            <div className="flex items-center gap-2 text-gray-600">
+              <Home className="w-4 h-4" />
+              <span className="text-sm">{property.status}</span>
+            </div>
+          </div>
+
+          {/* Cena i powierzchnia */}
+          <div className="mt-4 flex items-center gap-4">
+            <div className="text-blue-600">
+              <span className="text-2xl font-bold">
+                {property.price?.toLocaleString()}
+              </span>
+              <span className="text-sm ml-1">PLN</span>
+            </div>
+            <div className="text-gray-600">
+              <span className="text-lg font-semibold">{property.area}</span>
+              <span className="text-sm ml-1">m²</span>
+            </div>
+          </div>
+
+          {/* Przyciski oceny i akcji */}
+          <div className="flex justify-between items-center mt-4">
+            {/* Przyciski oceny */}
+            <div className="flex gap-2">
+              {!isShared && (
+                <>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onRate(property._id, 'favorite');
+                    }}
+                    className={`p-2 rounded-lg transition-colors ${
+                      property.rating === 'favorite' 
+                        ? 'bg-yellow-100 hover:bg-yellow-200' 
+                        : 'bg-gray-100 hover:bg-gray-200'
+                    }`}
+                  >
+                    ⭐
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onRate(property._id, 'interested');
+                    }}
+                    className={`p-2 rounded-lg transition-colors ${
+                      property.rating === 'interested' 
+                        ? 'bg-green-100 hover:bg-green-200' 
+                        : 'bg-gray-100 hover:bg-gray-200'
+                    }`}
+                  >
+                    👍
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onRate(property._id, 'not_interested');
+                    }}
+                    className={`p-2 rounded-lg transition-colors ${
+                      property.rating === 'not_interested' 
+                        ? 'bg-red-100 hover:bg-red-200' 
+                        : 'bg-gray-100 hover:bg-gray-200'
+                    }`}
+                  >
+                    👎
+                  </button>
+                </>
+              )}
             </div>
 
-            <div className="mt-4 flex items-center gap-4">
-              <div className="text-blue-600">
-                <span className="text-2xl font-bold">
-                  {property.price?.toLocaleString()}
-                </span>
-                <span className="text-sm ml-1">PLN</span>
-              </div>
-              <div className="text-gray-600">
-                <span className="text-lg font-semibold">{property.area}</span>
-                <span className="text-sm ml-1">m²</span>
-              </div>
+            {/* Przyciski akcji */}
+            <div className="flex gap-2">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onEdit(property);
+                }}
+                className="px-3 py-1.5 text-sm text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"
+              >
+                Edytuj
+              </button>
+              {property.sourceUrl && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onRefresh(property._id);
+                  }}
+                  className="px-3 py-1.5 text-sm text-green-600 bg-green-50 rounded-lg hover:bg-green-100 transition-colors"
+                >
+                  Odśwież
+                </button>
+              )}
             </div>
           </div>
         </div>
 
-        {/* Prawa sekcja z dodatkowymi informacjami (widoczna po rozwinięciu) */}
+        {/* Rozszerzone informacje */}
         {isExpanded && (
-          <div className="md:w-2/3 border-t md:border-t-0 md:border-l border-gray-200">
+          <div className="border-t border-gray-200">
             <div className="p-4">
               <div className="mb-4">
                 <h4 className="text-sm font-medium text-gray-700 mb-2">Opis</h4>
@@ -1044,110 +1117,47 @@ const PropertyCard = ({
                 </p>
               </div>
 
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                <div>
-                  <h4 className="text-sm font-medium text-gray-700 mb-2">Historia cen</h4>
-                  <PriceHistoryChart propertyId={property._id} />
-                </div>
-                
-                <div>
-                  <h4 className="text-sm font-medium text-gray-700 mb-2">Akcje</h4>
-                  <div className="flex flex-wrap gap-2">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onEdit(property);
-                      }}
-                      className="inline-flex items-center px-3 py-2 text-sm font-medium text-blue-700 bg-blue-50 rounded-lg hover:bg-blue-100"
-                    >
-                      <Edit2 className="w-4 h-4 mr-2" />
-                      Edytuj
-                    </button>
-                    {property.sourceUrl && (
-                      <>
-                        <a
-                          href={property.sourceUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center px-3 py-2 text-sm font-medium text-purple-700 bg-purple-50 rounded-lg hover:bg-purple-100"
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          Źródło
-                        </a>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onRefresh(property._id);
-                          }}
-                          className="inline-flex items-center px-3 py-2 text-sm font-medium text-green-700 bg-green-50 rounded-lg hover:bg-green-100"
-                        >
-                          <RefreshCw className="w-4 h-4 mr-2" />
-                          Odśwież
-                        </button>
-                      </>
-                    )}
-                  </div>
-                </div>
+              {/* Sekcja historii cen */}
+              <div className="mt-4">
+                <h4 className="text-sm font-medium text-gray-700 mb-2">Historia cen</h4>
+                <PriceHistoryChart propertyId={property._id} />
               </div>
+
+              {/* Link do źródła */}
+              {property.sourceUrl && (
+                <div className="mt-4">
+                  <a
+                    href={property.sourceUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center text-blue-600 hover:text-blue-800 hover:underline"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    Zobacz ogłoszenie źródłowe →
+                  </a>
+                </div>
+              )}
             </div>
           </div>
         )}
-      </div>
 
-      {/* Stopka z ocenami */}
-      <div className="border-t border-gray-200 bg-gray-50 p-2">
-        <div className="flex justify-between items-center">
-          <div className="flex items-center gap-1">
-            {isShared && (
-              <span className="text-xs text-purple-600">
-                Dodane przez: {addedByCurrentUser ? 'Ciebie' : 'Inny użytkownik'}
+        {/* Stopka */}
+        <div className="mt-auto border-t border-gray-200 bg-gray-50 p-2">
+          <div className="flex justify-between items-center">
+            <div>
+              {isShared && (
+                <span className="text-xs text-purple-600">
+                  Dodane przez: {addedByCurrentUser ? 'Ciebie' : 'Inny użytkownik'}
+                </span>
+              )}
+            </div>
+            <div>
+              <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                property.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+              }`}>
+                {property.isActive ? 'Aktywne' : 'Nieaktywne'}
               </span>
-            )}
-          </div>
-          <div className="flex gap-1">
-            {!isShared && (
-              <>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onRate(property._id, 'favorite');
-                  }}
-                  className={`p-1.5 rounded-lg transition-colors ${
-                    property.rating === 'favorite' 
-                      ? 'bg-yellow-100 text-yellow-700' 
-                      : 'hover:bg-gray-200'
-                  }`}
-                >
-                  ⭐
-                </button>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onRate(property._id, 'interested');
-                  }}
-                  className={`p-1.5 rounded-lg transition-colors ${
-                    property.rating === 'interested'
-                      ? 'bg-green-100 text-green-700'
-                      : 'hover:bg-gray-200'
-                  }`}
-                >
-                  👍
-                </button>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onRate(property._id, 'not_interested');
-                  }}
-                  className={`p-1.5 rounded-lg transition-colors ${
-                    property.rating === 'not_interested'
-                      ? 'bg-red-100 text-red-700'
-                      : 'hover:bg-gray-200'
-                  }`}
-                >
-                  👎
-                </button>
-              </>
-            )}
+            </div>
           </div>
         </div>
       </div>
