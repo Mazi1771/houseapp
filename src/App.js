@@ -51,7 +51,8 @@ function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [user, setUser] = useState(null);
   const [authMode, setAuthMode] = useState('login');
-  const [isLoadingProperties, setIsLoadingProperties] = useState(true);
+  const [isLoadingProperties, setIsLoadingProperties] = useState(false);
+  const [isLoadingAuth, setIsLoadingAuth] = useState(false);
   const [isFiltersVisible, setIsFiltersVisible] = useState(false);
   const [showInvitations, setShowInvitations] = useState(false);
   const [currentBoard, setCurrentBoard] = useState(null);
@@ -240,6 +241,7 @@ useEffect(() => {
   </div>
 );
 const handleLogin = async (data) => {
+    setIsLoadingAuth(true);
     try {
         // Zapisz dane autentykacji
         localStorage.setItem('token', data.token);
@@ -288,9 +290,10 @@ const handleLogin = async (data) => {
         }
     } catch (error) {
         console.error('Błąd podczas logowania:', error);
-        setIsLoadingProperties(false);
-        // Możesz dodać obsługę błędów dla użytkownika, np.:
         alert('Wystąpił błąd podczas logowania. Spróbuj ponownie.');
+    } finally {
+        setIsLoadingAuth(false);
+        setIsLoadingProperties(false);
     }
 };
 
