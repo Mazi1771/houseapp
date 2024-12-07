@@ -307,9 +307,21 @@ const handleRegister = (data) => {
   fetchBoards(); // To automatycznie ustawi pierwszą tablicę jako wybraną
 };
   const isPropertyShared = (property) => {
-  if (!property || !property.board) return false;
-  const board = boards.find(b => b._id === property.board);
-  return board?.owner !== user?._id;
+    console.log('Sprawdzanie isShared dla:', {
+        property,
+        selectedBoard,
+        user: user?._id
+    });
+    
+    // Jeśli nie ma wybranej tablicy lub użytkownika, zwróć false
+    if (!selectedBoard || !user) return false;
+    
+    // Sprawdź czy właścicielem tablicy jest obecny użytkownik
+    const isCurrentUserOwner = selectedBoard.owner === user._id;
+    
+    console.log('Czy obecny użytkownik jest właścicielem:', isCurrentUserOwner);
+    
+    return !isCurrentUserOwner;
 };
  const fetchBoards = async () => {
   const token = localStorage.getItem('token');
@@ -1288,48 +1300,41 @@ const PropertyCard = ({
   );
 };
 const PropertyList = () => {
-  const filteredProperties = getFilteredAndSortedProperties();
+    const filteredProperties = getFilteredAndSortedProperties();
+    console.log('Wyświetlane nieruchomości:', filteredProperties);
 
-  if (filteredProperties.length === 0) {
-    return (
-      <div className="text-center py-12">
-        <div className="bg-white rounded-xl shadow-sm p-8">
-          <Home className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+    if (filteredProperties.length === 0) {
+      return (
+        <div className="text-center py-12 bg-white rounded-lg shadow">
           <h2 className="text-xl font-medium text-gray-600">
             Brak nieruchomości na tej tablicy
           </h2>
-          <p className="text-gray-500 mt-2">
-            Dodaj pierwszą nieruchomość, aby rozpocząć.
-          </p>
         </div>
-      </div>
-    );
-  }
+      );
+    }
 
-  return (
-    <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredProperties.map((property) => (
-          <PropertyCard
-            key={property._id}
-            property={property}
-            isShared={isPropertyShared(property)}
-            onMove={setPropertyToMove}
-            onCopy={handlePropertyCopy}
-            onEdit={handleEditClick}
-            onDelete={handleDelete}
-            onRate={handleRating}
-            onRefresh={handleRefreshProperty}
-            isExpanded={expandedProperty === property._id}
-            onExpandToggle={() => setExpandedProperty(
-              expandedProperty === property._id ? null : property._id
-            )}
-            user={user}
-          />
-        ))}
-      </div>
-    </div>
-  );
+    return (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {filteredProperties.map((property) => (
+                <PropertyCard
+                    key={property._id}
+                    property={property}
+                    isShared={isPropertyShared(property)}  // Upewnij się, że ta funkcja działa prawidłowo
+                    onMove={setPropertyToMove}
+                    onCopy={handlePropertyCopy}
+                    onEdit={handleEditClick}
+                    onDelete={handleDelete}
+                    onRate={handleRating}
+                    onRefresh={handleRefreshProperty}
+                    isExpanded={expandedProperty === property._id}
+                    onExpandToggle={() => setExpandedProperty(
+                        expandedProperty === property._id ? null : property._id
+                    )}
+                    user={user}
+                />
+            ))}
+        </div>
+    );
 };
   // Modal dodawania nowej tablicy
   const NewBoardModal = () => (
