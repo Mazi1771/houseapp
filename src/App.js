@@ -634,30 +634,48 @@ const handleSaveEdit = async (updatedData) => {
 };
 
   const handleDelete = async (propertyId) => {
-    if (!window.confirm('Czy na pewno chcesz usunąć to ogłoszenie?')) {
-      return;
+    if (!window.confirm('Czy na pewno chcesz usunąć tę nieruchomość?')) {
+        return;
     }
-    
-    try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`https://houseapp-backend.onrender.com/api/properties/${propertyId}`, {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        }
-      });
 
-      if (response.ok) {
-        setProperties(properties.filter(p => p._id !== propertyId));
-        setExpandedProperty(null);
-      } else {
-        alert('Nie udało się usunąć ogłoszenia');
-      }
+    try {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`https://houseapp-backend.onrender.com/api/properties/${propertyId}`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json',
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error('Nie udało się usunąć nieruchomości');
+        }
+
+        // Aktualizuj stan lokalnie
+        setProperties(prevProperties => 
+            prevProperties.filter(property => property._id !== propertyId)
+        );
+
+        // Zaktualizuj też tablicę
+        if (selectedBoard) {
+            const updatedBoard = {
+                ...selectedBoard,
+                properties: selectedBoard.properties.filter(id => id !== propertyId)
+            };
+            setSelectedBoard(updatedBoard);
+        }
+
+        // Zamknij rozwinięty widok jeśli był otwarty
+        if (expandedProperty === propertyId) {
+            setExpandedProperty(null);
+        }
+
     } catch (error) {
-      alert('Wystąpił błąd podczas usuwania ogłoszenia');
+        console.error('Błąd podczas usuwania:', error);
+        alert('Wystąpił błąd podczas usuwania nieruchomości');
     }
-  };
+};
 
   const handleRating = async (propertyId, rating) => {
     try {
@@ -1036,45 +1054,73 @@ const PropertyCard = ({
   
   return (
     <div 
-      className={`bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 overflow-hidden ${
-        isExpanded ? 'md:col-span-2 lg:col-span-3' : ''
-      }`}
-      onClick={onExpandToggle}
-    >
-      <div className="flex flex-col h-full">
-        {/* Górny pasek gradientowy */}
-        <div className="h-1 bg-gradient-to-r from-blue-500 to-purple-500"/>
+      <div 
+  className={`bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 overflow-hidden ${
+    isExpanded ? 'md:col-span-2 lg:col-span-3' : ''
+  }`}
+  onClick={onExpandToggle}
+>
+  <div className="flex flex-col h-full">
+    {/* Górny pasek gradientowy */}
+    <div className="h-1 bg-gradient-to-r from-blue-500 to-purple-500"/>
 
-        <div className="p-4">
-          {/* Nagłówek z menu */}
-          <div className="flex justify-between items-start">
-            <h3 className="font-semibold text-lg text-gray-900 pr-8">{property.title}</h3>
-            <Menu>
-              <MenuTrigger>
-                <button 
-                  className="p-1.5 hover:bg-gray-100 rounded-full"
-                  onClick={e => e.stopPropagation()}
-                >
-                  <MoreVertical className="w-5 h-5 text-gray-500" />
-                </button>
-              </MenuTrigger>
-              <MenuContent>
-                {!isShared && (
-                  <MenuItem onClick={() => onMove(property)}>
-                    Przenieś do innej tablicy
-                  </MenuItem>
-                )}
-                <MenuItem onClick={() => onCopy(property._id)}>
-                  Kopiuj do tablicy
-                </MenuItem>
-                {!isShared && (
-                  <MenuItem onClick={() => onDelete(property._id)} className="text-red-600">
-                    Usuń
-                  </MenuItem>
-                )}
-              </MenuContent>
-            </Menu>
-          </div>
+    <div className="p-4">
+      {/* Nagłówek z menu */}
+      <div className="flex justify-between items-start">
+        <h3 className="font-semibold text-lg text-gray-900 pr-8">{property.title}</h3>
+        <Menu>
+          <MenuTrigger>
+            <button 
+              className="p-1.5 hover:bg-gray-100 rounded-full"
+              onClick={e => e.stopPropagation()}
+            >
+              <MoreVertical className="w-5 h-5 text-gray-500" />
+            </button>
+          </MenuTrigger>
+          <MenuContent>
+            {!isShared && (
+              <MenuItem 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onMove(property);
+                }}
+              >
+                <div className="flex items-center gap-2">
+                  <ArrowRight className="w-4 h-4" />
+                  Przenieś do innej tablicy
+                </div>
+              </MenuItem>
+            )}
+            <MenuItem 
+              onClick={(e) => {
+                e.stopPropagation();
+                onCopy(property._id);
+              }}
+            >
+              <div className="flex items-center gap-2">
+                <Copy className="w-4 h-4" />
+                Kopiuj do tablicy
+              </div>
+            </MenuItem>
+            {!isShared && (
+              <MenuItem 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (window.confirm('Czy na pewno chcesz usunąć tę nieruchomość?')) {
+                    onDelete(property._id);
+                  }
+                }}
+                className="text-red-600 hover:bg-red-50"
+              >
+                <div className="flex items-center gap-2">
+                  <Trash2 className="w-4 h-4" />
+                  Usuń
+                </div>
+              </MenuItem>
+            )}
+          </MenuContent>
+        </Menu>
+      </div>
 
           {/* Lokalizacja i status */}
           <div className="mt-2 space-y-2">
