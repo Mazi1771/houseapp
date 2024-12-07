@@ -1053,7 +1053,7 @@ const PropertyCard = ({
   const addedByCurrentUser = property.addedBy === user?._id;
   
   return (
-    <div 
+    
       <div 
   className={`bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 overflow-hidden ${
     isExpanded ? 'md:col-span-2 lg:col-span-3' : ''
