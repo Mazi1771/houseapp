@@ -14,7 +14,9 @@ import {
   MoreVertical,
   Plus,
   Trash2,
-  Edit2
+  Edit2,
+  Copy,
+  ArrowRight
 } from 'lucide-react';
 import { Menu, MenuTrigger, MenuContent, MenuItem } from './components/ui/menu';
 import PropertyForm from './components/PropertyForm';
