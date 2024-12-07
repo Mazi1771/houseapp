@@ -668,16 +668,22 @@ const handleSaveEdit = async (updatedData) => {
   const handleRating = async (propertyId, rating) => {
     try {
         const token = localStorage.getItem('token');
-        const propertyToUpdate = properties.find(p => p._id === propertyId);
+        const currentProperty = properties.find(p => p._id === propertyId);
         
-        if (!propertyToUpdate) return;
+        console.log('Aktualna nieruchomość:', currentProperty);
+        console.log('Obecny użytkownik:', user);
 
         // Optymistyczna aktualizacja UI
         setProperties(prevProperties => 
-            prevProperties.map(prop => 
-                prop._id === propertyId 
-                    ? { ...prop, rating } 
-                    : prop
+            prevProperties.map(p => 
+                p._id === propertyId 
+                    ? {
+                        ...p,
+                        rating,
+                        addedBy: p.addedBy, // Zachowaj oryginalnego właściciela
+                        addedByUser: p.addedByUser // Zachowaj dane właściciela
+                    } 
+                    : p
             )
         );
 
@@ -687,38 +693,36 @@ const handleSaveEdit = async (updatedData) => {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${token}`
             },
-            body: JSON.stringify({ 
-                ...propertyToUpdate,
+            body: JSON.stringify({
                 rating,
-                addedBy: propertyToUpdate.addedBy || user._id
+                addedBy: currentProperty.addedBy, // Wyślij obecnego właściciela
+                // Nie wysyłamy innych pól, żeby nie nadpisać niepotrzebnie danych
             })
         });
 
         if (!response.ok) {
-            // Przywróć poprzedni stan w przypadku błędu
+            // W przypadku błędu przywróć poprzedni stan
             setProperties(prevProperties => 
-                prevProperties.map(prop => 
-                    prop._id === propertyId 
-                        ? propertyToUpdate
-                        : prop
+                prevProperties.map(p => 
+                    p._id === propertyId ? currentProperty : p
                 )
             );
             throw new Error('Błąd podczas aktualizacji oceny');
         }
 
         const updatedProperty = await response.json();
-        console.log('Zaktualizowana nieruchomość:', updatedProperty);
+        console.log('Odpowiedź z serwera:', updatedProperty);
 
-        // Aktualizuj stan zgodnie z odpowiedzią serwera
+        // Aktualizuj stan zachowując dane właściciela
         setProperties(prevProperties => 
-            prevProperties.map(prop => 
-                prop._id === propertyId 
-                    ? { 
+            prevProperties.map(p => 
+                p._id === propertyId 
+                    ? {
                         ...updatedProperty,
-                        addedBy: propertyToUpdate.addedBy || user._id,
-                        addedByUser: user
-                      }
-                    : prop
+                        addedBy: currentProperty.addedBy,
+                        addedByUser: currentProperty.addedByUser
+                    } 
+                    : p
             )
         );
 
@@ -1106,23 +1110,23 @@ const PropertyCard = ({
 
           {/* Przyciski oceny */}
           <div className="flex justify-between items-center mt-4">
-            <div className="flex gap-2">
-              {!isShared && (
-                <>
-                  <button
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      onRate(property._id, 'favorite');
-                    }}
-                    className={`p-2 rounded-lg transition-colors ${
-                      property.rating === 'favorite' 
+        <div className="flex gap-2">
+    {user && ( // Zmiana warunku z !isShared na sprawdzenie czy jest użytkownik
+        <>
+            <button
+                onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    onRate(property._id, 'favorite');
+                }}
+                className={`p-2 rounded-lg transition-colors ${
+                    property.rating === 'favorite' 
                         ? 'bg-yellow-100 hover:bg-yellow-200' 
                         : 'bg-gray-100 hover:bg-gray-200'
-                    }`}
-                  >
-                    ⭐
-                  </button>
+                }`}
+            >
+                ⭐
+            </button>
                   <button
                     onClick={(e) => {
                       e.preventDefault();
@@ -1219,14 +1223,15 @@ const PropertyCard = ({
 
         {/* Stopka */}
         <div className="mt-auto border-t border-gray-200 bg-gray-50 p-2">
-          <div className="flex justify-between items-center">
-            <div>
-              {property.addedBy && property.addedBy !== user?._id && (
+    <div className="flex justify-between items-center">
+        <div>
+            {/* Pokazuj informację o autorze tylko jeśli to nie obecny użytkownik */}
+            {property.addedBy && property.addedBy !== user?._id && property.addedByUser && (
                 <span className="text-xs text-purple-600">
-                  Dodane przez: {property.addedByUser?.name || 'Innego użytkownika'}
+                    Dodane przez: {property.addedByUser.name || 'Innego użytkownika'}
                 </span>
-              )}
-            </div>
+            )}
+        </div>
             <div>
               <span className={`px-2 py-1 text-xs font-medium rounded-full ${
                 property.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
