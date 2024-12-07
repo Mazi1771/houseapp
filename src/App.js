@@ -467,10 +467,6 @@ const fetchBoardProperties = async (boardId) => {
         setIsLoadingProperties(true);
         const token = localStorage.getItem('token');
         
-        if (!token) {
-            throw new Error('Brak tokenu autoryzacji');
-        }
-
         const response = await fetch(`https://houseapp-backend.onrender.com/api/boards/${boardId}/properties`, {
             headers: {
                 'Authorization': `Bearer ${token}`,
@@ -483,13 +479,11 @@ const fetchBoardProperties = async (boardId) => {
         }
 
         const data = await response.json();
-        setProperties(Array.isArray(data) ? data : []);
-        
+        console.log('Pobrane właściwości:', data);
+
+        setProperties(data);
     } catch (error) {
         console.error('Błąd podczas pobierania właściwości:', error);
-        if (error.message.includes('token') || error.response?.status === 401) {
-            handleLogout();
-        }
         setProperties([]);
     } finally {
         setIsLoadingProperties(false);
