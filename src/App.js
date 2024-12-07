@@ -668,8 +668,11 @@ const handleSaveEdit = async (updatedData) => {
   const handleRating = async (propertyId, rating) => {
     try {
         const token = localStorage.getItem('token');
+        const propertyToUpdate = properties.find(p => p._id === propertyId);
         
-        // Najpierw zaktualizuj stan lokalnie dla natychmiastowej reakcji UI
+        if (!propertyToUpdate) return;
+
+        // Optymistyczna aktualizacja UI
         setProperties(prevProperties => 
             prevProperties.map(prop => 
                 prop._id === propertyId 
@@ -678,7 +681,6 @@ const handleSaveEdit = async (updatedData) => {
             )
         );
 
-        // Następnie wyślij aktualizację do API
         const response = await fetch(`https://houseapp-backend.onrender.com/api/properties/${propertyId}`, {
             method: 'PUT',
             headers: {
@@ -686,17 +688,18 @@ const handleSaveEdit = async (updatedData) => {
                 'Authorization': `Bearer ${token}`
             },
             body: JSON.stringify({ 
+                ...propertyToUpdate,
                 rating,
-                addedBy: properties.find(p => p._id === propertyId)?.addedBy
+                addedBy: propertyToUpdate.addedBy || user._id
             })
         });
 
         if (!response.ok) {
-            // Jeśli wystąpi błąd, przywróć poprzedni stan
+            // Przywróć poprzedni stan w przypadku błędu
             setProperties(prevProperties => 
                 prevProperties.map(prop => 
                     prop._id === propertyId 
-                        ? { ...prop, rating: prop.rating } 
+                        ? propertyToUpdate
                         : prop
                 )
             );
@@ -704,12 +707,17 @@ const handleSaveEdit = async (updatedData) => {
         }
 
         const updatedProperty = await response.json();
-        
-        // Upewniamy się, że stan jest zgodny z odpowiedzią serwera
+        console.log('Zaktualizowana nieruchomość:', updatedProperty);
+
+        // Aktualizuj stan zgodnie z odpowiedzią serwera
         setProperties(prevProperties => 
             prevProperties.map(prop => 
                 prop._id === propertyId 
-                    ? updatedProperty 
+                    ? { 
+                        ...updatedProperty,
+                        addedBy: propertyToUpdate.addedBy || user._id,
+                        addedByUser: user
+                      }
                     : prop
             )
         );
@@ -1211,11 +1219,16 @@ const PropertyCard = ({
         <div className="mt-auto border-t border-gray-200 bg-gray-50 p-2">
           <div className="flex justify-between items-center">
             <div>
-              {isShared && (
-                <span className="text-xs text-purple-600">
-                  Dodane przez: {addedByCurrentUser ? 'Ciebie' : 'Inny użytkownik'}
-                </span>
-              )}
+              {/* Informacja o dodającym */}
+{isShared && (
+    <span className="text-xs text-purple-600">
+        Dodane przez: {
+            property.addedBy === user?._id 
+                ? 'Ciebie' 
+                : property.addedByUser?.name || 'Innego użytkownika'
+        }
+    </span>
+)}
             </div>
             <div>
               <span className={`px-2 py-1 text-xs font-medium rounded-full ${
