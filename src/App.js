@@ -1310,22 +1310,22 @@ const PropertyList = () => {
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {filteredProperties.map((property) => (
-                <PropertyCard
-                    key={property._id}
-                    property={property}
-                    isShared={isPropertyShared(property)}  // Upewnij się, że ta funkcja działa prawidłowo
-                    onMove={setPropertyToMove}
-                    onCopy={handlePropertyCopy}
-                    onEdit={handleEditClick}
-                    onDelete={handleDelete}
-                    onRate={handleRating}
-                    onRefresh={handleRefreshProperty}
-                    isExpanded={expandedProperty === property._id}
-                    onExpandToggle={() => setExpandedProperty(
-                        expandedProperty === property._id ? null : property._id
-                    )}
-                    user={user}
-                />
+               <PropertyCard
+    key={property._id}
+    property={property}
+    isShared={isPropertyShared(property)}
+    onMove={setPropertyToMove}
+    onCopy={handlePropertyCopy}
+    onEdit={handleEditClick}
+    onDelete={handleDelete}
+    onRate={handleRating}
+    onRefresh={handleRefreshProperty}
+    isExpanded={expandedProperty === property._id}
+    onExpandToggle={() => setExpandedProperty(
+        expandedProperty === property._id ? null : property._id
+    )}
+    user={user}  // Upewnij się, że przekazujesz użytkownika
+/>
             ))}
         </div>
     );
