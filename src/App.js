@@ -307,21 +307,15 @@ const handleRegister = (data) => {
   fetchBoards(); // To automatycznie ustawi pierwszą tablicę jako wybraną
 };
   const isPropertyShared = (property) => {
-    console.log('Sprawdzanie isShared dla:', {
-        property,
-        selectedBoard,
-        user: user?._id
-    });
-    
-    // Jeśli nie ma wybranej tablicy lub użytkownika, zwróć false
-    if (!selectedBoard || !user) return false;
-    
-    // Sprawdź czy właścicielem tablicy jest obecny użytkownik
-    const isCurrentUserOwner = selectedBoard.owner === user._id;
-    
-    console.log('Czy obecny użytkownik jest właścicielem:', isCurrentUserOwner);
-    
-    return !isCurrentUserOwner;
+    // Jeśli nie ma property lub user, nie jest współdzielone
+    if (!property || !user) return false;
+
+    // Sprawdź właściciela tablicy
+    const board = boards.find(b => b._id === property.board);
+    if (!board) return false;
+
+    // Jeśli użytkownik jest właścicielem tablicy, to nie jest współdzielone
+    return board.owner !== user._id;
 };
  const fetchBoards = async () => {
   const token = localStorage.getItem('token');
@@ -1080,73 +1074,73 @@ const PropertyCard = ({
 
     <div className="p-4">
       {/* Nagłówek z menu */}
-      <div className="flex justify-between items-start">
-        <h3 className="font-semibold text-lg text-gray-900 pr-8">{property.title}</h3>
-        <Menu>
-          <MenuTrigger>
+<div className="flex justify-between items-start">
+    <h3 className="font-semibold text-lg text-gray-900 pr-8">{property.title}</h3>
+    <Menu>
+        <MenuTrigger>
             <button 
-              className="p-1.5 hover:bg-gray-100 rounded-full"
-              onClick={e => e.stopPropagation()}
+                className="p-1.5 hover:bg-gray-100 rounded-full"
+                onClick={e => e.stopPropagation()}
             >
-              <MoreVertical className="w-5 h-5 text-gray-500" />
+                <MoreVertical className="w-5 h-5 text-gray-500" />
             </button>
-          </MenuTrigger>
-          <MenuContent>
+        </MenuTrigger>
+        <MenuContent>
             {!isShared && (
-              <MenuItem 
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onMove(property);
-                }}
-              >
-                <div className="flex items-center gap-2">
-                  <ArrowRight className="w-4 h-4" />
-                  Przenieś do innej tablicy
-                </div>
-              </MenuItem>
+                <>
+                    <MenuItem 
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            onMove(property);
+                        }}
+                    >
+                        <div className="flex items-center gap-2">
+                            <ArrowRight className="w-4 h-4" />
+                            Przenieś do innej tablicy
+                        </div>
+                    </MenuItem>
+                    <MenuItem 
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            if (window.confirm('Czy na pewno chcesz usunąć tę nieruchomość?')) {
+                                onDelete(property._id);
+                            }
+                        }}
+                        className="text-red-600 hover:bg-red-50"
+                    >
+                        <div className="flex items-center gap-2">
+                            <Trash2 className="w-4 h-4" />
+                            Usuń
+                        </div>
+                    </MenuItem>
+                </>
             )}
             <MenuItem 
-              onClick={(e) => {
-                e.stopPropagation();
-                onCopy(property._id);
-              }}
-            >
-              <div className="flex items-center gap-2">
-                <Copy className="w-4 h-4" />
-                Kopiuj do tablicy
-              </div>
-            </MenuItem>
-            {!isShared && (
-              <MenuItem 
                 onClick={(e) => {
-                  e.stopPropagation();
-                  if (window.confirm('Czy na pewno chcesz usunąć tę nieruchomość?')) {
-                    onDelete(property._id);
-                  }
+                    e.stopPropagation();
+                    onCopy(property._id);
                 }}
-                className="text-red-600 hover:bg-red-50"
-              >
+            >
                 <div className="flex items-center gap-2">
-                  <Trash2 className="w-4 h-4" />
-                  Usuń
+                    <Copy className="w-4 h-4" />
+                    Kopiuj do tablicy
                 </div>
-              </MenuItem>
-            )}
-          </MenuContent>
-        </Menu>
-      </div>
+            </MenuItem>
+        </MenuContent>
+    </Menu>
+</div>
 
-          {/* Lokalizacja i status */}
-          <div className="mt-2 space-y-2">
-            <div className="flex items-center gap-2 text-gray-600">
-              <MapPin className="w-4 h-4" />
-              <span className="text-sm">{property.location || 'Brak lokalizacji'}</span>
-            </div>
-            <div className="flex items-center gap-2 text-gray-600">
-              <Home className="w-4 h-4" />
-              <span className="text-sm">{property.status}</span>
-            </div>
-          </div>
+{/* Lokalizacja i status */}
+<div className="mt-2 space-y-2">
+    <div className="flex items-center gap-2 text-gray-600">
+        <MapPin className="w-4 h-4" />
+        <span className="text-sm">{property.location || 'Brak lokalizacji'}</span>
+    </div>
+    <div className="flex items-center gap-2 text-gray-600">
+        <Home className="w-4 h-4" />
+        <span className="text-sm">{property.status}</span>
+    </div>
+</div>
 
           {/* Cena i powierzchnia */}
           <div className="mt-4 flex items-center gap-4">
