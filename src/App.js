@@ -27,7 +27,27 @@ import PriceHistoryChart from './components/PriceHistoryChart';
 import InvitationsView from './components/InvitationsView';
 import BoardSharing from './components/BoardSharing';
 import MapView from './components/MapView';
-
+const BoardSidebar = ({ 
+  isOpen, 
+  boards, 
+  sharedBoards, 
+  selectedBoard, 
+  onBoardSelect, 
+  onShareClick 
+}) => (
+  <div className={`fixed left-0 top-16 h-full bg-white shadow-lg transition-all duration-300 z-20 
+    ${isOpen ? 'w-64' : 'w-0'} overflow-hidden`}>
+    <div className="p-4">
+      <BoardNavigation
+        boards={boards}
+        sharedBoards={sharedBoards}
+        selectedBoard={selectedBoard}
+        onBoardSelect={onBoardSelect}
+        onShareClick={onShareClick}
+      />
+    </div>
+  </div>
+);
 
 function App() {
   // === STANY APLIKACJI ===
@@ -225,23 +245,7 @@ useEffect(() => {
     setUser(null);
     // Nie czyścimy tablic i nieruchomości - zostaną zaktualizowane przy następnym logowaniu
 };
-  const BoardSidebar = ({ isOpen }) => (
-  <div className={`fixed left-0 top-16 h-full bg-white shadow-lg transition-all duration-300 z-20 
-    ${isOpen ? 'w-64' : 'w-0'} overflow-hidden`}>
-    <div className="p-4">
-      <BoardNavigation
-        boards={boards}
-        sharedBoards={sharedBoards}
-        selectedBoard={selectedBoard}
-        onBoardSelect={handleBoardSelect}
-        onShareClick={(board) => {
-          setShareModalOpen(true);
-          setSelectedBoard(board);
-        }}
-      />
-    </div>
-  </div>
-);
+  
 const handleLogin = async (data) => {
     setIsLoadingAuth(true);
     try {
