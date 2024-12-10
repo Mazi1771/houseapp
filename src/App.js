@@ -28,7 +28,7 @@ import InvitationsView from './components/InvitationsView';
 import BoardSharing from './components/BoardSharing';
 import MapView from './components/MapView';
 
-const BoardNavigation = ({ boards, sharedBoards, selectedBoard, onBoardSelect, onShareClick }) => {
+const BoardNavigation = ({ boards, sharedBoards, selectedBoard, onBoardSelect, onShareClick, setIsNewBoardModalOpen  }) => {
   return (
     <div className="bg-white p-4 rounded-lg shadow">
       <div className="flex justify-between items-center mb-4">
@@ -103,7 +103,8 @@ const BoardSidebar = ({
   sharedBoards, 
   selectedBoard, 
   onBoardSelect, 
-  onShareClick 
+  onShareClick,
+  setIsNewBoardModalOpen
 }) => (
   <div className={`fixed left-0 top-16 h-full bg-white shadow-lg transition-all duration-300 z-20 
     ${isOpen ? 'w-64' : 'w-0'} overflow-hidden`}>
@@ -114,6 +115,7 @@ const BoardSidebar = ({
         selectedBoard={selectedBoard}
         onBoardSelect={onBoardSelect}
         onShareClick={onShareClick}
+        setIsNewBoardModalOpen={setIsNewBoardModalOpen}
       />
     </div>
   </div>
@@ -1474,7 +1476,15 @@ const PropertyList = () => {
 
 
       {/* Sidebar */}
-      <BoardSidebar isOpen={isBoardSidebarOpen} />
+      <BoardSidebar 
+  isOpen={isBoardSidebarOpen} 
+  boards={boards}
+  sharedBoards={sharedBoards}
+  selectedBoard={selectedBoard}
+  onBoardSelect={handleBoardSelect}
+  onShareClick={(board) => setShareModalOpen(true)}
+  setIsNewBoardModalOpen={setIsNewBoardModalOpen}  // Dodaj to
+/>
 
       {/* Main content */}
       <main className="pt-16 transition-all duration-300" style={{ 
