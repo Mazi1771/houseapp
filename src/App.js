@@ -27,6 +27,76 @@ import PriceHistoryChart from './components/PriceHistoryChart';
 import InvitationsView from './components/InvitationsView';
 import BoardSharing from './components/BoardSharing';
 import MapView from './components/MapView';
+
+const BoardNavigation = ({ boards, sharedBoards, selectedBoard, onBoardSelect, onShareClick }) => {
+  return (
+    <div className="bg-white p-4 rounded-lg shadow">
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="font-semibold text-lg">Moje tablice</h2>
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            setIsNewBoardModalOpen(true);
+          }}
+          className="p-2 text-blue-600 hover:bg-blue-50 rounded-full flex items-center justify-center"
+          aria-label="Dodaj nową tablicę"
+        >
+          <Plus className="w-5 h-5" />
+        </button>
+      </div>
+      
+      <div className="space-y-2">
+        {boards.map(board => (
+          <div 
+            key={board._id}
+            className={`flex items-center justify-between p-2 rounded-lg ${
+              selectedBoard?._id === board._id ? 'bg-blue-50' : 'hover:bg-gray-50'
+            }`}
+          >
+            <span 
+              onClick={() => onBoardSelect(board)}
+              className="flex-grow cursor-pointer"
+            >
+              {board.name}
+            </span>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => onShareClick(board)}
+                className="p-1.5 text-gray-400 hover:text-blue-600 rounded-full hover:bg-blue-50"
+              >
+                <Share className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {sharedBoards.length > 0 && (
+        <>
+          <h2 className="font-semibold text-lg mt-6 mb-4">Wspólne tablice</h2>
+          <div className="space-y-2">
+            {sharedBoards.map(board => (
+              <div
+                key={board._id}
+                onClick={() => onBoardSelect(board)}
+                className={`p-2 rounded-lg cursor-pointer ${
+                  selectedBoard?._id === board._id ? 'bg-purple-50' : 'hover:bg-gray-50'
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <span>{board.name}</span>
+                  <span className="text-sm text-purple-600">
+                    {board.owner.name || board.owner.email}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  );
+};
 const BoardSidebar = ({ 
   isOpen, 
   boards, 
@@ -970,83 +1040,7 @@ const initializeUserSession = async () => {
   };
 
   // === KOMPONENTY UI ===
-  const BoardNavigation = ({ boards, sharedBoards, selectedBoard, onBoardSelect, onShareClick }) => {
-    return (
-      <div className="bg-white p-4 rounded-lg shadow">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="font-semibold text-lg">Moje tablice</h2>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              setIsNewBoardModalOpen(true);
-            }}
-            className="p-2 text-blue-600 hover:bg-blue-50 rounded-full flex items-center justify-center"
-            aria-label="Dodaj nową tablicę"
-          >
-            <Plus className="w-5 h-5" />
-          </button>
-        </div>
-        
-        <div className="space-y-2">
-          {boards.map(board => (
-            <div 
-              key={board._id}
-              className={`flex items-center justify-between p-2 rounded-lg ${
-                selectedBoard?._id === board._id ? 'bg-blue-50' : 'hover:bg-gray-50'
-              }`}
-            >
-              <span 
-                onClick={() => onBoardSelect(board)}
-                className="flex-grow cursor-pointer"
-              >
-                {board.name}
-              </span>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => onShareClick(board)}
-                  className="p-1.5 text-gray-400 hover:text-blue-600 rounded-full hover:bg-blue-50"
-                >
-                  <Share className="w-4 h-4" />
-                </button>
-                {boards.length > 1 && (
-                  <button
-                    onClick={() => handleDeleteBoard(board._id)}
-                    className="p-1.5 text-gray-400 hover:text-red-600 rounded-full hover:bg-red-50"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
 
-        {sharedBoards.length > 0 && (
-          <>
-            <h2 className="font-semibold text-lg mt-6 mb-4">Wspólne tablice</h2>
-            <div className="space-y-2">
-              {sharedBoards.map(board => (
-                <div
-                  key={board._id}
-                  onClick={() => onBoardSelect(board)}
-                  className={`p-2 rounded-lg cursor-pointer ${
-                    selectedBoard?._id === board._id ? 'bg-purple-50' : 'hover:bg-gray-50'
-                  }`}
-                >
-                  <div className="flex items-center justify-between">
-                    <span>{board.name}</span>
-                    <span className="text-sm text-purple-600">
-                      {board.owner.name || board.owner.email}
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </>
-        )}
-      </div>
-    );
-  };
 
   // Zmodyfikowany PropertyCard z lepszym wsparciem dla wersji mobilnej
 const PropertyCard = ({ 
