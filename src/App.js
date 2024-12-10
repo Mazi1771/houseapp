@@ -99,10 +99,10 @@ const BoardNavigation = ({ boards, sharedBoards, selectedBoard, onBoardSelect, o
 };
 const BoardSidebar = ({ 
   isOpen, 
-  boards, 
-  sharedBoards, 
-  selectedBoard, 
-  onBoardSelect, 
+  boards = [], // dodaj wartość domyślną
+  sharedBoards = [], // dodaj wartość domyślną
+  selectedBoard,
+  onBoardSelect,
   onShareClick,
   setIsNewBoardModalOpen
 }) => (
