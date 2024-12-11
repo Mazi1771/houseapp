@@ -1207,31 +1207,47 @@ const PropertyCard = ({
               )}
             </div>
 
-            {/* Przyciski akcji */}
-            <div className="flex gap-2">
-              <button
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  onEdit(property);
-                }}
-                className="px-3 py-1.5 text-sm text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"
-              >
-                Edytuj
-              </button>
-              {property.sourceUrl && (
-                <button
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    onRefresh(property._id);
-                  }}
-                  className="px-3 py-1.5 text-sm text-green-600 bg-green-50 rounded-lg hover:bg-green-100 transition-colors"
-                >
-                  Odśwież
-                </button>
-              )}
-            </div>
+           {/* Przyciski akcji */}
+<div className="flex gap-2">
+    {canEditProperty && (
+        <button
+            onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                onEdit(property);
+            }}
+            className="px-3 py-1.5 text-sm text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"
+        >
+            Edytuj
+        </button>
+    )}
+    {canDeleteProperty && (
+        <button
+            onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (window.confirm('Czy na pewno chcesz usunąć tę nieruchomość?')) {
+                    onDelete(property._id);
+                }
+            }}
+            className="px-3 py-1.5 text-sm text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition-colors"
+        >
+            Usuń
+        </button>
+    )}
+    {property.sourceUrl && (
+        <button
+            onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                onRefresh(property._id);
+            }}
+            className="px-3 py-1.5 text-sm text-green-600 bg-green-50 rounded-lg hover:bg-green-100 transition-colors"
+        >
+            Odśwież
+        </button>
+    )}
+</div>
           </div>
         </div>
 
