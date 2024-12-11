@@ -382,17 +382,7 @@ const handleRegister = (data) => {
   setUser(data.user);
   fetchBoards(); // To automatycznie ustawi pierwszą tablicę jako wybraną
 };
- const isPropertyShared = (property) => {
-    // Jeśli nie ma property lub user, nie jest współdzielone
-    if (!property || !user) return false;
 
-    // Znajdź tablicę, do której należy nieruchomość
-    const board = boards.find(b => b._id === property.board);
-    if (!board) return false;
-
-    // Sprawdź czy użytkownik jest właścicielem tablicy
-    return board.owner !== user.id; // lub user._id, zależnie od tego jak przechowujesz ID
-};
  const fetchBoards = async () => {
   const token = localStorage.getItem('token');
   try {
