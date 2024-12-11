@@ -666,21 +666,17 @@ const handleSaveEdit = async (updatedData) => {
         const token = localStorage.getItem('token');
         console.log('Edytowana nieruchomość:', editingProperty);
 
-        // Wysyłamy tylko te pola, które chcemy zaktualizować
         const dataToUpdate = {
             title: updatedData.title,
             price: parseInt(updatedData.price),
             area: parseFloat(updatedData.area),
             location: updatedData.location,
-            description: updatedData.description || '',
+            description: updatedData.description,
             status: updatedData.status,
-            rooms: updatedData.rooms !== undefined ? parseInt(updatedData.rooms) : null,
-            plotArea: updatedData.plotArea ? parseFloat(updatedData.plotArea) : null,
-            edited: true,
-            updatedAt: new Date()
+            rooms: updatedData.rooms !== undefined ? parseInt(updatedData.rooms) : null
         };
 
-        console.log('Dane wysyłane na serwer:', dataToUpdate);
+        console.log('Wysyłane dane:', dataToUpdate);
 
         const response = await fetch(`https://houseapp-backend.onrender.com/api/properties/${editingProperty._id}`, {
             method: 'PUT',
@@ -691,45 +687,29 @@ const handleSaveEdit = async (updatedData) => {
             body: JSON.stringify(dataToUpdate)
         });
 
-        const responseData = await response.json();
-        console.log('Status odpowiedzi:', response.status);
-        console.log('Odpowiedź z serwera:', responseData);
-
         if (!response.ok) {
-            throw new Error(responseData.error || 'Błąd podczas aktualizacji');
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Błąd podczas aktualizacji');
         }
 
-        // Natychmiast aktualizuj stan lokalnie
+        const responseData = await response.json();
+        console.log('Odpowiedź z serwera:', responseData);
+
+        // Aktualizuj stan lokalnie
         setProperties(prevProperties => 
             prevProperties.map(p => 
-                p._id === editingProperty._id 
-                    ? { 
-                        ...p, 
-                        ...dataToUpdate,
-                        // Zachowaj oryginalne pola, których nie aktualizujemy
-                        addedBy: p.addedBy,
-                        board: p.board,
-                        priceHistory: p.priceHistory,
-                        source: p.source,
-                        isActive: p.isActive
-                      }
-                    : p
+                p._id === editingProperty._id ? responseData : p
             )
         );
 
-        // Zamknij formularz
         setEditingProperty(null);
-
-        // Odśwież dane z serwera
-        await fetchBoardProperties(selectedBoard._id);
-
         alert('Zmiany zostały zapisane pomyślnie!');
+
     } catch (error) {
         console.error('Błąd podczas aktualizacji:', error);
         alert(`Wystąpił błąd: ${error.message}`);
     }
 };
-
  const handleDelete = async (propertyId) => {
     if (!window.confirm('Czy na pewno chcesz usunąć tę nieruchomość?')) {
         return;
