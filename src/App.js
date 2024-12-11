@@ -1047,16 +1047,17 @@ const PropertyCard = ({
     const userId = user?._id || user?.id;
     const addedByCurrentUser = userId && property.addedBy && 
         (property.addedBy._id === userId || property.addedBy.id === userId);
-   const canEditProperty = !isShared || addedByCurrentUser;
-   const canDeleteProperty = !isShared || addedByCurrentUser;
+    const canEditProperty = !isShared || addedByCurrentUser;
+    const canDeleteProperty = !isShared || addedByCurrentUser;
     
-    console.log('PropertyCard rendered with:', {
-        propertyId: property._id,
-        addedBy: property.addedBy,
-        userId,
-        isShared,
-        addedByCurrentUser
-    });
+    console.log('PropertyCard permissions:', {
+    isShared,
+    addedByCurrentUser,
+    canEditProperty,
+    canDeleteProperty,
+    userId,
+    propertyAddedBy: property.addedBy
+});
   return (
     
       <div 
@@ -1083,39 +1084,37 @@ const PropertyCard = ({
             </button>
         </MenuTrigger>
       <MenuContent>
+    {/* Pokazuj opcje usuwania/przenoszenia jeśli user może edytować */}
     {(canEditProperty || canDeleteProperty) && (
         <>
-            {canEditProperty && (
-                <MenuItem 
-                    onClick={(e) => {
-                        e.stopPropagation();
-                        onMove(property);
-                    }}
-                >
-                    <div className="flex items-center gap-2">
-                        <ArrowRight className="w-4 h-4" />
-                        Przenieś do innej tablicy
-                    </div>
-                </MenuItem>
-            )}
-            {canDeleteProperty && (
-                <MenuItem 
-                    onClick={(e) => {
-                        e.stopPropagation();
-                        if (window.confirm('Czy na pewno chcesz usunąć tę nieruchomość?')) {
-                            onDelete(property._id);
-                        }
-                    }}
-                    className="text-red-600 hover:bg-red-50"
-                >
-                    <div className="flex items-center gap-2">
-                        <Trash2 className="w-4 h-4" />
-                        Usuń
-                    </div>
-                </MenuItem>
-            )}
+            <MenuItem 
+                onClick={(e) => {
+                    e.stopPropagation();
+                    onMove(property);
+                }}
+            >
+                <div className="flex items-center gap-2">
+                    <ArrowRight className="w-4 h-4" />
+                    Przenieś do innej tablicy
+                </div>
+            </MenuItem>
+            <MenuItem 
+                onClick={(e) => {
+                    e.stopPropagation();
+                    if (window.confirm('Czy na pewno chcesz usunąć tę nieruchomość?')) {
+                        onDelete(property._id);
+                    }
+                }}
+                className="text-red-600 hover:bg-red-50"
+            >
+                <div className="flex items-center gap-2">
+                    <Trash2 className="w-4 h-4" />
+                    Usuń
+                </div>
+            </MenuItem>
         </>
     )}
+    {/* Opcja kopiowania dostępna dla wszystkich */}
     <MenuItem 
         onClick={(e) => {
             e.stopPropagation();
