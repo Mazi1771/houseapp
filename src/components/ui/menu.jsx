@@ -41,8 +41,8 @@ export const MenuContent = ({ children }) => {
 };
 export const MenuItem = ({ onClick, children, className = '' }) => {
   return (
-    <button>
-      className={w-full text-left px-4 py-2 text-sm hover:bg-gray-100 ${className}}
+    <button
+      className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 ${className}`}
       onClick={(e) => {
         e.stopPropagation();
         onClick(e);
