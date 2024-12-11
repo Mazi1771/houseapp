@@ -18,7 +18,7 @@ import {
   Copy,
   ArrowRight
 } from 'lucide-react';
-import { Menu, MenuTrigger, MenuContent, MenuItem } from './components/ui/menu';
+import { Menu, MenuTrigger, MenuContent, MenuItem } from './components/ui/menu.jsx';
 import PropertyForm from './components/PropertyForm';
 import PropertyEditForm from './components/PropertyEditForm';
 import Login from './components/Login';
