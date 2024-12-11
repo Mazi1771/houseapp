@@ -675,10 +675,13 @@ const handleSaveEdit = async (updatedData) => {
             location: updatedData.location,
             description: updatedData.description,
             status: updatedData.status,
-            rooms: updatedData.rooms ? parseInt(updatedData.rooms) : null,
+            rooms: updatedData.rooms !== undefined ? parseInt(updatedData.rooms) : null,
             plotArea: updatedData.plotArea ? parseFloat(updatedData.plotArea) : null,
-            edited: true
+            edited: true,
+            addedBy: editingProperty.addedBy._id // zachowaj oryginalnego właściciela
         };
+
+        console.log('Dane wysyłane na serwer:', dataToUpdate);
 
         const response = await fetch(`https://houseapp-backend.onrender.com/api/properties/${editingProperty._id}`, {
             method: 'PUT',
@@ -697,21 +700,17 @@ const handleSaveEdit = async (updatedData) => {
         const responseData = await response.json();
         console.log('Odpowiedź z serwera:', responseData);
 
-        // Aktualizuj stan lokalnie
+        // Aktualizuj stan lokalnie, zachowując oryginalne dane addedBy
         setProperties(prevProperties => 
             prevProperties.map(p => 
                 p._id === editingProperty._id 
-                    ? { ...p, ...responseData }
+                    ? { ...p, ...responseData, addedBy: editingProperty.addedBy }
                     : p
             )
         );
 
-        // Zamknij formularz edycji
         setEditingProperty(null);
-
-        // Odśwież właściwości tablicy
         await fetchBoardProperties(selectedBoard._id);
-
         alert('Zmiany zostały zapisane pomyślnie!');
     } catch (error) {
         console.error('Błąd podczas aktualizacji:', error);
@@ -1053,13 +1052,14 @@ const PropertyCard = ({
     onExpandToggle,
     user
 }) => {
-    const addedByCurrentUser = user && property.addedBy && 
-        property.addedBy._id === user._id;
+    const userId = user?._id || user?.id;
+    const addedByCurrentUser = userId && property.addedBy && 
+        (property.addedBy._id === userId || property.addedBy.id === userId);
     
     console.log('PropertyCard rendered with:', {
         propertyId: property._id,
         addedBy: property.addedBy,
-        userId: user?._id,
+        userId,
         isShared,
         addedByCurrentUser
     });
@@ -1302,8 +1302,14 @@ const PropertyCard = ({
   );
 };
 const isPropertyShared = (property) => {
-    if (!property || !user || !user._id) {
+    if (!property || !user) {
         console.log('Brak wymaganych danych:', { property, user });
+        return false;
+    }
+
+    const userId = user._id || user.id; // obsługa obu formatów
+    if (!userId) {
+        console.log('Brak ID użytkownika:', user);
         return false;
     }
 
@@ -1313,10 +1319,10 @@ const isPropertyShared = (property) => {
         return false;
     }
 
-    const isShared = board.owner !== user._id;
+    const isShared = board.owner !== userId;
     console.log('Sprawdzanie współdzielenia:', { 
         boardOwner: board.owner, 
-        userId: user._id, 
+        userId, 
         isShared 
     });
     
