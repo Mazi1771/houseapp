@@ -1343,7 +1343,7 @@ const isPropertyShared = (property) => {
     
     return isShared;
 };
-};
+
 
 const PropertyList = () => {
     const filteredProperties = getFilteredAndSortedProperties();
