@@ -677,8 +677,20 @@ const handleSaveEdit = async (updatedData) => {
         console.log('Edytowana nieruchomość:', editingProperty);
         console.log('Dane do aktualizacji:', updatedData);
 
-        // Przygotuj dane do wysłania - usuń pola, których nie chcemy aktualizować
-        const { _id, createdAt, updatedAt, ...dataToUpdate } = updatedData;
+        // Przygotuj dane do wysłania
+        const dataToUpdate = {
+            title: updatedData.title,
+            price: updatedData.price,
+            area: updatedData.area,
+            plotArea: updatedData.plotArea,
+            rooms: updatedData.rooms,
+            location: updatedData.location,
+            description: updatedData.description,
+            status: updatedData.status,
+            coordinates: updatedData.coordinates || null,
+            edited: true,
+            updatedAt: new Date()
+        };
 
         const response = await fetch(`https://houseapp-backend.onrender.com/api/properties/${editingProperty._id}`, {
             method: 'PUT',
@@ -697,19 +709,14 @@ const handleSaveEdit = async (updatedData) => {
         console.log('Odpowiedź z serwera:', responseData);
 
         // Aktualizuj stan lokalnie
-        setProperties(prevProperties => 
-            prevProperties.map(p => 
-                p._id === editingProperty._id ? responseData : p
-            )
-        );
+        setProperties(prev => prev.map(p => 
+            p._id === editingProperty._id ? responseData : p
+        ));
 
-        // Zamknij formularz edycji
         setEditingProperty(null);
 
         // Odśwież właściwości tablicy
-        if (selectedBoard) {
-            await fetchBoardProperties(selectedBoard._id);
-        }
+        await fetchBoardProperties(selectedBoard._id);
 
         alert('Zmiany zostały zapisane pomyślnie!');
     } catch (error) {
@@ -1089,35 +1096,36 @@ const PropertyCard = ({
     {/* Pokaż opcje usuwania/przenoszenia jeśli:
         1. Użytkownik jest właścicielem tablicy LUB
         2. Użytkownik dodał tę nieruchomość */}
-    {(!isShared || addedByCurrentUser) && (
-        <>
-            <MenuItem 
-                onClick={(e) => {
-                    e.stopPropagation();
-                    onMove(property);
-                }}
-            >
-                <div className="flex items-center gap-2">
-                    <ArrowRight className="w-4 h-4" />
-                    Przenieś do innej tablicy
-                </div>
-            </MenuItem>
-            <MenuItem 
-                onClick={(e) => {
-                    e.stopPropagation();
-                    if (window.confirm('Czy na pewno chcesz usunąć tę nieruchomość?')) {
-                        onDelete(property._id);
-                    }
-                }}
-                className="text-red-600 hover:bg-red-50"
-            >
-                <div className="flex items-center gap-2">
-                    <Trash2 className="w-4 h-4" />
-                    Usuń
-                </div>
-            </MenuItem>
-        </>
-    )}
+   {(!isShared || property.addedBy === user?._id) && (
+    <>
+        <MenuItem 
+            onClick={(e) => {
+                e.stopPropagation();
+                onMove(property);
+            }}
+        >
+            <div className="flex items-center gap-2">
+                <ArrowRight className="w-4 h-4" />
+                Przenieś do innej tablicy
+            </div>
+        </MenuItem>
+        <MenuItem 
+            onClick={(e) => {
+                e.stopPropagation();
+                const confirmed = window.confirm('Czy na pewno chcesz usunąć tę nieruchomość?');
+                if (confirmed) {
+                    onDelete(property._id);
+                }
+            }}
+            className="text-red-600 hover:bg-red-50"
+        >
+            <div className="flex items-center gap-2">
+                <Trash2 className="w-4 h-4" />
+                Usuń
+            </div>
+        </MenuItem>
+    </>
+)}
     {/* Opcja kopiowania dostępna dla wszystkich */}
     <MenuItem 
         onClick={(e) => {
@@ -1297,6 +1305,17 @@ const PropertyCard = ({
     </div>
   );
 };
+const isPropertyShared = (property) => {
+  if (!property || !user || !boards) return false;
+
+  // Znajdź tablicę, do której należy nieruchomość
+  const board = boards.find(b => b._id === property.board);
+  if (!board) return false;
+
+  // Sprawdź czy użytkownik jest właścicielem tablicy
+  return board.owner !== user._id;
+};
+
 const PropertyList = () => {
     const filteredProperties = getFilteredAndSortedProperties();
     console.log('Wyświetlane nieruchomości:', filteredProperties);
