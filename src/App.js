@@ -665,20 +665,19 @@ const handleSaveEdit = async (updatedData) => {
     try {
         const token = localStorage.getItem('token');
         console.log('Edytowana nieruchomość:', editingProperty);
-        console.log('Dane do aktualizacji:', updatedData);
 
-        // Przygotuj dane do wysłania - tylko te pola, które chcemy zaktualizować
+        // Wysyłamy tylko te pola, które chcemy zaktualizować
         const dataToUpdate = {
             title: updatedData.title,
             price: parseInt(updatedData.price),
             area: parseFloat(updatedData.area),
             location: updatedData.location,
-            description: updatedData.description,
+            description: updatedData.description || '',
             status: updatedData.status,
             rooms: updatedData.rooms !== undefined ? parseInt(updatedData.rooms) : null,
             plotArea: updatedData.plotArea ? parseFloat(updatedData.plotArea) : null,
             edited: true,
-            addedBy: editingProperty.addedBy._id // zachowaj oryginalnego właściciela
+            updatedAt: new Date()
         };
 
         console.log('Dane wysyłane na serwer:', dataToUpdate);
@@ -692,25 +691,38 @@ const handleSaveEdit = async (updatedData) => {
             body: JSON.stringify(dataToUpdate)
         });
 
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.error || 'Błąd podczas aktualizacji');
-        }
-
         const responseData = await response.json();
+        console.log('Status odpowiedzi:', response.status);
         console.log('Odpowiedź z serwera:', responseData);
 
-        // Aktualizuj stan lokalnie, zachowując oryginalne dane addedBy
+        if (!response.ok) {
+            throw new Error(responseData.error || 'Błąd podczas aktualizacji');
+        }
+
+        // Natychmiast aktualizuj stan lokalnie
         setProperties(prevProperties => 
             prevProperties.map(p => 
                 p._id === editingProperty._id 
-                    ? { ...p, ...responseData, addedBy: editingProperty.addedBy }
+                    ? { 
+                        ...p, 
+                        ...dataToUpdate,
+                        // Zachowaj oryginalne pola, których nie aktualizujemy
+                        addedBy: p.addedBy,
+                        board: p.board,
+                        priceHistory: p.priceHistory,
+                        source: p.source,
+                        isActive: p.isActive
+                      }
                     : p
             )
         );
 
+        // Zamknij formularz
         setEditingProperty(null);
+
+        // Odśwież dane z serwera
         await fetchBoardProperties(selectedBoard._id);
+
         alert('Zmiany zostały zapisane pomyślnie!');
     } catch (error) {
         console.error('Błąd podczas aktualizacji:', error);
