@@ -382,16 +382,16 @@ const handleRegister = (data) => {
   setUser(data.user);
   fetchBoards(); // To automatycznie ustawi pierwszą tablicę jako wybraną
 };
-  const isPropertyShared = (property) => {
+ const isPropertyShared = (property) => {
     // Jeśli nie ma property lub user, nie jest współdzielone
     if (!property || !user) return false;
 
-    // Sprawdź właściciela tablicy
+    // Znajdź tablicę, do której należy nieruchomość
     const board = boards.find(b => b._id === property.board);
     if (!board) return false;
 
-    // Jeśli użytkownik jest właścicielem tablicy, to nie jest współdzielone
-    return board.owner !== user._id;
+    // Sprawdź czy użytkownik jest właścicielem tablicy
+    return board.owner !== user.id; // lub user._id, zależnie od tego jak przechowujesz ID
 };
  const fetchBoards = async () => {
   const token = localStorage.getItem('token');
@@ -677,8 +677,8 @@ const handleSaveEdit = async (updatedData) => {
         console.log('Edytowana nieruchomość:', editingProperty);
         console.log('Dane do aktualizacji:', updatedData);
 
-        // Usuń addedBy z danych do aktualizacji, ponieważ jest immutable
-        const { addedBy, _id, ...dataToUpdate } = updatedData;
+        // Przygotuj dane do wysłania - usuń pola, których nie chcemy aktualizować
+        const { _id, createdAt, updatedAt, ...dataToUpdate } = updatedData;
 
         const response = await fetch(`https://houseapp-backend.onrender.com/api/properties/${editingProperty._id}`, {
             method: 'PUT',
@@ -689,23 +689,24 @@ const handleSaveEdit = async (updatedData) => {
             body: JSON.stringify(dataToUpdate)
         });
 
-        const responseData = await response.json();
-        
         if (!response.ok) {
-            console.error('Błąd odpowiedzi:', responseData);
-            throw new Error(responseData.error || 'Błąd podczas aktualizacji');
+            throw new Error('Błąd podczas aktualizacji');
         }
 
-        console.log('Zaktualizowana nieruchomość:', responseData);
+        const responseData = await response.json();
+        console.log('Odpowiedź z serwera:', responseData);
 
         // Aktualizuj stan lokalnie
-        setProperties(prev => prev.map(p => 
-            p._id === editingProperty._id ? responseData : p
-        ));
+        setProperties(prevProperties => 
+            prevProperties.map(p => 
+                p._id === editingProperty._id ? responseData : p
+            )
+        );
 
+        // Zamknij formularz edycji
         setEditingProperty(null);
 
-        // Odśwież widok
+        // Odśwież właściwości tablicy
         if (selectedBoard) {
             await fetchBoardProperties(selectedBoard._id);
         }
@@ -717,7 +718,7 @@ const handleSaveEdit = async (updatedData) => {
     }
 };
 
-  const handleDelete = async (propertyId) => {
+ const handleDelete = async (propertyId) => {
     if (!window.confirm('Czy na pewno chcesz usunąć tę nieruchomość?')) {
         return;
     }
@@ -741,19 +742,12 @@ const handleSaveEdit = async (updatedData) => {
             prevProperties.filter(property => property._id !== propertyId)
         );
 
-        // Zaktualizuj też tablicę
-        if (selectedBoard) {
-            const updatedBoard = {
-                ...selectedBoard,
-                properties: selectedBoard.properties.filter(id => id !== propertyId)
-            };
-            setSelectedBoard(updatedBoard);
-        }
-
         // Zamknij rozwinięty widok jeśli był otwarty
         if (expandedProperty === propertyId) {
             setExpandedProperty(null);
         }
+
+        alert('Nieruchomość została usunięta pomyślnie');
 
     } catch (error) {
         console.error('Błąd podczas usuwania:', error);
@@ -1059,7 +1053,13 @@ const PropertyCard = ({
   user
 }) => {
   const addedByCurrentUser = property.addedBy === user?._id;
-  
+ console.log('PropertyCard rendered with:', {
+    propertyId: property._id,
+    addedBy: property.addedBy,
+    userId: user?._id,
+    isShared,
+    addedByCurrentUser
+  });
   return (
     
       <div 
@@ -1085,48 +1085,52 @@ const PropertyCard = ({
                 <MoreVertical className="w-5 h-5 text-gray-500" />
             </button>
         </MenuTrigger>
-        <MenuContent>
-            {!isShared && (
-                <>
-                    <MenuItem 
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            onMove(property);
-                        }}
-                    >
-                        <div className="flex items-center gap-2">
-                            <ArrowRight className="w-4 h-4" />
-                            Przenieś do innej tablicy
-                        </div>
-                    </MenuItem>
-                    <MenuItem 
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            if (window.confirm('Czy na pewno chcesz usunąć tę nieruchomość?')) {
-                                onDelete(property._id);
-                            }
-                        }}
-                        className="text-red-600 hover:bg-red-50"
-                    >
-                        <div className="flex items-center gap-2">
-                            <Trash2 className="w-4 h-4" />
-                            Usuń
-                        </div>
-                    </MenuItem>
-                </>
-            )}
+       <MenuContent>
+    {/* Pokaż opcje usuwania/przenoszenia jeśli:
+        1. Użytkownik jest właścicielem tablicy LUB
+        2. Użytkownik dodał tę nieruchomość */}
+    {(!isShared || addedByCurrentUser) && (
+        <>
             <MenuItem 
                 onClick={(e) => {
                     e.stopPropagation();
-                    onCopy(property._id);
+                    onMove(property);
                 }}
             >
                 <div className="flex items-center gap-2">
-                    <Copy className="w-4 h-4" />
-                    Kopiuj do tablicy
+                    <ArrowRight className="w-4 h-4" />
+                    Przenieś do innej tablicy
                 </div>
             </MenuItem>
-        </MenuContent>
+            <MenuItem 
+                onClick={(e) => {
+                    e.stopPropagation();
+                    if (window.confirm('Czy na pewno chcesz usunąć tę nieruchomość?')) {
+                        onDelete(property._id);
+                    }
+                }}
+                className="text-red-600 hover:bg-red-50"
+            >
+                <div className="flex items-center gap-2">
+                    <Trash2 className="w-4 h-4" />
+                    Usuń
+                </div>
+            </MenuItem>
+        </>
+    )}
+    {/* Opcja kopiowania dostępna dla wszystkich */}
+    <MenuItem 
+        onClick={(e) => {
+            e.stopPropagation();
+            onCopy(property._id);
+        }}
+    >
+        <div className="flex items-center gap-2">
+            <Copy className="w-4 h-4" />
+            Kopiuj do tablicy
+        </div>
+    </MenuItem>
+</MenuContent>
     </Menu>
 </div>
 
