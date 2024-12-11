@@ -667,19 +667,17 @@ const handleSaveEdit = async (updatedData) => {
         console.log('Edytowana nieruchomość:', editingProperty);
         console.log('Dane do aktualizacji:', updatedData);
 
-        // Przygotuj dane do wysłania
+        // Przygotuj dane do wysłania - tylko te pola, które chcemy zaktualizować
         const dataToUpdate = {
             title: updatedData.title,
-            price: updatedData.price,
-            area: updatedData.area,
-            plotArea: updatedData.plotArea,
-            rooms: updatedData.rooms,
+            price: parseInt(updatedData.price),
+            area: parseFloat(updatedData.area),
             location: updatedData.location,
             description: updatedData.description,
             status: updatedData.status,
-            coordinates: updatedData.coordinates || null,
-            edited: true,
-            updatedAt: new Date()
+            rooms: updatedData.rooms ? parseInt(updatedData.rooms) : null,
+            plotArea: updatedData.plotArea ? parseFloat(updatedData.plotArea) : null,
+            edited: true
         };
 
         const response = await fetch(`https://houseapp-backend.onrender.com/api/properties/${editingProperty._id}`, {
@@ -692,17 +690,23 @@ const handleSaveEdit = async (updatedData) => {
         });
 
         if (!response.ok) {
-            throw new Error('Błąd podczas aktualizacji');
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Błąd podczas aktualizacji');
         }
 
         const responseData = await response.json();
         console.log('Odpowiedź z serwera:', responseData);
 
         // Aktualizuj stan lokalnie
-        setProperties(prev => prev.map(p => 
-            p._id === editingProperty._id ? responseData : p
-        ));
+        setProperties(prevProperties => 
+            prevProperties.map(p => 
+                p._id === editingProperty._id 
+                    ? { ...p, ...responseData }
+                    : p
+            )
+        );
 
+        // Zamknij formularz edycji
         setEditingProperty(null);
 
         // Odśwież właściwości tablicy
@@ -1037,26 +1041,28 @@ const initializeUserSession = async () => {
 
   // Zmodyfikowany PropertyCard z lepszym wsparciem dla wersji mobilnej
 const PropertyCard = ({ 
-  property, 
-  isShared, 
-  onMove, 
-  onCopy, 
-  onEdit, 
-  onDelete, 
-  onRate,
-  onRefresh,
-  isExpanded,
-  onExpandToggle,
-  user
+    property, 
+    isShared, 
+    onMove, 
+    onCopy, 
+    onEdit, 
+    onDelete, 
+    onRate,
+    onRefresh,
+    isExpanded,
+    onExpandToggle,
+    user
 }) => {
-  const addedByCurrentUser = property.addedBy === user?._id;
- console.log('PropertyCard rendered with:', {
-    propertyId: property._id,
-    addedBy: property.addedBy,
-    userId: user?._id,
-    isShared,
-    addedByCurrentUser
-  });
+    const addedByCurrentUser = user && property.addedBy && 
+        property.addedBy._id === user._id;
+    
+    console.log('PropertyCard rendered with:', {
+        propertyId: property._id,
+        addedBy: property.addedBy,
+        userId: user?._id,
+        isShared,
+        addedByCurrentUser
+    });
   return (
     
       <div 
@@ -1296,14 +1302,25 @@ const PropertyCard = ({
   );
 };
 const isPropertyShared = (property) => {
-  if (!property || !user || !boards) return false;
+    if (!property || !user || !user._id) {
+        console.log('Brak wymaganych danych:', { property, user });
+        return false;
+    }
 
-  // Znajdź tablicę, do której należy nieruchomość
-  const board = boards.find(b => b._id === property.board);
-  if (!board) return false;
+    const board = boards.find(b => b._id === property.board?._id || property.board);
+    if (!board) {
+        console.log('Nie znaleziono tablicy dla nieruchomości:', property.board);
+        return false;
+    }
 
-  // Sprawdź czy użytkownik jest właścicielem tablicy
-  return board.owner !== user._id;
+    const isShared = board.owner !== user._id;
+    console.log('Sprawdzanie współdzielenia:', { 
+        boardOwner: board.owner, 
+        userId: user._id, 
+        isShared 
+    });
+    
+    return isShared;
 };
 
 const PropertyList = () => {
@@ -1323,7 +1340,7 @@ const PropertyList = () => {
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {filteredProperties.map((property) => (
-               <PropertyCard
+              <PropertyCard
     key={property._id}
     property={property}
     isShared={isPropertyShared(property)}
@@ -1337,7 +1354,7 @@ const PropertyList = () => {
     onExpandToggle={() => setExpandedProperty(
         expandedProperty === property._id ? null : property._id
     )}
-    user={user}  // Upewnij się, że przekazujesz użytkownika
+    user={user} // Upewnij się, że user zawiera _id
 />
             ))}
         </div>
