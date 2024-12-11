@@ -10,7 +10,6 @@ export const Menu = ({ children }) => {
         setIsOpen(false);
       }
     };
-
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
@@ -24,7 +23,7 @@ export const Menu = ({ children }) => {
           });
         }
         if (child.type === MenuContent) {
-          return isOpen ? child : null;
+          return isOpen ? React.cloneElement(child, { onClose: () => setIsOpen(false) }) : null;
         }
         return child;
       })}
@@ -32,27 +31,28 @@ export const Menu = ({ children }) => {
   );
 };
 
-export const MenuTrigger = ({ children, onClick }) => {
-  return React.cloneElement(children, { onClick });
-};
-
-export const MenuContent = ({ children }) => {
+export const MenuContent = ({ children, onClose }) => {
   return (
     <div className="absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-50">
       <div className="py-1">
-        {children}
+        {React.Children.map(children, child => 
+          React.cloneElement(child, { onClose })
+        )}
       </div>
     </div>
   );
 };
 
-export const MenuItem = ({ onClick, children, className = '' }) => {
+export const MenuItem = ({ onClick, onClose, children, className = '' }) => {
   return (
     <button
       className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 ${className}`}
       onClick={(e) => {
         e.stopPropagation();
         onClick(e);
+        if (onClose) {
+          onClose();
+        }
       }}
     >
       {children}
