@@ -1067,6 +1067,8 @@ const PropertyCard = ({
     const userId = user?._id || user?.id;
     const addedByCurrentUser = userId && property.addedBy && 
         (property.addedBy._id === userId || property.addedBy.id === userId);
+   const canEditProperty = !isShared || addedByCurrentUser;
+   const canDeleteProperty = !isShared || addedByCurrentUser;
     
     console.log('PropertyCard rendered with:', {
         propertyId: property._id,
@@ -1100,41 +1102,40 @@ const PropertyCard = ({
                 <MoreVertical className="w-5 h-5 text-gray-500" />
             </button>
         </MenuTrigger>
-       <MenuContent>
-    {/* Pokaż opcje usuwania/przenoszenia jeśli:
-        1. Użytkownik jest właścicielem tablicy LUB
-        2. Użytkownik dodał tę nieruchomość */}
-   {(!isShared || property.addedBy === user?._id) && (
-    <>
-        <MenuItem 
-            onClick={(e) => {
-                e.stopPropagation();
-                onMove(property);
-            }}
-        >
-            <div className="flex items-center gap-2">
-                <ArrowRight className="w-4 h-4" />
-                Przenieś do innej tablicy
-            </div>
-        </MenuItem>
-        <MenuItem 
-            onClick={(e) => {
-                e.stopPropagation();
-                const confirmed = window.confirm('Czy na pewno chcesz usunąć tę nieruchomość?');
-                if (confirmed) {
-                    onDelete(property._id);
-                }
-            }}
-            className="text-red-600 hover:bg-red-50"
-        >
-            <div className="flex items-center gap-2">
-                <Trash2 className="w-4 h-4" />
-                Usuń
-            </div>
-        </MenuItem>
-    </>
-)}
-    {/* Opcja kopiowania dostępna dla wszystkich */}
+      <MenuContent>
+    {(canEditProperty || canDeleteProperty) && (
+        <>
+            {canEditProperty && (
+                <MenuItem 
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        onMove(property);
+                    }}
+                >
+                    <div className="flex items-center gap-2">
+                        <ArrowRight className="w-4 h-4" />
+                        Przenieś do innej tablicy
+                    </div>
+                </MenuItem>
+            )}
+            {canDeleteProperty && (
+                <MenuItem 
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        if (window.confirm('Czy na pewno chcesz usunąć tę nieruchomość?')) {
+                            onDelete(property._id);
+                        }
+                    }}
+                    className="text-red-600 hover:bg-red-50"
+                >
+                    <div className="flex items-center gap-2">
+                        <Trash2 className="w-4 h-4" />
+                        Usuń
+                    </div>
+                </MenuItem>
+            )}
+        </>
+    )}
     <MenuItem 
         onClick={(e) => {
             e.stopPropagation();
@@ -1319,7 +1320,7 @@ const isPropertyShared = (property) => {
         return false;
     }
 
-    const userId = user._id || user.id; // obsługa obu formatów
+    const userId = user._id || user.id;
     if (!userId) {
         console.log('Brak ID użytkownika:', user);
         return false;
@@ -1331,7 +1332,9 @@ const isPropertyShared = (property) => {
         return false;
     }
 
-    const isShared = board.owner !== userId;
+    // Sprawdź czy właściciel tablicy to obecny użytkownik
+    const isShared = board.owner?._id !== userId && board.owner !== userId;
+    
     console.log('Sprawdzanie współdzielenia:', { 
         boardOwner: board.owner, 
         userId, 
@@ -1339,6 +1342,7 @@ const isPropertyShared = (property) => {
     });
     
     return isShared;
+};
 };
 
 const PropertyList = () => {
