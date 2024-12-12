@@ -1051,230 +1051,229 @@ const PropertyCard = ({
             }`}
             onClick={onExpandToggle}
         >
-  <div className="flex flex-col h-full">
-    {/* Górny pasek gradientowy */}
-    <div className="h-1 bg-gradient-to-r from-blue-500 to-purple-500"/>
+            <div className="flex flex-col h-full">
+                {/* Górny pasek gradientowy */}
+                <div className="h-1 bg-gradient-to-r from-blue-500 to-purple-500"/>
 
-    <div className="p-4">
-      {/* Nagłówek z menu */}
-<div className="flex justify-between items-start">
-    <h3 className="font-semibold text-lg text-gray-900 pr-8">{property.title}</h3>
-    <Menu>
-        <MenuTrigger>
-            <button 
-                className="p-1.5 hover:bg-gray-100 rounded-full"
-                onClick={e => e.stopPropagation()}
-            >
-                <MoreVertical className="w-5 h-5 text-gray-500" />
-            </button>
-        </MenuTrigger>
-      <MenuContent>
-    {/* Pokazuj opcje usuwania/przenoszenia jeśli user może edytować */}
-    {(canEditProperty || canDeleteProperty) && (
-        <>
-            <MenuItem 
-                onClick={(e) => {
-                    e.stopPropagation();
-                    onMove(property);
-                }}
-            >
-                <div className="flex items-center gap-2">
-                    <ArrowRight className="w-4 h-4" />
-                    Przenieś do innej tablicy
+                <div className="p-4">
+                    {/* Nagłówek z menu */}
+                    <div className="flex justify-between items-start">
+                        <h3 className="font-semibold text-lg text-gray-900 pr-8">{property.title}</h3>
+                        <Menu>
+                            <MenuTrigger>
+                                <button 
+                                    className="p-1.5 hover:bg-gray-100 rounded-full"
+                                    onClick={e => e.stopPropagation()}
+                                >
+                                    <MoreVertical className="w-5 h-5 text-gray-500" />
+                                </button>
+                            </MenuTrigger>
+                            <MenuContent>
+                                {(canEditProperty || canDeleteProperty) && (
+                                    <>
+                                        <MenuItem 
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                onMove(property);
+                                            }}
+                                        >
+                                            <div className="flex items-center gap-2">
+                                                <ArrowRight className="w-4 h-4" />
+                                                Przenieś do innej tablicy
+                                            </div>
+                                        </MenuItem>
+                                        <MenuItem 
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                if (window.confirm('Czy na pewno chcesz usunąć tę nieruchomość?')) {
+                                                    onDelete(property._id);
+                                                }
+                                            }}
+                                            className="text-red-600 hover:bg-red-50"
+                                        >
+                                            <div className="flex items-center gap-2">
+                                                <Trash2 className="w-4 h-4" />
+                                                Usuń
+                                            </div>
+                                        </MenuItem>
+                                    </>
+                                )}
+                                <MenuItem 
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        onCopy(property._id);
+                                    }}
+                                >
+                                    <div className="flex items-center gap-2">
+                                        <Copy className="w-4 h-4" />
+                                        Kopiuj do tablicy
+                                    </div>
+                                </MenuItem>
+                            </MenuContent>
+                        </Menu>
+                    </div>
+
+                    {/* Lokalizacja i status */}
+                    <div className="mt-2 space-y-2">
+                        <div className="flex items-center gap-2 text-gray-600">
+                            <MapPin className="w-4 h-4" />
+                            <span className="text-sm">{property.location || 'Brak lokalizacji'}</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-gray-600">
+                            <Home className="w-4 h-4" />
+                            <span className="text-sm">{property.status}</span>
+                        </div>
+                    </div>
+
+                    {/* Cena i powierzchnia */}
+                    <div className="mt-4 flex items-center gap-4">
+                        <div className="text-blue-600">
+                            <span className="text-2xl font-bold">
+                                {property.price?.toLocaleString()}
+                            </span>
+                            <span className="text-sm ml-1">PLN</span>
+                        </div>
+                        <div className="text-gray-600">
+                            <span className="text-lg font-semibold">{property.area}</span>
+                            <span className="text-sm ml-1">m²</span>
+                        </div>
+                    </div>
+
+                    {/* Sekcja z przyciskami oceny i akcji */}
+                    <div className="flex justify-between items-center mt-4">
+                        {/* Przyciski oceny */}
+                        <div className="flex gap-2">
+                            <button
+                                onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    onRate(property._id, property.rating === 'favorite' ? null : 'favorite');
+                                }}
+                                className={`p-2 rounded-lg transition-colors ${
+                                    property.rating === 'favorite' 
+                                        ? 'bg-yellow-100 hover:bg-yellow-200' 
+                                        : 'bg-gray-100 hover:bg-gray-200'
+                                }`}
+                            >
+                                ⭐
+                            </button>
+                            <button
+                                onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    onRate(property._id, property.rating === 'interested' ? null : 'interested');
+                                }}
+                                className={`p-2 rounded-lg transition-colors ${
+                                    property.rating === 'interested' 
+                                        ? 'bg-green-100 hover:bg-green-200' 
+                                        : 'bg-gray-100 hover:bg-gray-200'
+                                }`}
+                            >
+                                👍
+                            </button>
+                            <button
+                                onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    onRate(property._id, property.rating === 'not_interested' ? null : 'not_interested');
+                                }}
+                                className={`p-2 rounded-lg transition-colors ${
+                                    property.rating === 'not_interested' 
+                                        ? 'bg-red-100 hover:bg-red-200' 
+                                        : 'bg-gray-100 hover:bg-gray-200'
+                                }`}
+                            >
+                                👎
+                            </button>
+                        </div>
+
+                        {/* Przyciski akcji */}
+                        <div className="flex gap-2">
+                            {canEditProperty && (
+                                <button
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        onEdit(property);
+                                    }}
+                                    className="px-3 py-1.5 text-sm text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"
+                                >
+                                    Edytuj
+                                </button>
+                            )}
+                            {property.sourceUrl && (
+                                <button
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        onRefresh(property._id);
+                                    }}
+                                    className="px-3 py-1.5 text-sm text-green-600 bg-green-50 rounded-lg hover:bg-green-100 transition-colors"
+                                >
+                                    Odśwież
+                                </button>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Rozszerzone informacje */}
+                    {isExpanded && (
+                        <div className="border-t border-gray-200 p-4">
+                            <div className="space-y-4">
+                                {/* Opis */}
+                                <div>
+                                    <h4 className="text-sm font-medium text-gray-700 mb-2">Opis</h4>
+                                    <p className="text-gray-600 whitespace-pre-wrap">
+                                        {property.description || 'Brak opisu'}
+                                    </p>
+                                </div>
+
+                                {/* Historia cen */}
+                                <div>
+                                    <h4 className="text-sm font-medium text-gray-700 mb-2">Historia cen</h4>
+                                    <PriceHistoryChart propertyId={property._id} />
+                                </div>
+
+                                {/* Link do źródła */}
+                                {property.sourceUrl && (
+                                    <a
+                                        href={property.sourceUrl}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="inline-flex items-center text-blue-600 hover:text-blue-800 hover:underline mt-2"
+                                        onClick={(e) => e.stopPropagation()}
+                                    >
+                                        Zobacz ogłoszenie źródłowe →
+                                    </a>
+                                )}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Stopka */}
+                    <div className="mt-auto border-t border-gray-200 bg-gray-50 p-2">
+                        <div className="flex justify-between items-center">
+                            <div>
+                                {/* Pokazuj informację o autorze tylko jeśli to nie obecny użytkownik */}
+                                {property.addedBy && property.addedBy !== user?._id && property.addedByUser && (
+                                    <span className="text-xs text-purple-600">
+                                        Dodane przez: {property.addedByUser.name || 'Innego użytkownika'}
+                                    </span>
+                                )}
+                            </div>
+                            <div>
+                                <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                                    property.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                                }`}>
+                                    {property.isActive ? 'Aktywne' : 'Nieaktywne'}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-            </MenuItem>
-            <MenuItem 
-                onClick={(e) => {
-                    e.stopPropagation();
-                    if (window.confirm('Czy na pewno chcesz usunąć tę nieruchomość?')) {
-                        onDelete(property._id);
-                    }
-                }}
-                className="text-red-600 hover:bg-red-50"
-            >
-                <div className="flex items-center gap-2">
-                    <Trash2 className="w-4 h-4" />
-                    Usuń
-                </div>
-            </MenuItem>
-        </>
-    )}
-    {/* Opcja kopiowania dostępna dla wszystkich */}
-    <MenuItem 
-        onClick={(e) => {
-            e.stopPropagation();
-            onCopy(property._id);
-        }}
-    >
-        <div className="flex items-center gap-2">
-            <Copy className="w-4 h-4" />
-            Kopiuj do tablicy
+            </div>
         </div>
-    </MenuItem>
-</MenuContent>
-    </Menu>
-</div>
-
-{/* Lokalizacja i status */}
-<div className="mt-2 space-y-2">
-    <div className="flex items-center gap-2 text-gray-600">
-        <MapPin className="w-4 h-4" />
-        <span className="text-sm">{property.location || 'Brak lokalizacji'}</span>
-    </div>
-    <div className="flex items-center gap-2 text-gray-600">
-        <Home className="w-4 h-4" />
-        <span className="text-sm">{property.status}</span>
-    </div>
-</div>
-
-          {/* Cena i powierzchnia */}
-          <div className="mt-4 flex items-center gap-4">
-            <div className="text-blue-600">
-              <span className="text-2xl font-bold">
-                {property.price?.toLocaleString()}
-              </span>
-              <span className="text-sm ml-1">PLN</span>
-            </div>
-            <div className="text-gray-600">
-              <span className="text-lg font-semibold">{property.area}</span>
-              <span className="text-sm ml-1">m²</span>
-            </div>
-          </div>
-
-  {/* Sekcja z przyciskami oceny i akcji */}
-<div className="flex justify-between items-center mt-4">
-    {/* Przyciski oceny */}
-    <div className="flex gap-2">
-        <button
-            onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                onRate(property._id, property.rating === 'favorite' ? null : 'favorite');
-            }}
-            className={`p-2 rounded-lg transition-colors ${
-                property.rating === 'favorite' 
-                    ? 'bg-yellow-100 hover:bg-yellow-200' 
-                    : 'bg-gray-100 hover:bg-gray-200'
-            }`}
-        >
-            ⭐
-        </button>
-        <button
-            onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                onRate(property._id, property.rating === 'interested' ? null : 'interested');
-            }}
-            className={`p-2 rounded-lg transition-colors ${
-                property.rating === 'interested' 
-                    ? 'bg-green-100 hover:bg-green-200' 
-                    : 'bg-gray-100 hover:bg-gray-200'
-            }`}
-        >
-            👍
-        </button>
-        <button
-            onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                onRate(property._id, property.rating === 'not_interested' ? null : 'not_interested');
-            }}
-            className={`p-2 rounded-lg transition-colors ${
-                property.rating === 'not_interested' 
-                    ? 'bg-red-100 hover:bg-red-200' 
-                    : 'bg-gray-100 hover:bg-gray-200'
-            }`}
-        >
-            👎
-        </button>
-    </div>
-
-    {/* Przyciski akcji */}
-    <div className="flex gap-2">
-        {canEditProperty && (
-            <button
-                onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    onEdit(property);
-                }}
-                className="px-3 py-1.5 text-sm text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"
-            >
-                Edytuj
-            </button>
-        )}
-        {property.sourceUrl && (
-            <button
-                onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    onRefresh(property._id);
-                }}
-                className="px-3 py-1.5 text-sm text-green-600 bg-green-50 rounded-lg hover:bg-green-100 transition-colors"
-            >
-                Odśwież
-            </button>
-        )}
-    </div>
-</div>
-
-        {/* Rozszerzone informacje */}
-        {isExpanded && (
-          <div className="border-t border-gray-200 p-4">
-            <div className="space-y-4">
-              {/* Opis */}
-              <div>
-                <h4 className="text-sm font-medium text-gray-700 mb-2">Opis</h4>
-                <p className="text-gray-600 whitespace-pre-wrap">
-                  {property.description || 'Brak opisu'}
-                </p>
-              </div>
-
-              {/* Historia cen */}
-              <div>
-                <h4 className="text-sm font-medium text-gray-700 mb-2">Historia cen</h4>
-                <PriceHistoryChart propertyId={property._id} />
-              </div>
-
-              {/* Link do źródła */}
-              {property.sourceUrl && (
-                <a
-                  href={property.sourceUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center text-blue-600 hover:text-blue-800 hover:underline mt-2"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  Zobacz ogłoszenie źródłowe →
-                </a>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* Stopka */}
-        <div className="mt-auto border-t border-gray-200 bg-gray-50 p-2">
-    <div className="flex justify-between items-center">
-        <div>
-            {/* Pokazuj informację o autorze tylko jeśli to nie obecny użytkownik */}
-            {property.addedBy && property.addedBy !== user?._id && property.addedByUser && (
-                <span className="text-xs text-purple-600">
-                    Dodane przez: {property.addedByUser.name || 'Innego użytkownika'}
-                </span>
-            )}
-        </div>
-            <div>
-              <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                property.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-              }`}>
-                {property.isActive ? 'Aktywne' : 'Nieaktywne'}
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
+    );
 };
 const isPropertyShared = (property) => {
     if (!property || !user) {
