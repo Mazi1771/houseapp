@@ -753,15 +753,23 @@ const handleSaveEdit = async (updatedData) => {
 
 const handleRating = async (propertyId, rating) => {
     try {
-        console.log('Rozpoczynam aktualizację oceny:', { propertyId, rating, currentRating: properties.find(p => p._id === propertyId)?.rating });
+        console.log('Rozpoczynam aktualizację oceny:', { propertyId, rating });
         const token = localStorage.getItem('token');
-        const currentProperty = properties.find(p => p._id === propertyId);
+        
+        // Znajdź odpowiednią nieruchomość przed aktualizacją
+        const propertyToUpdate = properties.find(p => p._id === propertyId);
+        if (!propertyToUpdate) {
+            throw new Error('Nie znaleziono nieruchomości');
+        }
+
+        // Zapisz poprzedni stan
+        const previousRating = propertyToUpdate.rating;
         
         // Natychmiastowa aktualizacja UI
         setProperties(prevProperties => 
             prevProperties.map(p => 
                 p._id === propertyId 
-                    ? { ...p, rating: rating }
+                    ? { ...p, rating }
                     : p
             )
         );
@@ -772,7 +780,16 @@ const handleRating = async (propertyId, rating) => {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${token}`
             },
-            body: JSON.stringify({ rating })
+            body: JSON.stringify({ 
+                rating,
+                // Zachowaj pozostałe dane nieruchomości
+                title: propertyToUpdate.title,
+                price: propertyToUpdate.price,
+                area: propertyToUpdate.area,
+                location: propertyToUpdate.location,
+                description: propertyToUpdate.description,
+                status: propertyToUpdate.status
+            })
         });
 
         if (!response.ok) {
@@ -780,9 +797,9 @@ const handleRating = async (propertyId, rating) => {
         }
 
         const updatedProperty = await response.json();
-        console.log('Odpowiedź z serwera po aktualizacji:', updatedProperty);
+        console.log('Odpowiedź z serwera:', updatedProperty);
 
-        // Aktualizacja stanu o potwierdzone dane z serwera
+        // Aktualizuj stan o dane z serwera
         setProperties(prevProperties => 
             prevProperties.map(p => 
                 p._id === propertyId ? updatedProperty : p
@@ -791,10 +808,13 @@ const handleRating = async (propertyId, rating) => {
 
     } catch (error) {
         console.error('Błąd podczas aktualizacji oceny:', error);
-        // Przywróć poprzedni stan w przypadku błędu
+        
+        // W przypadku błędu przywróć poprzedni stan
         setProperties(prevProperties => 
             prevProperties.map(p => 
-                p._id === propertyId ? currentProperty : p
+                p._id === propertyId 
+                    ? { ...p, rating: previousRating }
+                    : p
             )
         );
         alert('Wystąpił błąd podczas zapisywania oceny');
