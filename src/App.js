@@ -27,7 +27,6 @@ import PriceHistoryChart from './components/PriceHistoryChart';
 import InvitationsView from './components/InvitationsView';
 import BoardSharing from './components/BoardSharing';
 import MapView from './components/MapView';
-import PropTypes from 'prop-types';
 
 const BoardNavigation = ({ boards, sharedBoards, selectedBoard, onBoardSelect, onShareClick, setIsNewBoardModalOpen  }) => {
   return (
@@ -1253,59 +1252,33 @@ const PropertyCard = ({
           </div>
         )}
 
-       {/* Stopka */}
-<div className="mt-auto border-t border-gray-200 bg-gray-50 p-2">
+        {/* Stopka */}
+        <div className="mt-auto border-t border-gray-200 bg-gray-50 p-2">
     <div className="flex justify-between items-center">
         <div>
-            {property.addedByUser && property.addedBy !== user?._id && (
+            {/* Pokazuj informację o autorze tylko jeśli to nie obecny użytkownik */}
+            {property.addedBy && property.addedBy !== user?._id && property.addedByUser && (
                 <span className="text-xs text-purple-600">
-                    Dodane przez: {property.addedByUser.name || property.addedByUser.email || 'Innego użytkownika'}
+                    Dodane przez: {property.addedByUser.name || 'Innego użytkownika'}
                 </span>
             )}
         </div>
-        <div>
-            <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+            <div>
+              <span className={`px-2 py-1 text-xs font-medium rounded-full ${
                 property.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-            }`}>
+              }`}>
                 {property.isActive ? 'Aktywne' : 'Nieaktywne'}
-            </span>
+              </span>
+            </div>
+          </div>
         </div>
-    </div>
-</div>
       </div>
     </div>
   );
 };
-PropertyCard.propTypes = {
-    property: PropTypes.shape({
-        _id: PropTypes.string.isRequired,
-        title: PropTypes.string.isRequired,
-        price: PropTypes.number,
-        area: PropTypes.number,
-        location: PropTypes.string,
-        status: PropTypes.string,
-        description: PropTypes.string,
-        sourceUrl: PropTypes.string,
-        isActive: PropTypes.bool,
-        rating: PropTypes.string,
-        addedBy: PropTypes.oneOfType([PropTypes.string, PropTypes.object]),
-        addedByUser: PropTypes.object
-    }).isRequired,
-    isShared: PropTypes.bool,
-    onMove: PropTypes.func.isRequired,
-    onCopy: PropTypes.func.isRequired,
-    onEdit: PropTypes.func.isRequired,
-    onDelete: PropTypes.func.isRequired,
-    onRate: PropTypes.func.isRequired,
-    onRefresh: PropTypes.func.isRequired,
-    isExpanded: PropTypes.bool,
-    onExpandToggle: PropTypes.func.isRequired,
-    user: PropTypes.object
-};
-const isPropertyShared = (property, user, boards) => {
-    // Sprawdzamy czy mamy wszystkie potrzebne dane
-    if (!property || !user || !boards) {
-        console.log('Brak wymaganych danych:', { property, user, boards });
+const isPropertyShared = (property) => {
+    if (!property || !user) {
+        console.log('Brak wymaganych danych:', { property, user });
         return false;
     }
 
@@ -1315,14 +1288,13 @@ const isPropertyShared = (property, user, boards) => {
         return false;
     }
 
-    // Szukamy tablicy dla tej nieruchomości
     const board = boards.find(b => b._id === property.board?._id || property.board);
     if (!board) {
         console.log('Nie znaleziono tablicy dla nieruchomości:', property.board);
         return false;
     }
 
-    // Sprawdzamy czy właściciel tablicy to obecny użytkownik
+    // Sprawdź czy właściciel tablicy to obecny użytkownik
     const isShared = board.owner?._id !== userId && board.owner !== userId;
     
     console.log('Sprawdzanie współdzielenia:', { 
@@ -1334,39 +1306,40 @@ const isPropertyShared = (property, user, boards) => {
     return isShared;
 };
 
+
 const PropertyList = () => {
     const filteredProperties = getFilteredAndSortedProperties();
     console.log('Wyświetlane nieruchomości:', filteredProperties);
 
     if (filteredProperties.length === 0) {
-        return (
-            <div className="text-center py-12 bg-white rounded-lg shadow">
-                <h2 className="text-xl font-medium text-gray-600">
-                    Brak nieruchomości na tej tablicy
-                </h2>
-            </div>
-        );
+      return (
+        <div className="text-center py-12 bg-white rounded-lg shadow">
+          <h2 className="text-xl font-medium text-gray-600">
+            Brak nieruchomości na tej tablicy
+          </h2>
+        </div>
+      );
     }
 
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {filteredProperties.map((property) => (
-                <PropertyCard
-                    key={property._id}
-                    property={property}
-                    isShared={isPropertyShared(property, user, boards)}
-                    onMove={setPropertyToMove}
-                    onCopy={handlePropertyCopy}
-                    onEdit={handleEditClick}
-                    onDelete={handleDelete}
-                    onRate={handleRating}
-                    onRefresh={handleRefreshProperty}
-                    isExpanded={expandedProperty === property._id}
-                    onExpandToggle={() => setExpandedProperty(
-                        expandedProperty === property._id ? null : property._id
-                    )}
-                    user={user}
-                />
+              <PropertyCard
+    key={property._id}
+    property={property}
+    isShared={isPropertyShared(property)}
+    onMove={setPropertyToMove}
+    onCopy={handlePropertyCopy}
+    onEdit={handleEditClick}
+    onDelete={handleDelete}
+    onRate={handleRating}
+    onRefresh={handleRefreshProperty}
+    isExpanded={expandedProperty === property._id}
+    onExpandToggle={() => setExpandedProperty(
+        expandedProperty === property._id ? null : property._id
+    )}
+    user={user} // Upewnij się, że user zawiera _id
+/>
             ))}
         </div>
     );
