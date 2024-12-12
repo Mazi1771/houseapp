@@ -747,27 +747,37 @@ const handleSaveEdit = async (updatedData) => {
     }
 };
 
-  const handleRating = async (propertyId, rating) => {
+const handleRating = async (propertyId, rating) => {
     try {
+        console.log('Rozpoczynam aktualizację oceny:', { propertyId, rating });
         const token = localStorage.getItem('token');
+        
         const currentProperty = properties.find(p => p._id === propertyId);
+        if (!currentProperty) {
+            throw new Error('Nie znaleziono nieruchomości do oceny');
+        }
         
         console.log('Aktualna nieruchomość:', currentProperty);
         console.log('Obecny użytkownik:', user);
-
-        // Optymistyczna aktualizacja UI
+        
+        // Aktualizacja UI
         setProperties(prevProperties => 
             prevProperties.map(p => 
                 p._id === propertyId 
-                    ? {
-                        ...p,
-                        rating,
-                        addedBy: p.addedBy, // Zachowaj oryginalnego właściciela
-                        addedByUser: p.addedByUser // Zachowaj dane właściciela
-                    } 
+                    ? { ...p, rating }
                     : p
             )
         );
+
+        // Dane do wysłania
+        const updateData = {
+            rating,
+            propertyId,
+            userId: user.id || user._id
+        };
+        
+        console.log('Wysyłam dane:', updateData);
+        console.log('Token:', token);
 
         const response = await fetch(`https://houseapp-backend.onrender.com/api/properties/${propertyId}`, {
             method: 'PUT',
@@ -775,41 +785,37 @@ const handleSaveEdit = async (updatedData) => {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${token}`
             },
-            body: JSON.stringify({
-                rating,
-                addedBy: currentProperty.addedBy, // Wyślij obecnego właściciela
-                // Nie wysyłamy innych pól, żeby nie nadpisać niepotrzebnie danych
-            })
+            body: JSON.stringify(updateData)
         });
 
+        console.log('Status odpowiedzi:', response.status);
+        
         if (!response.ok) {
-            // W przypadku błędu przywróć poprzedni stan
-            setProperties(prevProperties => 
-                prevProperties.map(p => 
-                    p._id === propertyId ? currentProperty : p
-                )
-            );
-            throw new Error('Błąd podczas aktualizacji oceny');
+            const errorData = await response.json();
+            console.error('Błąd z serwera:', errorData);
+            throw new Error(errorData.error || 'Błąd podczas aktualizacji oceny');
         }
 
         const updatedProperty = await response.json();
-        console.log('Odpowiedź z serwera:', updatedProperty);
+        console.log('Zaktualizowana nieruchomość:', updatedProperty);
 
-        // Aktualizuj stan zachowując dane właściciela
-        setProperties(prevProperties => 
-            prevProperties.map(p => 
-                p._id === propertyId 
-                    ? {
-                        ...updatedProperty,
-                        addedBy: currentProperty.addedBy,
-                        addedByUser: currentProperty.addedByUser
-                    } 
-                    : p
-            )
-        );
+        // Odświeżamy widok
+        await fetchBoardProperties(selectedBoard._id);
+
+        // Pokazujemy komunikat sukcesu
+        alert('Ocena została zaktualizowana');
 
     } catch (error) {
-        console.error('Błąd podczas aktualizacji oceny:', error);
+        console.error('Szczegóły błędu:', error);
+        
+        // Przywracamy poprzedni stan
+        setProperties(prevProperties => 
+            prevProperties.map(p => 
+                p._id === propertyId ? currentProperty : p
+            )
+        );
+        
+        alert(`Błąd podczas zapisywania oceny: ${error.message}`);
     }
 };
 
