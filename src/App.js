@@ -752,18 +752,23 @@ const handleSaveEdit = async (updatedData) => {
 };
 
 const handleRating = async (propertyId, newRating) => {
+    // Zadeklaruj zmienne na początku funkcji
+    let previousRating = null;
+    let propertyToUpdate = null;
+
     try {
         console.log('Rozpoczynam aktualizację oceny:', { propertyId, newRating });
         const token = localStorage.getItem('token');
         
         // Znajdź właściwą nieruchomość
-        const propertyToUpdate = properties.find(p => p._id === propertyId);
+        propertyToUpdate = properties.find(p => p._id === propertyId);
         if (!propertyToUpdate) {
             throw new Error('Nie znaleziono nieruchomości');
         }
 
         // Zapisz poprzedni stan
-        const previousRating = propertyToUpdate.rating;
+        previousRating = propertyToUpdate.rating;
+        console.log('Stan przed aktualizacją:', { previousRating, newRating });
 
         // Przygotuj dane do wysłania
         const updateData = {
@@ -818,22 +823,19 @@ const handleRating = async (propertyId, newRating) => {
             )
         );
 
-        // Opcjonalnie odśwież listę właściwości
-        if (selectedBoard?._id) {
-            await fetchBoardProperties(selectedBoard._id);
-        }
-
     } catch (error) {
         console.error('Błąd podczas aktualizacji oceny:', error);
         
-        // Przywróć poprzedni stan
-        setProperties(prevProperties => 
-            prevProperties.map(p => 
-                p._id === propertyId 
-                    ? { ...p, rating: previousRating }
-                    : p
-            )
-        );
+        // Przywróć poprzedni stan tylko jeśli mamy właściwą nieruchomość i poprzednią ocenę
+        if (propertyToUpdate && previousRating !== null) {
+            setProperties(prevProperties => 
+                prevProperties.map(p => 
+                    p._id === propertyId 
+                        ? { ...p, rating: previousRating }
+                        : p
+                )
+            );
+        }
         
         alert('Wystąpił błąd podczas zapisywania oceny. Spróbuj ponownie.');
     }
