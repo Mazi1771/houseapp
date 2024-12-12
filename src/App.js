@@ -1141,8 +1141,9 @@ const PropertyCard = ({
             </div>
           </div>
 
-    {/* Przyciski oceny i akcji */}
-<div className="flex items-center justify-between mt-4">
+  {/* Sekcja z przyciskami oceny i akcji */}
+<div className="flex justify-between items-center mt-4">
+    {/* Przyciski oceny */}
     <div className="flex gap-2">
         <button
             onClick={(e) => {
