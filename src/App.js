@@ -749,15 +749,15 @@ const handleSaveEdit = async (updatedData) => {
 
 const handleRating = async (propertyId, rating) => {
     try {
-        console.log('Rozpoczynam aktualizację oceny:', { propertyId, rating });
+        console.log('Rozpoczynam aktualizację oceny:', { propertyId, rating, currentRating: properties.find(p => p._id === propertyId)?.rating });
         const token = localStorage.getItem('token');
         const currentProperty = properties.find(p => p._id === propertyId);
         
-        // Optymistyczna aktualizacja UI
+        // Natychmiastowa aktualizacja UI
         setProperties(prevProperties => 
             prevProperties.map(p => 
                 p._id === propertyId 
-                    ? { ...p, rating }
+                    ? { ...p, rating: rating }
                     : p
             )
         );
@@ -772,20 +772,13 @@ const handleRating = async (propertyId, rating) => {
         });
 
         if (!response.ok) {
-            console.error('Błąd odpowiedzi:', response.status);
-            // W przypadku błędu przywracamy poprzedni stan
-            setProperties(prevProperties => 
-                prevProperties.map(p => 
-                    p._id === propertyId ? currentProperty : p
-                )
-            );
             throw new Error('Błąd podczas aktualizacji oceny');
         }
 
         const updatedProperty = await response.json();
-        console.log('Zaktualizowana nieruchomość:', updatedProperty);
+        console.log('Odpowiedź z serwera po aktualizacji:', updatedProperty);
 
-        // Aktualizujemy stan o dane z serwera
+        // Aktualizacja stanu o potwierdzone dane z serwera
         setProperties(prevProperties => 
             prevProperties.map(p => 
                 p._id === propertyId ? updatedProperty : p
@@ -794,9 +787,16 @@ const handleRating = async (propertyId, rating) => {
 
     } catch (error) {
         console.error('Błąd podczas aktualizacji oceny:', error);
+        // Przywróć poprzedni stan w przypadku błędu
+        setProperties(prevProperties => 
+            prevProperties.map(p => 
+                p._id === propertyId ? currentProperty : p
+            )
+        );
         alert('Wystąpił błąd podczas zapisywania oceny');
     }
 };
+
 
   // === OBSŁUGA TABLIC I UDOSTĘPNIANIA ===
    // Dodaj nową funkcję inicjalizacji
@@ -1141,51 +1141,57 @@ const PropertyCard = ({
 
                     {/* Sekcja z przyciskami oceny i akcji */}
                     <div className="flex justify-between items-center mt-4">
-                        {/* Przyciski oceny */}
-                        <div className="flex gap-2">
-                            <button
-                                onClick={(e) => {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                    onRate(property._id, property.rating === 'favorite' ? null : 'favorite');
-                                }}
-                                className={`p-2 rounded-lg transition-colors ${
-                                    property.rating === 'favorite' 
-                                        ? 'bg-yellow-100 hover:bg-yellow-200' 
-                                        : 'bg-gray-100 hover:bg-gray-200'
-                                }`}
-                            >
-                                ⭐
-                            </button>
-                            <button
-                                onClick={(e) => {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                    onRate(property._id, property.rating === 'interested' ? null : 'interested');
-                                }}
-                                className={`p-2 rounded-lg transition-colors ${
-                                    property.rating === 'interested' 
-                                        ? 'bg-green-100 hover:bg-green-200' 
-                                        : 'bg-gray-100 hover:bg-gray-200'
-                                }`}
-                            >
-                                👍
-                            </button>
-                            <button
-                                onClick={(e) => {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                    onRate(property._id, property.rating === 'not_interested' ? null : 'not_interested');
-                                }}
-                                className={`p-2 rounded-lg transition-colors ${
-                                    property.rating === 'not_interested' 
-                                        ? 'bg-red-100 hover:bg-red-200' 
-                                        : 'bg-gray-100 hover:bg-gray-200'
-                                }`}
-                            >
-                                👎
-                            </button>
-                        </div>
+                       {/* Przyciski oceny */}
+<div className="flex gap-2">
+    <button
+        onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            const newRating = property.rating === 'favorite' ? null : 'favorite';
+            console.log('Kliknięto ocenę favorite:', { currentRating: property.rating, newRating });
+            onRate(property._id, newRating);
+        }}
+        className={`p-2 rounded-lg transition-colors ${
+            property.rating === 'favorite' 
+                ? 'bg-yellow-100 hover:bg-yellow-200' 
+                : 'bg-gray-100 hover:bg-gray-200'
+        }`}
+    >
+        ⭐
+    </button>
+    <button
+        onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            const newRating = property.rating === 'interested' ? null : 'interested';
+            console.log('Kliknięto ocenę interested:', { currentRating: property.rating, newRating });
+            onRate(property._id, newRating);
+        }}
+        className={`p-2 rounded-lg transition-colors ${
+            property.rating === 'interested' 
+                ? 'bg-green-100 hover:bg-green-200' 
+                : 'bg-gray-100 hover:bg-gray-200'
+        }`}
+    >
+        👍
+    </button>
+    <button
+        onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            const newRating = property.rating === 'not_interested' ? null : 'not_interested';
+            console.log('Kliknięto ocenę not_interested:', { currentRating: property.rating, newRating });
+            onRate(property._id, newRating);
+        }}
+        className={`p-2 rounded-lg transition-colors ${
+            property.rating === 'not_interested' 
+                ? 'bg-red-100 hover:bg-red-200' 
+                : 'bg-gray-100 hover:bg-gray-200'
+        }`}
+    >
+        👎
+    </button>
+</div>
 
                         {/* Przyciski akcji */}
                         <div className="flex gap-2">
