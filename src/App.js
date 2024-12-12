@@ -1036,21 +1036,21 @@ const PropertyCard = ({
     const canDeleteProperty = !isShared || addedByCurrentUser;
     
     console.log('PropertyCard permissions:', {
-    isShared,
-    addedByCurrentUser,
-    canEditProperty,
-    canDeleteProperty,
-    userId,
-    propertyAddedBy: property.addedBy
-});
-  return (
-    
-      <div 
-  className={`bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 overflow-hidden ${
-    isExpanded ? 'md:col-span-2 lg:col-span-3' : ''
-  }`}
-  onClick={onExpandToggle}
->
+        isShared,
+        addedByCurrentUser,
+        canEditProperty,
+        canDeleteProperty,
+        userId,
+        propertyAddedBy: property.addedBy
+    });
+
+    return (
+        <div 
+            className={`bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 overflow-hidden ${
+                isExpanded ? 'md:col-span-2 lg:col-span-3' : ''
+            }`}
+            onClick={onExpandToggle}
+        >
   <div className="flex flex-col h-full">
     {/* Górny pasek gradientowy */}
     <div className="h-1 bg-gradient-to-r from-blue-500 to-purple-500"/>
