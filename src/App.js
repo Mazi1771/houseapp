@@ -1141,97 +1141,81 @@ const PropertyCard = ({
             </div>
           </div>
 
-         {/* Przyciski oceny */}
-<div className="flex gap-2">
-    <button
-        onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            onRate(property._id, property.rating === 'favorite' ? null : 'favorite');
-        }}
-        className={`p-2 rounded-lg transition-colors ${
-            property.rating === 'favorite' 
-                ? 'bg-yellow-100 hover:bg-yellow-200' 
-                : 'bg-gray-100 hover:bg-gray-200'
-        }`}
-    >
-        ⭐
-    </button>
-    <button
-        onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            onRate(property._id, property.rating === 'interested' ? null : 'interested');
-        }}
-        className={`p-2 rounded-lg transition-colors ${
-            property.rating === 'interested' 
-                ? 'bg-green-100 hover:bg-green-200' 
-                : 'bg-gray-100 hover:bg-gray-200'
-        }`}
-    >
-        👍
-    </button>
-    <button
-        onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            onRate(property._id, property.rating === 'not_interested' ? null : 'not_interested');
-        }}
-        className={`p-2 rounded-lg transition-colors ${
-            property.rating === 'not_interested' 
-                ? 'bg-red-100 hover:bg-red-200' 
-                : 'bg-gray-100 hover:bg-gray-200'
-        }`}
-    >
-        👎
-    </button>
-                </>
-              )}
-            </div>
+    {/* Przyciski oceny i akcji */}
+<div className="flex items-center justify-between mt-4">
+    <div className="flex gap-2">
+        <button
+            onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                onRate(property._id, property.rating === 'favorite' ? null : 'favorite');
+            }}
+            className={`p-2 rounded-lg transition-colors ${
+                property.rating === 'favorite' 
+                    ? 'bg-yellow-100 hover:bg-yellow-200' 
+                    : 'bg-gray-100 hover:bg-gray-200'
+            }`}
+        >
+            ⭐
+        </button>
+        <button
+            onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                onRate(property._id, property.rating === 'interested' ? null : 'interested');
+            }}
+            className={`p-2 rounded-lg transition-colors ${
+                property.rating === 'interested' 
+                    ? 'bg-green-100 hover:bg-green-200' 
+                    : 'bg-gray-100 hover:bg-gray-200'
+            }`}
+        >
+            👍
+        </button>
+        <button
+            onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                onRate(property._id, property.rating === 'not_interested' ? null : 'not_interested');
+            }}
+            className={`p-2 rounded-lg transition-colors ${
+                property.rating === 'not_interested' 
+                    ? 'bg-red-100 hover:bg-red-200' 
+                    : 'bg-gray-100 hover:bg-gray-200'
+            }`}
+        >
+            👎
+        </button>
+    </div>
 
-           {/* Przyciski akcji */}
-<div className="flex gap-2">
-    {canEditProperty && (
-        <button
-            onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                onEdit(property);
-            }}
-            className="px-3 py-1.5 text-sm text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"
-        >
-            Edytuj
-        </button>
-    )}
-    {canDeleteProperty && (
-        <button
-            onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                if (window.confirm('Czy na pewno chcesz usunąć tę nieruchomość?')) {
-                    onDelete(property._id);
-                }
-            }}
-            className="px-3 py-1.5 text-sm text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition-colors"
-        >
-            Usuń
-        </button>
-    )}
-    {property.sourceUrl && (
-        <button
-            onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                onRefresh(property._id);
-            }}
-            className="px-3 py-1.5 text-sm text-green-600 bg-green-50 rounded-lg hover:bg-green-100 transition-colors"
-        >
-            Odśwież
-        </button>
-    )}
+    {/* Przyciski akcji */}
+    <div className="flex gap-2">
+        {canEditProperty && (
+            <button
+                onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    onEdit(property);
+                }}
+                className="px-3 py-1.5 text-sm text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"
+            >
+                Edytuj
+            </button>
+        )}
+        {property.sourceUrl && (
+            <button
+                onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    onRefresh(property._id);
+                }}
+                className="px-3 py-1.5 text-sm text-green-600 bg-green-50 rounded-lg hover:bg-green-100 transition-colors"
+            >
+                Odśwież
+            </button>
+        )}
+    </div>
 </div>
-          </div>
-        </div>
 
         {/* Rozszerzone informacje */}
         {isExpanded && (
