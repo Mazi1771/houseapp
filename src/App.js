@@ -752,6 +752,9 @@ const handleSaveEdit = async (updatedData) => {
 };
 
 const handleRating = async (propertyId, rating) => {
+    // Zadeklaruj previousRating na początku funkcji, aby był dostępny w całym jej scope
+    let previousRating;
+
     try {
         console.log('Rozpoczynam aktualizację oceny:', { propertyId, rating });
         const token = localStorage.getItem('token');
@@ -763,7 +766,8 @@ const handleRating = async (propertyId, rating) => {
         }
 
         // Zapisz poprzedni stan
-        const previousRating = propertyToUpdate.rating;
+        previousRating = propertyToUpdate.rating;
+        console.log('Poprzednia ocena:', previousRating);
         
         // Natychmiastowa aktualizacja UI
         setProperties(prevProperties => 
@@ -820,7 +824,6 @@ const handleRating = async (propertyId, rating) => {
         alert('Wystąpił błąd podczas zapisywania oceny');
     }
 };
-
 
   // === OBSŁUGA TABLIC I UDOSTĘPNIANIA ===
    // Dodaj nową funkcję inicjalizacji
