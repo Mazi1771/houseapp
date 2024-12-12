@@ -751,16 +751,9 @@ const handleRating = async (propertyId, rating) => {
     try {
         console.log('Rozpoczynam aktualizację oceny:', { propertyId, rating });
         const token = localStorage.getItem('token');
-        
         const currentProperty = properties.find(p => p._id === propertyId);
-        if (!currentProperty) {
-            throw new Error('Nie znaleziono nieruchomości do oceny');
-        }
         
-        console.log('Aktualna nieruchomość:', currentProperty);
-        console.log('Obecny użytkownik:', user);
-        
-        // Aktualizacja UI
+        // Optymistyczna aktualizacja UI
         setProperties(prevProperties => 
             prevProperties.map(p => 
                 p._id === propertyId 
@@ -769,53 +762,39 @@ const handleRating = async (propertyId, rating) => {
             )
         );
 
-        // Dane do wysłania
-        const updateData = {
-            rating,
-            propertyId,
-            userId: user.id || user._id
-        };
-        
-        console.log('Wysyłam dane:', updateData);
-        console.log('Token:', token);
-
         const response = await fetch(`https://houseapp-backend.onrender.com/api/properties/${propertyId}`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${token}`
             },
-            body: JSON.stringify(updateData)
+            body: JSON.stringify({ rating })
         });
 
-        console.log('Status odpowiedzi:', response.status);
-        
         if (!response.ok) {
-            const errorData = await response.json();
-            console.error('Błąd z serwera:', errorData);
-            throw new Error(errorData.error || 'Błąd podczas aktualizacji oceny');
+            console.error('Błąd odpowiedzi:', response.status);
+            // W przypadku błędu przywracamy poprzedni stan
+            setProperties(prevProperties => 
+                prevProperties.map(p => 
+                    p._id === propertyId ? currentProperty : p
+                )
+            );
+            throw new Error('Błąd podczas aktualizacji oceny');
         }
 
         const updatedProperty = await response.json();
         console.log('Zaktualizowana nieruchomość:', updatedProperty);
 
-        // Odświeżamy widok
-        await fetchBoardProperties(selectedBoard._id);
-
-        // Pokazujemy komunikat sukcesu
-        alert('Ocena została zaktualizowana');
-
-    } catch (error) {
-        console.error('Szczegóły błędu:', error);
-        
-        // Przywracamy poprzedni stan
+        // Aktualizujemy stan o dane z serwera
         setProperties(prevProperties => 
             prevProperties.map(p => 
-                p._id === propertyId ? currentProperty : p
+                p._id === propertyId ? updatedProperty : p
             )
         );
-        
-        alert(`Błąd podczas zapisywania oceny: ${error.message}`);
+
+    } catch (error) {
+        console.error('Błąd podczas aktualizacji oceny:', error);
+        alert('Wystąpił błąd podczas zapisywania oceny');
     }
 };
 
@@ -1162,56 +1141,51 @@ const PropertyCard = ({
             </div>
           </div>
 
-          {/* Przyciski oceny */}
-          <div className="flex justify-between items-center mt-4">
-        <div className="flex gap-2">
-    {user && ( // Zmiana warunku z !isShared na sprawdzenie czy jest użytkownik
-        <>
-            <button
-                onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    onRate(property._id, 'favorite');
-                }}
-                className={`p-2 rounded-lg transition-colors ${
-                    property.rating === 'favorite' 
-                        ? 'bg-yellow-100 hover:bg-yellow-200' 
-                        : 'bg-gray-100 hover:bg-gray-200'
-                }`}
-            >
-                ⭐
-            </button>
-                  <button
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      onRate(property._id, 'interested');
-                    }}
-                    className={`p-2 rounded-lg transition-colors ${
-                      property.rating === 'interested' 
-                        ? 'bg-green-100 hover:bg-green-200' 
-                        : 'bg-gray-100 hover:bg-gray-200'
-                    }`}
-                  >
-                    👍
-                  </button>
-                  <button
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      onRate(property._id, 'not_interested');
-                    }}
-                    className={`p-2 rounded-lg transition-colors ${
-                      property.rating === 'not_interested' 
-                        ? 'bg-red-100 hover:bg-red-200' 
-                        : 'bg-gray-100 hover:bg-gray-200'
-                    }`}
-                  >
-                    👎
-                  </button>
-                </>
-              )}
-            </div>
+         {/* Przyciski oceny */}
+<div className="flex gap-2">
+    <button
+        onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            onRate(property._id, property.rating === 'favorite' ? null : 'favorite');
+        }}
+        className={`p-2 rounded-lg transition-colors ${
+            property.rating === 'favorite' 
+                ? 'bg-yellow-100 hover:bg-yellow-200' 
+                : 'bg-gray-100 hover:bg-gray-200'
+        }`}
+    >
+        ⭐
+    </button>
+    <button
+        onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            onRate(property._id, property.rating === 'interested' ? null : 'interested');
+        }}
+        className={`p-2 rounded-lg transition-colors ${
+            property.rating === 'interested' 
+                ? 'bg-green-100 hover:bg-green-200' 
+                : 'bg-gray-100 hover:bg-gray-200'
+        }`}
+    >
+        👍
+    </button>
+    <button
+        onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            onRate(property._id, property.rating === 'not_interested' ? null : 'not_interested');
+        }}
+        className={`p-2 rounded-lg transition-colors ${
+            property.rating === 'not_interested' 
+                ? 'bg-red-100 hover:bg-red-200' 
+                : 'bg-gray-100 hover:bg-gray-200'
+        }`}
+    >
+        👎
+    </button>
+</div>
 
            {/* Przyciski akcji */}
 <div className="flex gap-2">
