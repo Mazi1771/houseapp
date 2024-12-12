@@ -1185,7 +1185,9 @@ const PropertyCard = ({
     >
         👎
     </button>
-</div>
+                </>
+              )}
+            </div>
 
            {/* Przyciski akcji */}
 <div className="flex gap-2">
