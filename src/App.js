@@ -664,7 +664,11 @@ const handleAddProperty = async () => {
 const handleSaveEdit = async (updatedData) => {
     try {
         const token = localStorage.getItem('token');
-        console.log('Edytowana nieruchomość:', editingProperty);
+        
+        // Upewnij się, że mamy dostęp do edytowanej nieruchomości
+        if (!editingProperty) {
+            throw new Error('Brak edytowanej nieruchomości');
+        }
 
         const dataToUpdate = {
             title: updatedData.title,
