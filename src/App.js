@@ -751,69 +751,82 @@ const handleSaveEdit = async (updatedData) => {
     }
 };
 
-const handleRating = async (propertyId, rating) => {
-    // Zadeklaruj previousRating na początku funkcji, aby był dostępny w całym jej scope
-    let previousRating;
-
+const handleRating = async (propertyId, newRating) => {
     try {
-        console.log('Rozpoczynam aktualizację oceny:', { propertyId, rating });
+        console.log('Rozpoczynam aktualizację oceny:', { propertyId, newRating });
         const token = localStorage.getItem('token');
         
-        // Znajdź odpowiednią nieruchomość przed aktualizacją
+        // Znajdź właściwą nieruchomość
         const propertyToUpdate = properties.find(p => p._id === propertyId);
         if (!propertyToUpdate) {
             throw new Error('Nie znaleziono nieruchomości');
         }
 
         // Zapisz poprzedni stan
-        previousRating = propertyToUpdate.rating;
-        console.log('Poprzednia ocena:', previousRating);
-        
-        // Natychmiastowa aktualizacja UI
+        const previousRating = propertyToUpdate.rating;
+
+        // Przygotuj dane do wysłania
+        const updateData = {
+            rating: newRating,
+            // Zachowaj pozostałe pola bez zmian
+            title: propertyToUpdate.title,
+            price: propertyToUpdate.price,
+            area: propertyToUpdate.area,
+            location: propertyToUpdate.location,
+            description: propertyToUpdate.description,
+            status: propertyToUpdate.status,
+            rooms: propertyToUpdate.rooms,
+            isActive: propertyToUpdate.isActive
+        };
+
+        // Najpierw aktualizuj UI
         setProperties(prevProperties => 
             prevProperties.map(p => 
                 p._id === propertyId 
-                    ? { ...p, rating }
+                    ? { ...p, rating: newRating }
                     : p
             )
         );
 
+        // Wyślij żądanie do API
         const response = await fetch(`https://houseapp-backend.onrender.com/api/properties/${propertyId}`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${token}`
             },
-            body: JSON.stringify({ 
-                rating,
-                // Zachowaj pozostałe dane nieruchomości
-                title: propertyToUpdate.title,
-                price: propertyToUpdate.price,
-                area: propertyToUpdate.area,
-                location: propertyToUpdate.location,
-                description: propertyToUpdate.description,
-                status: propertyToUpdate.status
-            })
+            body: JSON.stringify(updateData)
         });
 
         if (!response.ok) {
-            throw new Error('Błąd podczas aktualizacji oceny');
+            throw new Error(`Błąd HTTP: ${response.status}`);
         }
 
         const updatedProperty = await response.json();
         console.log('Odpowiedź z serwera:', updatedProperty);
 
-        // Aktualizuj stan o dane z serwera
+        // Wymuś prawidłową ocenę w odpowiedzi z serwera
+        const finalProperty = {
+            ...updatedProperty,
+            rating: newRating  // Użyj naszej wartości zamiast tej z serwera
+        };
+
+        // Zaktualizuj stan aplikacji ostateczną wersją
         setProperties(prevProperties => 
             prevProperties.map(p => 
-                p._id === propertyId ? updatedProperty : p
+                p._id === propertyId ? finalProperty : p
             )
         );
+
+        // Opcjonalnie odśwież listę właściwości
+        if (selectedBoard?._id) {
+            await fetchBoardProperties(selectedBoard._id);
+        }
 
     } catch (error) {
         console.error('Błąd podczas aktualizacji oceny:', error);
         
-        // W przypadku błędu przywróć poprzedni stan
+        // Przywróć poprzedni stan
         setProperties(prevProperties => 
             prevProperties.map(p => 
                 p._id === propertyId 
@@ -821,7 +834,8 @@ const handleRating = async (propertyId, rating) => {
                     : p
             )
         );
-        alert('Wystąpił błąd podczas zapisywania oceny');
+        
+        alert('Wystąpił błąd podczas zapisywania oceny. Spróbuj ponownie.');
     }
 };
 
