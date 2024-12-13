@@ -752,39 +752,11 @@ const handleSaveEdit = async (updatedData) => {
 };
 
 const handleRating = async (propertyId, newRating) => {
-    // Zadeklaruj zmienne na początku funkcji
-    let previousRating = null;
-    let propertyToUpdate = null;
-
     try {
-        console.log('Rozpoczynam aktualizację oceny:', { propertyId, newRating });
+        console.log('Aktualizacja oceny:', { propertyId, newRating });
         const token = localStorage.getItem('token');
         
-        // Znajdź właściwą nieruchomość
-        propertyToUpdate = properties.find(p => p._id === propertyId);
-        if (!propertyToUpdate) {
-            throw new Error('Nie znaleziono nieruchomości');
-        }
-
-        // Zapisz poprzedni stan
-        previousRating = propertyToUpdate.rating;
-        console.log('Stan przed aktualizacją:', { previousRating, newRating });
-
-        // Przygotuj dane do wysłania
-        const updateData = {
-            rating: newRating,
-            // Zachowaj pozostałe pola bez zmian
-            title: propertyToUpdate.title,
-            price: propertyToUpdate.price,
-            area: propertyToUpdate.area,
-            location: propertyToUpdate.location,
-            description: propertyToUpdate.description,
-            status: propertyToUpdate.status,
-            rooms: propertyToUpdate.rooms,
-            isActive: propertyToUpdate.isActive
-        };
-
-        // Najpierw aktualizuj UI
+        // Natychmiastowa aktualizacja UI
         setProperties(prevProperties => 
             prevProperties.map(p => 
                 p._id === propertyId 
@@ -793,51 +765,33 @@ const handleRating = async (propertyId, newRating) => {
             )
         );
 
-        // Wyślij żądanie do API
-        const response = await fetch(`https://houseapp-backend.onrender.com/api/properties/${propertyId}`, {
-            method: 'PUT',
+        const response = await fetch(`https://houseapp-backend.onrender.com/api/properties/${propertyId}/rating`, {
+            method: 'PATCH',
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${token}`
             },
-            body: JSON.stringify(updateData)
+            body: JSON.stringify({ rating: newRating })
         });
 
         if (!response.ok) {
-            throw new Error(`Błąd HTTP: ${response.status}`);
+            throw new Error('Błąd podczas aktualizacji oceny');
         }
 
         const updatedProperty = await response.json();
         console.log('Odpowiedź z serwera:', updatedProperty);
 
-        // Wymuś prawidłową ocenę w odpowiedzi z serwera
-        const finalProperty = {
-            ...updatedProperty,
-            rating: newRating  // Użyj naszej wartości zamiast tej z serwera
-        };
-
-        // Zaktualizuj stan aplikacji ostateczną wersją
+    } catch (error) {
+        console.error('Błąd:', error);
+        // Przywróć poprzedni stan w przypadku błędu
         setProperties(prevProperties => 
             prevProperties.map(p => 
-                p._id === propertyId ? finalProperty : p
+                p._id === propertyId 
+                    ? { ...p, rating: previousRating }
+                    : p
             )
         );
-
-    } catch (error) {
-        console.error('Błąd podczas aktualizacji oceny:', error);
-        
-        // Przywróć poprzedni stan tylko jeśli mamy właściwą nieruchomość i poprzednią ocenę
-        if (propertyToUpdate && previousRating !== null) {
-            setProperties(prevProperties => 
-                prevProperties.map(p => 
-                    p._id === propertyId 
-                        ? { ...p, rating: previousRating }
-                        : p
-                )
-            );
-        }
-        
-        alert('Wystąpił błąd podczas zapisywania oceny. Spróbuj ponownie.');
+        alert('Wystąpił błąd podczas zapisywania oceny');
     }
 };
 
