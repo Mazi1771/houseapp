@@ -752,9 +752,21 @@ const handleSaveEdit = async (updatedData) => {
 };
 
 const handleRating = async (propertyId, newRating) => {
+    let currentProperty = null;
+    let originalRating = null;
+
     try {
         console.log('Aktualizacja oceny:', { propertyId, newRating });
         const token = localStorage.getItem('token');
+        
+        // Znajdź aktualną nieruchomość i zapisz jej stan
+        currentProperty = properties.find(p => p._id === propertyId);
+        if (!currentProperty) {
+            throw new Error('Nie znaleziono nieruchomości');
+        }
+
+        // Zapisz oryginalną ocenę przed zmianą
+        originalRating = currentProperty.rating;
         
         // Natychmiastowa aktualizacja UI
         setProperties(prevProperties => 
@@ -775,22 +787,33 @@ const handleRating = async (propertyId, newRating) => {
         });
 
         if (!response.ok) {
-            throw new Error('Błąd podczas aktualizacji oceny');
+            throw new Error(`Błąd HTTP: ${response.status}`);
         }
 
         const updatedProperty = await response.json();
         console.log('Odpowiedź z serwera:', updatedProperty);
 
-    } catch (error) {
-        console.error('Błąd:', error);
-        // Przywróć poprzedni stan w przypadku błędu
+        // Aktualizuj stan finalną wersją z serwera
         setProperties(prevProperties => 
             prevProperties.map(p => 
-                p._id === propertyId 
-                    ? { ...p, rating: previousRating }
-                    : p
+                p._id === propertyId ? updatedProperty : p
             )
         );
+
+    } catch (error) {
+        console.error('Błąd podczas aktualizacji oceny:', error);
+        
+        // Przywróć poprzedni stan tylko jeśli mamy zapisaną oryginalną ocenę
+        if (originalRating !== null) {
+            setProperties(prevProperties => 
+                prevProperties.map(p => 
+                    p._id === propertyId 
+                        ? { ...p, rating: originalRating }
+                        : p
+                )
+            );
+        }
+        
         alert('Wystąpił błąd podczas zapisywania oceny');
     }
 };
