@@ -778,7 +778,7 @@ const handleRating = async (propertyId, newRating) => {
         );
 
         const response = await fetch(`https://houseapp-backend.onrender.com/api/properties/${propertyId}/rating`, {
-            method: 'PATCH',
+            method: 'PUT', // Zmienione z PATCH na PUT
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${token}`
@@ -803,7 +803,7 @@ const handleRating = async (propertyId, newRating) => {
     } catch (error) {
         console.error('Błąd podczas aktualizacji oceny:', error);
         
-        // Przywróć poprzedni stan tylko jeśli mamy zapisaną oryginalną ocenę
+        // Przywróć poprzedni stan
         if (originalRating !== null) {
             setProperties(prevProperties => 
                 prevProperties.map(p => 
