@@ -28,6 +28,11 @@ import InvitationsView from './components/InvitationsView';
 import BoardSharing from './components/BoardSharing';
 import MapView from './components/MapView';
 
+const [isSearchExpanded, setIsSearchExpanded] = useState(false);
+const [comparisonMode, setComparisonMode] = useState(false);
+const [selectedForComparison, setSelectedForComparison] = useState([]);
+const [showComparisonModal, setShowComparisonModal] = useState(false);
+const [searchQuery, setSearchQuery] = useState('');
 const BoardNavigation = ({ boards, sharedBoards, selectedBoard, onBoardSelect, onShareClick, setIsNewBoardModalOpen  }) => {
   return (
     <div className="bg-white p-4 rounded-lg shadow">
@@ -1043,34 +1048,42 @@ const PropertyCard = ({
     onCopy, 
     onEdit, 
     onDelete, 
-    onRate,
-    onRefresh,
-    isExpanded,
-    onExpandToggle,
-    user
+    onRate, 
+    onRefresh, 
+    isExpanded, 
+    onExpandToggle, 
+    user,
+    // Nowe props
+    comparisonMode,
+    isSelectedForComparison,
+    onComparisonToggle
 }) => {
     const userId = user?._id || user?.id;
     const addedByCurrentUser = userId && property.addedBy && 
         (property.addedBy._id === userId || property.addedBy.id === userId);
     const canEditProperty = !isShared || addedByCurrentUser;
     const canDeleteProperty = !isShared || addedByCurrentUser;
-    
-    console.log('PropertyCard permissions:', {
-        isShared,
-        addedByCurrentUser,
-        canEditProperty,
-        canDeleteProperty,
-        userId,
-        propertyAddedBy: property.addedBy
-    });
 
     return (
         <div 
-            className={`bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 overflow-hidden ${
-                isExpanded ? 'md:col-span-2 lg:col-span-3' : ''
-            }`}
+            className={`relative bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 
+                ${isSelectedForComparison ? 'ring-2 ring-blue-500' : ''}`}
             onClick={onExpandToggle}
         >
+            {/* Przycisk porównywania - widoczny tylko w trybie porównywania */}
+            {comparisonMode && (
+                <button
+                    onClick={onComparisonToggle}
+                    className={`absolute top-2 right-2 z-50 p-2 rounded-full transition-colors ${
+                        isSelectedForComparison 
+                            ? 'bg-blue-500 text-white hover:bg-blue-600' 
+                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    }`}
+                >
+                    <Check className="w-4 h-4" />
+                </button>
+            )}
+
             <div className="flex flex-col h-full">
                 {/* Górny pasek gradientowy */}
                 <div className="h-1 bg-gradient-to-r from-blue-500 to-purple-500"/>
@@ -1349,22 +1362,37 @@ const PropertyList = () => {
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {filteredProperties.map((property) => (
-              <PropertyCard
-    key={property._id}
-    property={property}
-    isShared={isPropertyShared(property)}
-    onMove={setPropertyToMove}
-    onCopy={handlePropertyCopy}
-    onEdit={handleEditClick}
-    onDelete={handleDelete}
-    onRate={handleRating}
-    onRefresh={handleRefreshProperty}
-    isExpanded={expandedProperty === property._id}
-    onExpandToggle={() => setExpandedProperty(
-        expandedProperty === property._id ? null : property._id
-    )}
-    user={user} // Upewnij się, że user zawiera _id
-/>
+                <PropertyCard
+                    key={property._id}
+                    property={property}
+                    isShared={isPropertyShared(property)}
+                    onMove={setPropertyToMove}
+                    onCopy={handlePropertyCopy}
+                    onEdit={handleEditClick}
+                    onDelete={handleDelete}
+                    onRate={handleRating}
+                    onRefresh={handleRefreshProperty}
+                    isExpanded={expandedProperty === property._id}
+                    onExpandToggle={() => setExpandedProperty(
+                        expandedProperty === property._id ? null : property._id
+                    )}
+                    user={user}
+                    // Nowe props do porównywania
+                    comparisonMode={comparisonMode}
+                    isSelectedForComparison={selectedForComparison.some(p => p._id === property._id)}
+                    onComparisonToggle={(e) => {
+                        e.stopPropagation();
+                        if (selectedForComparison.some(p => p._id === property._id)) {
+                            setSelectedForComparison(prev => 
+                                prev.filter(p => p._id !== property._id)
+                            );
+                        } else if (selectedForComparison.length < 2) {
+                            setSelectedForComparison(prev => [...prev, property]);
+                        } else {
+                            alert('Możesz porównać maksymalnie 2 nieruchomości');
+                        }
+                    }}
+                />
             ))}
         </div>
     );
@@ -1535,173 +1563,220 @@ const PropertyList = () => {
               {/* Toolbar */}
 <div className="bg-white p-4 rounded-lg shadow mb-6">
   <div className="flex flex-col gap-4">
-    <div className="flex items-center justify-between">
-      <div className="flex items-center gap-4 flex-grow">
-        <div className="relative flex-grow">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-          <input 
-            type="text"
-            placeholder="Szukaj nieruchomości..."
-            className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all"
-          />
-        </div>
+    {/* Główny rząd przycisków */}
+    <div className="flex items-center justify-between flex-wrap gap-4">
+      <div className="flex items-center gap-2 flex-wrap">
+        {/* Przycisk wyszukiwania */}
         <button
-          onClick={() => setIsFormVisible(!isFormVisible)}
-          className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors whitespace-nowrap"
+          onClick={() => setIsSearchExpanded(!isSearchExpanded)}
+          className="flex items-center gap-2 px-4 py-2 text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
         >
-          {isFormVisible ? 'Zamknij' : 'Dodaj nieruchomość'}
+          <Search className="h-4 w-4" />
+          {isSearchExpanded ? 'Ukryj wyszukiwarkę' : 'Wyszukaj'}
+        </button>
+
+        {/* Przycisk porównywania */}
+        <button
+          onClick={() => {
+            setComparisonMode(!comparisonMode);
+            if (!comparisonMode) {
+              setSelectedForComparison([]);
+            }
+          }}
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
+            comparisonMode 
+              ? 'bg-orange-600 text-white hover:bg-orange-700' 
+              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+          }`}
+        >
+          <Scale className="h-4 w-4" />
+          {comparisonMode ? 'Zakończ porównywanie' : 'Porównaj nieruchomości'}
+        </button>
+
+        {/* Licznik wybranych do porównania */}
+        {comparisonMode && (
+          <span className="text-sm text-gray-600 bg-gray-100 px-3 py-2 rounded-lg">
+            Wybrano {selectedForComparison.length}/2 nieruchomości
+          </span>
+        )}
+
+        {/* Przycisk "Porównaj wybrane" */}
+        {selectedForComparison.length === 2 && (
+          <button
+            onClick={() => setShowComparisonModal(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+          >
+            <ArrowRight className="h-4 w-4" />
+            Porównaj wybrane
+          </button>
+        )}
+
+        {/* Przycisk filtrów */}
+        <button
+          onClick={() => setIsFiltersVisible(!isFiltersVisible)}
+          className="flex items-center gap-2 px-4 py-2 text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+        >
+          <Settings className="h-4 w-4" />
+          {isFiltersVisible ? 'Ukryj filtry' : 'Pokaż filtry'}
+        </button>
+
+        {/* Przycisk widoku mapy */}
+        <button
+          onClick={() => setViewMode(viewMode === 'grid' ? 'map' : 'grid')}
+          className="flex items-center gap-2 px-4 py-2 text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+        >
+          {viewMode === 'grid' ? (
+            <>
+              <Map className="h-4 w-4" />
+              <span>Pokaż mapę</span>
+            </>
+          ) : (
+            <>
+              <Grid className="h-4 w-4" />
+              <span>Pokaż listę</span>
+            </>
+          )}
         </button>
       </div>
+
+      {/* Przycisk dodawania nieruchomości */}
+      <button
+        onClick={() => setIsFormVisible(!isFormVisible)}
+        className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors whitespace-nowrap"
+      >
+        {isFormVisible ? 'Zamknij' : 'Dodaj nieruchomość'}
+      </button>
     </div>
 
-    <div className="flex items-center gap-4 flex-wrap">
-      {/* Przyciski filtrów */}
-      <button
-        onClick={() => setIsFiltersVisible(!isFiltersVisible)}
-        className="flex items-center gap-2 px-4 py-2 text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
-      >
-        <Settings className="h-4 w-4" />
-        {isFiltersVisible ? 'Ukryj filtry' : 'Pokaż filtry'}
-      </button>
+    {/* Panel wyszukiwania */}
+    {isSearchExpanded && (
+      <div className="pt-4 border-t">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {/* Pole wyszukiwania */}
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Szukaj po nazwie lub lokalizacji..."
+              className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none"
+            />
+          </div>
 
-      {/* Przycisk udostępniania */}
-      <button
-  onClick={() => setShareModalOpen(true)}  // Na to
-  className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
->
-  <Share className="h-4 w-4" />
-  Udostępnij Tablicę
-</button>
+          {/* Sortowanie */}
+          <select
+            onChange={(e) => setSortBy(e.target.value)}
+            value={sortBy || ''}
+            className="px-4 py-2 rounded-lg border border-gray-200 bg-white text-gray-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none"
+          >
+            <option value="">Sortuj według...</option>
+            <option value="price-asc">Cena: rosnąco</option>
+            <option value="price-desc">Cena: malejąco</option>
+            <option value="area-asc">Powierzchnia: rosnąco</option>
+            <option value="area-desc">Powierzchnia: malejąco</option>
+            <option value="date-asc">Data: najstarsze</option>
+            <option value="date-desc">Data: najnowsze</option>
+          </select>
 
-      {/* Przycisk przełączania widoku */}
-      <button
-        onClick={() => setViewMode(viewMode === 'grid' ? 'map' : 'grid')}
-        className="flex items-center gap-2 px-4 py-2 text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
-      >
-        {viewMode === 'grid' ? (
-          <>
-            <Map className="h-4 w-4" />
-            <span>Pokaż mapę</span>
-          </>
-        ) : (
-          <>
-            <Grid className="h-4 w-4" />
-            <span>Pokaż listę</span>
-          </>
-        )}
-      </button>
-
-      {/* Dropdown sortowania */}
-      <select
-        onChange={(e) => setSortBy(e.target.value)}
-        value={sortBy || ''}
-        className="px-4 py-2 rounded-lg border border-gray-200 bg-white text-gray-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none"
-      >
-        <option value="">Sortuj według...</option>
-        <option value="price-asc">Cena: rosnąco</option>
-        <option value="price-desc">Cena: malejąco</option>
-        <option value="area-asc">Powierzchnia: rosnąco</option>
-        <option value="area-desc">Powierzchnia: malejąco</option>
-        <option value="date-asc">Data: najstarsze</option>
-        <option value="date-desc">Data: najnowsze</option>
-      </select>
-    </div>
-  </div>
-</div>
-
-{/* Panel filtrów */}
-{isFiltersVisible && (
-  <div className="bg-white p-4 rounded-lg shadow mb-6">
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-      <div>
-        <h3 className="font-medium mb-2">Cena (PLN)</h3>
-        <div className="flex gap-2">
-          <input
-            type="number"
-            placeholder="Od"
-            value={filters.priceMin}
-            onChange={(e) => setFilters({...filters, priceMin: e.target.value})}
-            className="w-full rounded border p-2"
-          />
-          <input
-            type="number"
-            placeholder="Do"
-            value={filters.priceMax}
-            onChange={(e) => setFilters({...filters, priceMax: e.target.value})}
-            className="w-full rounded border p-2"
-          />
-        </div>
-      </div>
-      
-      <div>
-        <h3 className="font-medium mb-2">Powierzchnia (m²)</h3>
-        <div className="flex gap-2">
-          <input
-            type="number"
-            placeholder="Od"
-            value={filters.areaMin}
-            onChange={(e) => setFilters({...filters, areaMin: e.target.value})}
-            className="w-full rounded border p-2"
-          />
-          <input
-            type="number"
-            placeholder="Do"
-            value={filters.areaMax}
-            onChange={(e) => setFilters({...filters, areaMax: e.target.value})}
-            className="w-full rounded border p-2"
-          />
-        </div>
-      </div>
-
-      <div className="space-y-2">
-        <div>
-          <h3 className="font-medium mb-2">Stan</h3>
+          {/* Status */}
           <select
             value={filters.status}
             onChange={(e) => setFilters({...filters, status: e.target.value})}
-            className="w-full rounded border p-2"
+            className="px-4 py-2 rounded-lg border border-gray-200 bg-white text-gray-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none"
           >
-            <option value="">Wszystkie</option>
+            <option value="">Wszystkie stany</option>
             <option value="do zamieszkania">Do zamieszkania</option>
             <option value="do remontu">Do remontu</option>
             <option value="w budowie">W budowie</option>
             <option value="stan deweloperski">Stan deweloperski</option>
           </select>
         </div>
-        
-        <div>
-          <h3 className="font-medium mb-2">Ocena</h3>
-          <select
-            value={filters.rating}
-            onChange={(e) => setFilters({...filters, rating: e.target.value})}
-            className="w-full rounded border p-2"
+      </div>
+    )}
+
+    {/* Panel filtrów */}
+    {isFiltersVisible && (
+      <div className="pt-4 border-t">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {/* Filtry ceny */}
+          <div>
+            <h3 className="font-medium mb-2">Cena (PLN)</h3>
+            <div className="flex gap-2">
+              <input
+                type="number"
+                placeholder="Od"
+                value={filters.priceMin}
+                onChange={(e) => setFilters({...filters, priceMin: e.target.value})}
+                className="w-full rounded-lg border p-2"
+              />
+              <input
+                type="number"
+                placeholder="Do"
+                value={filters.priceMax}
+                onChange={(e) => setFilters({...filters, priceMax: e.target.value})}
+                className="w-full rounded-lg border p-2"
+              />
+            </div>
+          </div>
+
+          {/* Filtry powierzchni */}
+          <div>
+            <h3 className="font-medium mb-2">Powierzchnia (m²)</h3>
+            <div className="flex gap-2">
+              <input
+                type="number"
+                placeholder="Od"
+                value={filters.areaMin}
+                onChange={(e) => setFilters({...filters, areaMin: e.target.value})}
+                className="w-full rounded-lg border p-2"
+              />
+              <input
+                type="number"
+                placeholder="Do"
+                value={filters.areaMax}
+                onChange={(e) => setFilters({...filters, areaMax: e.target.value})}
+                className="w-full rounded-lg border p-2"
+              />
+            </div>
+          </div>
+
+          {/* Filtr ocen */}
+          <div>
+            <h3 className="font-medium mb-2">Ocena</h3>
+            <select
+              value={filters.rating}
+              onChange={(e) => setFilters({...filters, rating: e.target.value})}
+              className="w-full rounded-lg border p-2"
+            >
+              <option value="">Wszystkie</option>
+              <option value="favorite">⭐ Ulubione</option>
+              <option value="interested">👍 Zainteresowany</option>
+              <option value="not_interested">👎 Niezainteresowany</option>
+            </select>
+          </div>
+        </div>
+
+        {/* Przycisk czyszczenia filtrów */}
+        <div className="flex justify-end mt-4">
+          <button
+            onClick={() => setFilters({
+              priceMin: '',
+              priceMax: '',
+              areaMin: '',
+              areaMax: '',
+              status: '',
+              rating: '',
+            })}
+            className="px-4 py-2 text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200"
           >
-            <option value="">Wszystkie</option>
-            <option value="favorite">⭐ Ulubione</option>
-            <option value="interested">👍 Zainteresowany</option>
-            <option value="not_interested">👎 Niezainteresowany</option>
-          </select>
+            Wyczyść filtry
+          </button>
         </div>
       </div>
-
-      <div className="md:col-span-3 flex justify-end mt-4">
-        <button
-          onClick={() => setFilters({
-            priceMin: '',
-            priceMax: '',
-            areaMin: '',
-            areaMax: '',
-            status: '',
-            rating: '',
-          })}
-          className="px-4 py-2 bg-gray-100 text-gray-600 rounded hover:bg-gray-200"
-        >
-          Wyczyść filtry
-        </button>
-      </div>
-    </div>
+    )}
   </div>
-)}
+</div>
             {/* Lista nieruchomości */}
 {viewMode === 'map' ? (
   <MapView 
