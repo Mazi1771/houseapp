@@ -16,7 +16,9 @@ import {
   Trash2,
   Edit2,
   Copy,
-  ArrowRight
+  ArrowRight,
+  Check,  // Dodane
+  Scale
 } from 'lucide-react';
 import { Menu, MenuTrigger, MenuContent, MenuItem } from './components/ui/menu.jsx';
 import PropertyForm from './components/PropertyForm';
@@ -28,11 +30,7 @@ import InvitationsView from './components/InvitationsView';
 import BoardSharing from './components/BoardSharing';
 import MapView from './components/MapView';
 
-const [isSearchExpanded, setIsSearchExpanded] = useState(false);
-const [comparisonMode, setComparisonMode] = useState(false);
-const [selectedForComparison, setSelectedForComparison] = useState([]);
-const [showComparisonModal, setShowComparisonModal] = useState(false);
-const [searchQuery, setSearchQuery] = useState('');
+
 const BoardNavigation = ({ boards, sharedBoards, selectedBoard, onBoardSelect, onShareClick, setIsNewBoardModalOpen  }) => {
   return (
     <div className="bg-white p-4 rounded-lg shadow">
@@ -128,6 +126,11 @@ const BoardSidebar = ({
 
 function App() {
   // === STANY APLIKACJI ===
+  const [isSearchExpanded, setIsSearchExpanded] = useState(false);
+const [comparisonMode, setComparisonMode] = useState(false);
+const [selectedForComparison, setSelectedForComparison] = useState([]);
+const [showComparisonModal, setShowComparisonModal] = useState(false);
+const [searchQuery, setSearchQuery] = useState('');
   const [isFormVisible, setIsFormVisible] = useState(false);
   const [properties, setProperties] = useState([]);
   const [editingProperty, setEditingProperty] = useState(null);
